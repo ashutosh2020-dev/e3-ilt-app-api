@@ -1,0 +1,24 @@
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
+from app.config.database import get_db
+from app.services.ilt_services import IltService
+from datetime import datetime
+from typing import Annotated, Union
+
+router = APIRouter()
+IltService = IltService()
+
+@router.get("/api/v1/ilts/")
+def read_ilts_for_user(user_id: int, db: Session = Depends(get_db)):
+    ilt_list_details = IltService.get_Ilts_list(user_id = user_id, db = db)
+    return ilt_list_details
+
+@router.post("/api/v1/ilts/")
+async def create_ilt(user_id:int, title: str, description: str, 
+                     school_id: int, member_id: list ,db: Session = Depends(get_db)):
+    IltService.create_ilts(owner_id = user_id, title = title, description = description, school_id = school_id,
+                            member_id_list = member_id, db = db)
+    return True
+
+# @router.get("/api/v1/ilts/{id}") # Get List of ilts for a given user.
+# @router.post("/api/v1/ilts/{id}") # Create new ILT for a given user.
