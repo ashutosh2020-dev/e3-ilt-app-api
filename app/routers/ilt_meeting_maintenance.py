@@ -18,15 +18,13 @@ def get_ilt_meetings(user_id: int, ilt_id: int, db: Session = Depends(get_db)):
 def create_ilt_meeting(user_id:int, ilt_id:int, scheduledStartDate:Annotated[Union[datetime, None], Body()], 
                        meetingStart: Annotated[Union[datetime, None], Body()] , 
                        meetingEnd: Annotated[Union[datetime, None], Body()],location:str="" , db: Session = Depends(get_db)):
-    print(scheduledStartDate)
     return IltMeetingService.create_ilts_meeting(ilt_id=ilt_id, user_id=user_id, scheduledStartDate = scheduledStartDate, 
                        meetingStart = meetingStart, meetingEnd = meetingEnd, db=db, location = location)
 
 
-# not completed
 @router.get("/api/v1/ilts/{id}/meetings/{meetingId}")
-def get_meeting_info_for_meeting_id(id:int, meetingId:int, db: Session = Depends(get_db)):
-    return IltMeetingService.get_meeting_info(meeting_id=meetingId, db = db)
+def get_meeting_info_for_meeting_id(User_id:int, id:int, meetingId:int, db: Session = Depends(get_db)):
+    return IltMeetingService.get_meeting_info(meeting_id=meetingId, iltId = id, User_id =User_id, db = db)
 
 
 # @router.post("/api/v1/ilts/{id}/meetings/{meetingId}")

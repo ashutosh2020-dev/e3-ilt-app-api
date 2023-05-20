@@ -15,7 +15,7 @@ class MdlUsers(Base):
     lname = Column(String, nullable=False)
     email = Column(String, unique=True,nullable=False)
     number = Column(Integer, unique=True, nullable=False)
-    password = Column(String, unique=True, nullable=False)
+    password = Column(String, nullable=False)
     is_active = Column(Boolean, default=False, nullable=False)
     role_id = Column(Integer, ForeignKey("roles.id"), nullable=False, index=True)
     parent_user_id = Column(Integer, autoincrement=True)
@@ -51,7 +51,6 @@ class MdlIltMembers(Base):
 class MdlMeetings(Base):
     __tablename__ = "Ilt_meetings"
     id =  Column(Integer, primary_key=True, autoincrement=True)
-    #ilt_id = Column(Integer, ForeignKey("Ilts.id"), nullable=False, index=True)
     location = Column(String, nullable=True, default=None)
     schedule_start_at = Column(DateTime, nullable=False)
     start_at = Column(DateTime, nullable=False)
@@ -63,11 +62,29 @@ class MdlIltMeetings(Base):
     ilt_id = Column(Integer, ForeignKey("Ilts.id"), nullable=False, index=True)
     ilt_meeting_id = Column(Integer, ForeignKey("Ilt_meetings.id"), nullable=False, index=True)
 
+class MdlMeetingsResponse(Base):
+    __tablename__ = "meeting_response"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    attendance_flag = Column(Boolean, nullable=True)
+    checkin_personal_best = Column(String, nullable=True, default=None)
+    checkin_professional_best = Column(String, nullable=True, default=None)
+    rating = Column(Integer,  nullable=True, default=None)
+    feedback = Column(String, nullable=True, default="")
+    notes =  Column(String, nullable=True, default="")
+
+class MdlIltMeetingResponses(Base):
+    __tablename__ = "ilt_meeting_response_mapping"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    meeting_id = Column(Integer, ForeignKey("Ilt_meetings.id"), nullable=False, index=True)
+    meeting_user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    meeting_response_id = Column(Integer, ForeignKey("meeting_response.id"), nullable=False, index=True)
+
 class MdlRocks(Base):
     __tablename__ = "Ilt_rocks"
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String, nullable=False)
     description = Column(String, nullable=False)
+    # on_track_flag = Column(Boolean, nullable=False)
 
 class MdlMeeting_rocks(Base):
     __tablename__ = "Ilt_meeting_rocks_maping"
@@ -79,7 +96,7 @@ class MdlMeeting_rocks(Base):
 class MdlIlt_ToDoTask(Base):
     __tablename__ = "Ilt_to_do_task"
     id = Column(Integer, primary_key=True, autoincrement=True)
-    response_id = Column(Integer, ForeignKey("Ilts.id"), nullable=False, index=True)
+    meeting_response_id = Column(Integer, ForeignKey("meeting_response.id"), nullable=False, index=True)
     description =  Column(String, nullable=False)
     due_date = Column(DateTime, nullable=False)
     status = Column(Boolean, nullable=False)
@@ -87,5 +104,24 @@ class MdlIlt_ToDoTask(Base):
 class Mdl_updates(Base):
     __tablename__ = "meeting_updates"
     id = Column(Integer, primary_key=True, autoincrement=True)
-    response_id = Column(Integer, ForeignKey("Ilts.id"), nullable=False, index=True)
+    meeting_response_id = Column(Integer, ForeignKey("meeting_response.id"), nullable=False, index=True)
     description = Column(String, nullable=False)
+
+class Mdl_issue(Base):
+    __tablename__ = "issue"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    issue = Column(String, nullable=True)
+    priority = Column(String, nullable=True)
+    created_at = Column(DateTime, nullable=True)
+    resolves_flag = Column(Boolean, nullable=True)
+    recognize_performance_flag = Column(Boolean, nullable=True)
+    teacher_support_flag = Column(Boolean, nullable=True)
+    leader_support_flag = Column(Boolean, nullable=True)
+    advance_equality_flag = Column(Boolean, nullable=True)
+    others_flag = Column(Boolean, nullable=True)
+
+class MdlIltissue(Base):
+    __tablename__ = "meeting_issue_mapping"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    meeting_response_id = Column(Integer, ForeignKey("meeting_response.id"), nullable=False, index=True)
+    issue_id = Column(Integer, ForeignKey("issue.id"), nullable=False, index=True)
