@@ -7,19 +7,19 @@ app/
 │   └── database.py
 ├── models.py
 ├── routers/
-│   ├── users.py
-│   └── orders.py
+│   ├── ilt_maintenance.py
+│   ├── ilt_meeting_maitenance.py
+|   └── user_maintenance.py
+├── schemas/
+│   ├── meeting_responce.py  
 ├── services/
-│   ├── user_service.py
-│   └── order_service.py
+│   ├── ilt_service.py
+│   └── ilt_meeting_service.py
 └── utils.py
+|main.py
+|Dockerfile
 
-# extra
-# try:
-#     users = db.query(User).limit(5).all()
-#     for user in users:
-#         print(user.id, user.user_id,user.password)
-# except Exception as e:
-#     print("Error retrieving data from the database:", e)
-# finally:
-#     db.close()
+
+## Run these two commands docker cmd in root dir/path
+# docker build -t middle_ilt_app1 -f DockerFile .
+# docker run -p 8000:8000  middle_ilt_app2

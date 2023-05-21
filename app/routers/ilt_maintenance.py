@@ -9,8 +9,7 @@ IltService = IltService()
 
 @router.get("/api/v1/ilts/")
 def read_ilts_for_user(user_id: int, db: Session = Depends(get_db)):
-    ilt_list_details = IltService.get_Ilts_list(user_id = user_id, db = db)
-    return ilt_list_details
+    return IltService.get_Ilts_list(user_id = user_id, db = db)
 
 @router.post("/api/v1/ilts/")
 async def create_ilt(user_id:int, title: str, description: str, 

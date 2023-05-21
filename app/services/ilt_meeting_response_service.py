@@ -1,9 +1,10 @@
 from sqlalchemy.orm import Session
 from app.models import MdlMeeting_rocks, MdlIlt_ToDoTask, Mdl_updates, \
             MdlMeetingsResponse, MdlIltMeetingResponses, MdlRocks, Mdl_issue, MdlUsers, MdlIltissue
+from app.schemas.meeting_response import MeetingResponse
 from datetime import datetime
-# from fastapi import Body
 from typing import Annotated, Union
+
 
 
 class IltMeetingResponceService:
@@ -277,53 +278,90 @@ class IltMeetingResponceService:
                 "statusCode": 500,
                 "userMessage": f"unable to process your request {str(e)}"
                 }
-    # def update_ilt_meeting(self, meeting_id: int, ilt_id: int,location, scheduledStartDate, meetingStart, 
-    #                        meetingEnd,  db: Session):
-    #     try:
-    #         db_meeting_rock = db.query(MdlMeeting_rocks).filter(MdlMeeting_rocks.rock_id == rockId).first()
-    #         if db_meeting_rock:
-    #             db_meeting_rock.ilt_meeting_response_id = meetingResponseId
-    #             db_meeting_rock.rock_id = rockId 
-    #             db_meeting_rock.on_track_flag = onTrack
-    #             db.commit()
-    #             db.refresh(db_meeting)
-    #             return {
-    #                     "confirmMessageID": "string",
-    #                     "statusCode": 200,
-    #                     "userMessage": "meeting have successfully created"
-    #                     }
-    #         else:
-    #             return {
-    #                 "confirmMessageID": "string",
-    #                 "statusCode": 500,
-    #                 "userMessage": "Internal Server Error"
-    #                 }
-    #     except Exception as e:
-    #         return  {
-    #             "confirmMessageID": "string",
-    #             "statusCode": 500,
-    #             "userMessage": "Internal Server Error = "+e
-    #             }
-        
-    #     return {
-    #             "confirmMessageID": "string",
-    #             "statusCode": 200,
-    #             "userMessage": "meeting have successfully created"
-    #         }
 
+    def update_ilt_meeting_responses(self, data:MeetingResponse, db: Session
+                                    ):
+        """
+            these are the keys inside data
+                iltMeetingResponseId: int 
+                iltMeetingId ==> 
+                member: members ==>
+                attendance: bool,
+                personalBest: str,
+                professionalBest: str
+                rating: int
+                feedback: str
+                notes: str
+                rocks: List[Rock]
+                updates: List[str]
+                todoList: List[TodoItem]
+                issues: List[Issue],
+        """
+        try:
+            try:
+                meetingResponse = db.query(MdlMeetingsResponse).filter(MdlMeetingsResponse.id == data.iltMeetingResponseId).one_or_none()
+                if meetingResponse is None:
+                    return {
+                        "confirmMessageID": "string",
+                        "statusCode": 404,
+                        "userMessage": "MeetingsResponse record not found"
+                        }
+                meetingResponseId = meetingResponse.id
+                ilt_meetingResponce_map_record = db.query(MdlIltMeetingResponses)\
+                                        .filter(MdlIltMeetingResponses.meeting_response_id==meetingResponseId).one()
+                user_id, meeting_id = ilt_meetingResponce_map_record.meeting_user_id, ilt_meetingResponce_map_record.meeting_id  
+                user_meetingResponse_record = db.query(MdlMeetingsResponse)\
+                                        .filter(MdlMeetingsResponse.id==meetingResponseId).one()        
+                user_record = db.query(MdlUsers).filter(MdlUsers.id==user_id).one()
+                user_rock = db.query(MdlMeeting_rocks).filter(MdlMeeting_rocks.ilt_meeting_response_id==meetingResponseId).one()
+                user_update_record=db.query(Mdl_updates).filter(Mdl_updates.meeting_response_id==meetingResponseId).one()
+                issue_id=db.query(MdlIltissue).filter(MdlIltissue.meeting_response_id==meetingResponseId).one().issue_id
+                user_issue_record= db.query(Mdl_issue).filter(Mdl_issue.id==issue_id).one()
+                user_todo_record= db.query(MdlIlt_ToDoTask).filter(MdlIlt_ToDoTask.meeting_response_id==meetingResponseId).one()
 
-    # def get_meeting_info(self, meeting_id:int, db:Session):
-    #     db_meeting_record = db.query(MdlMeetings).filter(MdlMeetings.id==meeting_id).first()
-    #     if db_meeting_record:
-    #         return {"meeting_id":db_meeting_record.id, "location":db_meeting_record.location, 
-    #                "schedule_start_at":db_meeting_record.schedule_start_at, 
-    #                "start_at":db_meeting_record.start_at,
-    #                "end_at":db_meeting_record.end_at}
-    #     else:
-    #         return {
-    #             "confirmMessageID": "string",
-    #             "statusCode": 404,
-    #             "userMessage": "enter valid meeting ID "
-    #             }
-            
-
+            except Exception as e:
+                return {
+                        "confirmMessageID": "string",
+                        "statusCode": 404,
+                        "userMessage": f"complete records with corresponding meeting responceId is not found, {str(e)}"
+                        }
+            user_record.fname=data.member.firstName
+            user_record.lname= data.member.lastName
+            user_meetingResponse_record.attendance_flag = data.attendance
+            user_meetingResponse_record.checkin_personal_best = data.personalBest
+            user_meetingResponse_record.checkin_professional_best = data.professionalBest
+            user_meetingResponse_record.rating = data.rating
+            user_meetingResponse_record.notes = data.notes
+            user_rock.on_track_flag = data.rocks[0].onTrack
+            user_update_record.description= data.updates[0]
+            user_todo_record.description= data.todoList[0].description
+            user_todo_record.due_date = data.todoList[0].dueDate
+            user_todo_record.status = data.todoList[0].status
+            user_issue_record.id = data.issues[0].issueid
+            user_issue_record.issue = data.issues[0].issue
+            user_issue_record.priority = data.issues[0].priority
+            user_issue_record.created_at = data.issues[0].created_at
+            user_issue_record.resolves_flag = data.issues[0].resolvedFlag
+            user_issue_record.recognize_performance_flag = data.issues[0].recognizePerformanceFlag
+            user_issue_record.teacher_support_flag = data.issues[0].teacherSupportFlag
+            user_issue_record.leader_support_flag = data.issues[0].leaderSupportFlag
+            user_issue_record.advance_equality_flag = data.issues[0].advanceEqualityFlag
+            user_issue_record.others_flag = data.issues[0].othersFlag
+            db.commit()                                                            
+            db.refresh(user_record)
+            db.refresh(user_meetingResponse_record)
+            db.refresh(user_rock)
+            db.refresh(user_update_record)
+            db.refresh(user_todo_record)
+            db.refresh(user_issue_record)
+            return {
+                        "confirmMessageID": "string",
+                        "statusCode": 200,
+                        "userMessage": "we have successfully all records"
+                    }
+        except Exception as e:  
+            return  {
+                "confirmMessageID": "string",
+                "statusCode": 500,
+                "userMessage": f"Internal Server Error = {str(e)}"
+                }

@@ -17,10 +17,10 @@ class IltService:
                 ilt_list.append(val)
             return ilt_list
         return {
-        "confirmMessageID": "string",
-        "statusCode": 0,
-        "userMessage": "records Not found"
-        }
+            "confirmMessageID": "string",
+            "statusCode": 0,
+            "userMessage": "records Not found"
+            }
     def get_ilt_details(self, ilt_id:int, db:Session):
         try:
             ilt_record = db.query(MdlIlts).filter(MdlIlts.id==ilt_id).one()
@@ -48,7 +48,6 @@ class IltService:
                     "members": member_info
                     }
         except Exception as e:
-            
             return None
     
     def is_user_exist(self, user_id, db):
@@ -73,7 +72,6 @@ class IltService:
             db.add(db_ilt)
             db.commit()
             db.refresh(db_ilt)
-            print(db_ilt.id)
             # mapping all user's id with ilt in the map table also check uid existance
             for m_id in member_id_list:
                 # flag = self.is_user_exist(user_id = m_id, db=db)

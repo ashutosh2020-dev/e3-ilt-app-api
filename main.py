@@ -2,7 +2,8 @@ from fastapi import FastAPI, Depends
 from sqlalchemy.orm import Session
 from app.config.app_settings import settings
 from app.config.database import engine, SessionLocal, Base
-from app.routers import user_maintenance, ilt_maintenance, ilt_meeting_maintenance, ilt_meeting_response
+from app.routers import user_maintenance, ilt_maintenance, ilt_meeting_maintenance, ilt_meeting_response_maintenance
+import uvicorn
 
 tags_metadata = [
     {
@@ -43,10 +44,9 @@ Base.metadata.create_all(bind=engine)
 app.include_router(ilt_maintenance.router, tags=["ILT Maintenance"])
 app.include_router(user_maintenance.router, tags=["User Maintenance"])
 app.include_router(ilt_meeting_maintenance.router, tags=["Ilt Meetings Maintenance"])
-app.include_router(ilt_meeting_response.router, tags=["ILT Meeting Response Maintenance"])
+app.include_router(ilt_meeting_response_maintenance.router, tags=["ILT Meeting Response Maintenance"])
 
 
 if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run("main:app", host="127.0.0.1", port=settings.app_port)
-    # uvicorn.run("main:app", host="0.0.0.0", port=settings.app_port, reload=True)
+    # uvicorn.run("main:app", host="127.0.0.1", port=settings.app_port, reload=True)
+    uvicorn.run("main:app", host="0.0.0.0", port=settings.app_port, reload=True)

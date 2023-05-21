@@ -1,0 +1,16 @@
+# Defining Python Version
+FROM python:3.10.6
+
+WORKDIR /dockerworkdir
+
+COPY ./app /dockerworkdir/app
+COPY requirements.txt /dockerworkdir/
+COPY main.py /dockerworkdir/
+COPY README.md  /dockerworkdir/
+
+RUN  pip install --no-cache-dir --upgrade pip && \
+     pip install --no-cache-dir -r requirements.txt
+
+EXPOSE 8000
+
+CMD ["python", "main.py"]

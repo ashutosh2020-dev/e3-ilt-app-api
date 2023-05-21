@@ -50,7 +50,6 @@ class UserService:
         except Exception as e:
             exc_type, exc_value, exc_traceback = sys.exc_info()
             status_code = getattr(exc_value, "status_code", 404)  # Default to 404 if status_code is not present
-            print(status_code)
             return {
                 "confirmMessageID": "string",
                 "statusCode": status_code,
