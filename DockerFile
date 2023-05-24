@@ -1,5 +1,4 @@
-# Defining Python Version
-FROM python:3.10.6
+FROM python:3.9
 
 WORKDIR /dockerworkdir
 
@@ -11,6 +10,6 @@ COPY README.md  /dockerworkdir/
 RUN  pip install --no-cache-dir --upgrade pip && \
      pip install --no-cache-dir -r requirements.txt
 
-EXPOSE 8000
+EXPOSE 80
 
 CMD ["python", "main.py"]

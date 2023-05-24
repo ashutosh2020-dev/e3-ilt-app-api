@@ -33,7 +33,7 @@ class MdlSchools(Base):
 class MdlIlts(Base):
     __tablename__ = "Ilts"
     id = Column(Integer, primary_key=True, autoincrement=True)
-    #created_by = Column(String, nullable=False)
+    created_by = Column(String, nullable=True)
     created_at = Column(DateTime,nullable=True, default=datetime.datetime.utcnow)
     updated_at = Column(DateTime, nullable=True)
     update_by = Column(String, nullable=True)
