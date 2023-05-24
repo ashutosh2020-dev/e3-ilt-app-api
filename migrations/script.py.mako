@@ -17,7 +17,7 @@ depends_on = ${repr(depends_on)}
 
 
 def upgrade() -> None:
-    op.add_column('Ilts', sa.Column('created_by', sa.String))
+    # op.add_column('Ilts', sa.Column('created_by', sa.String))
     ${upgrades if upgrades else "pass"}
 
 

@@ -1,6 +1,6 @@
 from typing import List, Optional
 from pydantic import BaseModel
-
+from datetime import datetime
 class Member(BaseModel):
     userId: int
     firstName: str
@@ -12,7 +12,7 @@ class Rock(BaseModel):
 
 class TodoItem(BaseModel):
     description: str
-    dueDate: str
+    dueDate: str="2023-05-23"
     status: str
 
 class Issue(BaseModel):
@@ -41,3 +41,6 @@ class MeetingResponse(BaseModel):
     updates: List[str]
     todoList: List[TodoItem]
     issues: List[Issue]
+
+class Duedate(BaseModel):
+    Duedate:datetime

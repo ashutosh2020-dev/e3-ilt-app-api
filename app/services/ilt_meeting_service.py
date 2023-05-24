@@ -62,6 +62,7 @@ class IltMeetingService:
             db.refresh(db_meeting)
 
             ilt_members_list = [record.member_id for record in db.query(MdlIltMembers).filter(MdlIltMembers.ilt_id==ilt_id).all()]
+            print(ilt_members_list)
             # create meeting response and update the map table(MdlIltMeetingResponses) for  meeting id and m_response_id
             status, msg = IltMeetingResponceService().create_meeting_responses_empty_for_ILTmember(meeting_id=db_meeting.id, \
                                                                                               member_list = ilt_members_list, db=db)
@@ -122,7 +123,7 @@ class IltMeetingService:
             }
 
 
-    def get_meeting_info(self, meeting_id:int, iltId:int, User_id:int, db:Session):
+    def get_meeting_info(self, User_id:int, iltId:int, meeting_id:int,  db:Session):
         try:
             user = db.query(MdlUsers).filter(MdlUsers.id == User_id).one_or_none()
             if user is None:

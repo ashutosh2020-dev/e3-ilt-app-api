@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, Boolean, DateTime
+from sqlalchemy import Column, Integer, String, ForeignKey, Boolean, DateTime, UniqueConstraint
 import datetime
 from app.config.database import Base
 
@@ -33,7 +33,6 @@ class MdlSchools(Base):
 class MdlIlts(Base):
     __tablename__ = "Ilts"
     id = Column(Integer, primary_key=True, autoincrement=True)
-    created_by = Column(String, nullable=True)
     created_at = Column(DateTime,nullable=True, default=datetime.datetime.utcnow)
     updated_at = Column(DateTime, nullable=True)
     update_by = Column(String, nullable=True)
@@ -122,6 +121,7 @@ class Mdl_issue(Base):
 
 class MdlIltissue(Base):
     __tablename__ = "meeting_issue_mapping"
+    __table_args__ = (UniqueConstraint('meeting_response_id', 'issue_id'),)
     id = Column(Integer, primary_key=True, autoincrement=True)
     meeting_response_id = Column(Integer, ForeignKey("meeting_response.id"), nullable=False, index=True)
     issue_id = Column(Integer, ForeignKey("issue.id"), nullable=False, index=True)

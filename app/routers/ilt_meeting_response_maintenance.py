@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, Body
 from sqlalchemy.orm import Session
 from app.config.database import get_db
 from app.services.ilt_meeting_response_service import IltMeetingResponceService
-from app.schemas.meeting_response import MeetingResponse
+from app.schemas.meeting_response import MeetingResponse, Duedate
 from datetime import datetime
 from typing import Annotated, Union
 
@@ -28,10 +28,11 @@ def create_ilt_meetings_rocks(user_id: int, meetingResponseId:int, rock_id: int,
 
 
 @router.post("/api/v1/ilts/meetingResponses/{meetingResponseId}/todolist")
-def create_ilt_meeting_todolist(user_id:int, meetingResposnceId:int, description:str, dueDate:Annotated[Union[datetime, None], Body()], 
+def create_ilt_meeting_todolist(user_id:int, meetingResposnceId:int, description:str, dueDate:Duedate, 
                        status:bool , db: Session = Depends(get_db)):
+    print(dueDate.Duedate)
     return IltMeetingResponceService.create_to_do_list(user_id=user_id, meetingResponseId=meetingResposnceId, description=description, \
-                          dueDate=dueDate, status=status, db=db)
+                          dueDate=dueDate.Duedate, status=status, db=db)
 
 
 @router.post("/api/v1/ilts/meetingResponses/{meetingResponseId}/updates")

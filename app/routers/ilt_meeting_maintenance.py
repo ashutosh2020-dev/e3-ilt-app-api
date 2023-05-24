@@ -12,7 +12,7 @@ IltMeetingService = IltMeetingService()
 @router.get("/api/v1/ilts/{id}/meetings")
 def get_ilt_meetings(user_id: int, ilt_id: int, db: Session = Depends(get_db)):
     return IltMeetingService.get_Ilts_meeting_list(user_id = user_id, ilt_id = ilt_id, db =db )
-
+    
 
 @router.post("/api/v1/ilts/{id}/meetings")
 def create_ilt_meeting(user_id:int, ilt_id:int, scheduledStartDate:Annotated[Union[datetime, None], Body()], 

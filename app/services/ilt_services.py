@@ -56,34 +56,67 @@ class IltService:
             return True
         else:
             return False
-
+        
+    def create_schools(self, name, location, district, db:Session):
+        db_school = MdlSchools(name=name, location=location, district=district)
+        db.add(db_school)
+        db.commit()
+        db.refresh(db_school) 
+        return {
+                "confirmMessageID": "string",
+                "statusCode": 200,
+                "userMessage": "school has created successfully."
+                }
     def create_ilts(self, owner_id, title, description, school_id, member_id_list, db: Session):
         try:
             # validate school id existance
-            #validate owner id 
-            user = db.query(MdlUsers).filter(MdlUsers.id == owner_id).first()
-            if not user:
+            user_re = db.query(MdlUsers).filter(MdlUsers.id == owner_id).one_or_none()
+            if user_re is None:
                 return {
                     "confirmMessageID": "string",
                     "statusCode": 404,
                     "userMessage": "User not found"
                     }
+            school_re = db.query(MdlSchools).filter(MdlSchools.id == school_id).one_or_none()
+            if school_re is None:
+                return {
+                    "confirmMessageID": "string",
+                    "statusCode": 404,
+                    "userMessage": "school not found"
+                    }
+            # verify all member id
+            if len(member_id_list)==0:
+                return {
+                "confirmMessageID": "string",
+                "statusCode": 500,
+                "userMessage": "please member list."
+                } 
+            member_id_list = list(set(member_id_list))
+            try:
+                valid_member_id_list = [db.query(MdlUsers).filter(MdlUsers.id == m_id).first().id for m_id in member_id_list]
+            except Exception as e:
+                return {
+                "confirmMessageID": "string",
+                "statusCode": 500,
+                "userMessage": f"please enter existing member id only. Error: {str(e)}"
+                }
+            
             db_ilt = MdlIlts(owner_id = owner_id, title= title, description= description, school_id= school_id)
             db.add(db_ilt)
             db.commit()
             db.refresh(db_ilt)
+            
             # mapping all user's id with ilt in the map table also check uid existance
-            for m_id in member_id_list:
+            for m_id in valid_member_id_list:
                 # flag = self.is_user_exist(user_id = m_id, db=db)
-                db_user_id = db.query(MdlUsers).filter(MdlUsers.id == m_id).first().id
-                db_ilt_member = MdlIltMembers(ilt_id = db_ilt.id, member_id = db_user_id)
+                db_ilt_member = MdlIltMembers(ilt_id = db_ilt.id, member_id = m_id)
                 db.add(db_ilt_member)
                 db.commit()
                 db.refresh(db_ilt_member)
             return {
                 "confirmMessageID": "string",
                 "statusCode": 200,
-                "userMessage": "created successfully"
+                "userMessage": "ilt has created successfully and added all members successfully"
                 }
         except SQLAlchemyError as e:
             # db.rollback()

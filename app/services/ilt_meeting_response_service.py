@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
 from app.models import MdlMeeting_rocks, MdlIlt_ToDoTask, Mdl_updates, \
             MdlMeetingsResponse, MdlIltMeetingResponses, MdlRocks, Mdl_issue, MdlUsers, MdlIltissue
-from app.schemas.meeting_response import MeetingResponse
+from app.schemas.meeting_response import MeetingResponse, Duedate
 from datetime import datetime
 from typing import Annotated, Union
 
@@ -40,14 +40,24 @@ class IltMeetingResponceService:
                                         "feedback":user_meetingResponse_record.feedback,
                                         "notes":user_meetingResponse_record.notes
                                         }
-            user_rock_record =  db.query(MdlMeeting_rocks)\
+            user_rock_record =  [{
+                                "rockId": record.id,
+                                "onTrack": record.on_track_flag
+                                }  \
+                        for record in db.query(MdlMeeting_rocks)\
                         .filter(MdlMeeting_rocks.ilt_meeting_response_id==meetingResponseId)\
-                        .first()  
-            user_update_record=db.query(Mdl_updates)\
+                        .all()
+                        ]  
+            user_update_record=[ record.description 
+                        for record in db.query(Mdl_updates)\
                     .filter(Mdl_updates.meeting_response_id==meetingResponseId)\
-                    .first()
-            user_todolist_record= db.query(MdlIlt_ToDoTask)\
-                        .filter(MdlIlt_ToDoTask.meeting_response_id==meetingResponseId).first()
+                    .all()]
+            user_todolist_record= [  {
+                                "description": record.description,
+                                "dueDate": record.due_date,
+                                "status": record.status
+                                } for record in db.query(MdlIlt_ToDoTask)\
+                        .filter(MdlIlt_ToDoTask.meeting_response_id==meetingResponseId).all()]
             issue_id =  db.query(MdlIltissue)\
                         .filter(MdlIltissue.meeting_response_id == meetingResponseId).first().id
             user_issues_record = db.query(Mdl_issue)\
@@ -59,12 +69,7 @@ class IltMeetingResponceService:
                             "iltMeetingResponseId": meetingResponseId,
                             "iltMeetingId": ilt_meet_id,
                             "member": members_Info_dict,
-                            "rocks": [
-                                {
-                                "rockId": user_rock_record.id,
-                                "onTrack": user_rock_record.on_track_flag
-                                }
-                            ],
+                            "rocks": user_rock_record,
                             "updates": [
                                 user_update_record.description
                             ],
@@ -168,7 +173,7 @@ class IltMeetingResponceService:
             return {
                 "confirmMessageID": "string",
                 "statusCode": 200,
-                "userMessage": "user added successfully"
+                "userMessage": "rock added to the corresponding meetingRosponse id successfully"
                 }
         except Exception as e:
             return {
@@ -178,7 +183,7 @@ class IltMeetingResponceService:
                 }
     
     def create_to_do_list(self, user_id:int, meetingResponseId: int, description:str, 
-                          dueDate, status:bool, db:Session):
+                          dueDate:Duedate, status:bool, db:Session):
         try:
             # check if user_id is inside MdlIltMembers
             db_meeting_rocks = MdlIlt_ToDoTask(meeting_response_id = meetingResponseId, 
