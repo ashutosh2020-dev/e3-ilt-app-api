@@ -25,7 +25,7 @@ class IltService:
         try:
             ilt_record = db.query(MdlIlts).filter(MdlIlts.id==ilt_id).one()
             members_id_list = [record.id for record in db.query(MdlIltMembers).filter(MdlIltMembers.ilt_id==ilt_id).all()]
-            school_record = db.query(MdlSchools).filter(MdlSchools.id==ilt_record.school_id).first()
+            school_record = db.query(MdlSchools).filter(MdlSchools.id==ilt_record.school_id).one()
             owner_record = db.query(MdlUsers).filter(MdlUsers.id==ilt_record.owner_id).one()
             member_info = []
             for uid in members_id_list:
@@ -41,9 +41,9 @@ class IltService:
                     "tile": ilt_record.title,
                     "description": ilt_record.description,
                     "school": {
-                        "schoolId": 0,
-                        "schoolName": "string",
-                        "schoolDistrict": "string"
+                        "schoolId": school_record.id,
+                        "schoolName": school_record.name,
+                        "schoolDistrict": school_record.district
                     },
                     "members": member_info
                     }
@@ -67,15 +67,22 @@ class IltService:
                 "statusCode": 200,
                 "userMessage": "school has created successfully."
                 }
-    def create_ilts(self, owner_id, title, description, school_id, member_id_list, db: Session):
+    def create_ilts(self, owner_id, title, description, school_id, user_id, member_id_list, db: Session):
         try:
             # validate school id existance
-            user_re = db.query(MdlUsers).filter(MdlUsers.id == owner_id).one_or_none()
-            if user_re is None:
+            owner_re = db.query(MdlUsers).filter(MdlUsers.id == owner_id).one_or_none()
+            if owner_re is None:
                 return {
                     "confirmMessageID": "string",
                     "statusCode": 404,
                     "userMessage": "User not found"
+                    }
+            logged_user_re = db.query(MdlUsers).filter(MdlUsers.id == user_id).one_or_none()
+            if logged_user_re is None:
+                return {
+                    "confirmMessageID": "string",
+                    "statusCode": 404,
+                    "userMessage": "user not found"
                     }
             school_re = db.query(MdlSchools).filter(MdlSchools.id == school_id).one_or_none()
             if school_re is None:
@@ -101,7 +108,7 @@ class IltService:
                 "userMessage": f"please enter existing member id only. Error: {str(e)}"
                 }
             
-            db_ilt = MdlIlts(owner_id = owner_id, title= title, description= description, school_id= school_id)
+            db_ilt = MdlIlts(owner_id = owner_id,created_by=user_id, title= title, description= description, school_id= school_id)
             db.add(db_ilt)
             db.commit()
             db.refresh(db_ilt)

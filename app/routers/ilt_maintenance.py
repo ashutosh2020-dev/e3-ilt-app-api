@@ -12,14 +12,10 @@ IltService = IltService()
 def read_ilts_for_user(user_id: int, db: Session = Depends(get_db)):
     return IltService.get_Ilts_list(user_id = user_id, db = db)
 
-@router.post("/api/v1/schools/")
-def create_school(name:str, location:str, district:str, db: Session = Depends(get_db)):
-    return IltService.create_schools(name = name, location=location, district=district, db=db)
-
 @router.post("/api/v1/ilts/")
-async def create_ilt(user_id:int, title: str, description: str, 
+async def create_ilt(user_id:int,created_by:int,  title: str, description: str, 
                      school_id: int, member_id: Annotated[Union[list[int], None], Query()], db: Session = Depends(get_db)):
-    return IltService.create_ilts(owner_id = user_id, title = title, description = description, school_id = school_id,
+    return IltService.create_ilts(owner_id = created_by, user_id=user_id, title = title, description = description, school_id = school_id,
                             member_id_list = member_id, db = db)
 
 @router.get("/api/v1/ilts/{id}")

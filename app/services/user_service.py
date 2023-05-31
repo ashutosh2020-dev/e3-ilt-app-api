@@ -1,13 +1,13 @@
 from sqlalchemy.orm import Session
-from app.models import MdlUsers
+from app.models import MdlUsers, MdlRoles
 from sqlalchemy.orm.exc import NoResultFound
 import sys
 
 class UserService:
     def get_user(self, user_id: int, db: Session):
         try:
-            user_record = db.query(MdlUsers).filter(MdlUsers.id == user_id).first()
-            if user_record:
+            user_record = db.query(MdlUsers).filter(MdlUsers.id == user_id).one_or_none()
+            if user_record is not None:
                 return {
                             "userId": user_record.id,
                             "firstName": user_record.fname,
@@ -37,6 +37,20 @@ class UserService:
 
     def create_user(self, parent_user_id, fname, lname, email, number, password, is_active, role_id, db: Session):
         try:
+            check_parent_id = db.query(MdlUsers).filter(MdlUsers.id==parent_user_id).one_or_none()
+            if check_parent_id is None:
+                return {
+                "confirmMessageID": "string",
+                "statusCode": 404,
+                "userMessage": "User_id not found"
+            }
+            check_role_id = db.query(MdlRoles).filter(MdlRoles.id==role_id).one_or_none()
+            if check_role_id is None:
+                return {
+                "confirmMessageID": "string",
+                "statusCode": 404,
+                "userMessage": "role_id not found"
+            }
             db_user = MdlUsers(fname=fname, lname=lname, email=email, number=number, \
                             password=password, is_active=is_active, role_id=role_id, parent_user_id= parent_user_id)
             db.add(db_user)

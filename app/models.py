@@ -18,7 +18,7 @@ class MdlUsers(Base):
     password = Column(String, nullable=False)
     is_active = Column(Boolean, default=False, nullable=False)
     role_id = Column(Integer, ForeignKey("roles.id"), nullable=False, index=True)
-    parent_user_id = Column(Integer, autoincrement=True)
+    parent_user_id = Column(Integer, nullable=False)
 
     def verify_password(self, password):
         return self.password == password
@@ -26,14 +26,16 @@ class MdlUsers(Base):
 class MdlSchools(Base):
     __tablename__ = "schools"
     id = Column(Integer, primary_key=True, autoincrement=True)
-    name = Column(String, nullable=False)
+    name = Column(String, unique=True, nullable=False)
     location = Column(String, nullable=False)
     district = Column(String, nullable=False)    
 
 class MdlIlts(Base):
     __tablename__ = "Ilts"
+    __table_args__ = (UniqueConstraint('title', 'school_id'),)
     id = Column(Integer, primary_key=True, autoincrement=True)
-    created_at = Column(DateTime,nullable=True, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime,nullable=False, default=datetime.datetime.utcnow)
+    created_by = Column(String, nullable=False)
     updated_at = Column(DateTime, nullable=True)
     update_by = Column(String, nullable=True)
     owner_id = Column(Integer,  nullable=False)
@@ -43,6 +45,7 @@ class MdlIlts(Base):
 
 class MdlIltMembers(Base):
     __tablename__ = "Ilt_members_maping"
+    __table_args__ = (UniqueConstraint('ilt_id', 'member_id'),)
     id = Column(Integer, primary_key=True, autoincrement=True)
     ilt_id = Column(Integer, ForeignKey("Ilts.id"), nullable=False, index=True)
     member_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
@@ -57,6 +60,7 @@ class MdlMeetings(Base):
 
 class MdlIltMeetings(Base):
     __tablename__ = "Ilt_meeting_maping"
+    __table_args__ = (UniqueConstraint('ilt_id', 'ilt_meeting_id'),)
     id = Column(Integer, primary_key=True, autoincrement=True)
     ilt_id = Column(Integer, ForeignKey("Ilts.id"), nullable=False, index=True)
     ilt_meeting_id = Column(Integer, ForeignKey("Ilt_meetings.id"), nullable=False, index=True)
@@ -73,11 +77,26 @@ class MdlMeetingsResponse(Base):
 
 class MdlIltMeetingResponses(Base):
     __tablename__ = "ilt_meeting_response_mapping"
+    __table_args__ = (UniqueConstraint('meeting_user_id', 'meeting_response_id'),)
     id = Column(Integer, primary_key=True, autoincrement=True)
     meeting_id = Column(Integer, ForeignKey("Ilt_meetings.id"), nullable=False, index=True)
     meeting_user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
     meeting_response_id = Column(Integer, ForeignKey("meeting_response.id"), nullable=False, index=True)
 
+class MdlPriorities(Base):
+    __tablename__ = "Ilt_priorities"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    name = Column(String, nullable=False)
+    description = Column(String, nullable=False)
+
+class MdlIltPriorities(Base):
+    __tablename__ = "Ilt_priorities_mapping"
+    __table_args__ = (UniqueConstraint('role_id', 'priorities_id'),)
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    role_id = Column(Integer, ForeignKey("roles.id"), nullable=False, index=True)
+    priorities_id = Column(Integer, ForeignKey("Ilt_priorities.id"), nullable=False, index=True)
+
+    
 class MdlRocks(Base):
     __tablename__ = "Ilt_rocks"
     id = Column(Integer, primary_key=True, autoincrement=True)
@@ -87,6 +106,7 @@ class MdlRocks(Base):
 
 class MdlMeeting_rocks(Base):
     __tablename__ = "Ilt_meeting_rocks_maping"
+    __table_args__ = (UniqueConstraint('ilt_meeting_response_id', 'rock_id'),)
     id = Column(Integer, primary_key=True, autoincrement=True)
     ilt_meeting_response_id =  Column(Integer, ForeignKey("Ilts.id"), nullable=False, index=True)
     rock_id = Column(Integer, ForeignKey("Ilt_rocks.id"), nullable=False, unique=True, index=True)

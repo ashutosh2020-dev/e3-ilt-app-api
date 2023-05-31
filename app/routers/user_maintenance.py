@@ -6,7 +6,7 @@ from app.services.user_service import UserService
 router = APIRouter()
 user_service = UserService()
 
-@router.get("/api/v1/users/{id}")
+@router.get("/api/v1/users/")
 def fn_read_users(user_id: int, db: Session = Depends(get_db)):
     return user_service.get_user(user_id, db =db)
     
