@@ -6,9 +6,9 @@ from app.services.other_services import Create_otherService
 router = APIRouter()
 create_api_service = Create_otherService()
 
- 
+        
 @router.post("/api/v1/other/root_user/")
-def fn_create_root_user(fname: str, lname: str, email: str, number: str, \
+def fn_create_admin_user(fname: str, lname: str, email: str, number: str, \
                    password: str, is_active: bool, role_id: int, db: Session = Depends(get_db)):
     return create_api_service.create_root_user(fname=fname, lname=lname, email=email, number=number, 
                                          password=password, is_active=is_active, role_id=role_id, db=db)

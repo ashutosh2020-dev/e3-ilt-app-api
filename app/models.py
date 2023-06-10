@@ -118,7 +118,7 @@ class MdlIlt_ToDoTask(Base):
     meeting_response_id = Column(Integer, ForeignKey("meeting_response.id"), nullable=False, index=True)
     description =  Column(String, nullable=False)
     due_date = Column(DateTime, nullable=False)
-    status = Column(Boolean, nullable=False)
+    status = Column(String, nullable=False)
 
 class Mdl_updates(Base):
     __tablename__ = "meeting_updates"

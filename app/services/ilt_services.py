@@ -23,7 +23,13 @@ class IltService:
             }
     def get_ilt_details(self, ilt_id:int, db:Session):
         try:
-            ilt_record = db.query(MdlIlts).filter(MdlIlts.id==ilt_id).one()
+            ilt_record = db.query(MdlIlts).filter(MdlIlts.id==ilt_id).one_or_none()
+            if ilt_record is None:
+                return {
+            "confirmMessageID": "string",
+            "statusCode": 404,
+            "userMessage": "records Not found"
+            }
             members_id_list = [record.id for record in db.query(MdlIltMembers).filter(MdlIltMembers.ilt_id==ilt_id).all()]
             school_record = db.query(MdlSchools).filter(MdlSchools.id==ilt_record.school_id).one()
             owner_record = db.query(MdlUsers).filter(MdlUsers.id==ilt_record.owner_id).one()

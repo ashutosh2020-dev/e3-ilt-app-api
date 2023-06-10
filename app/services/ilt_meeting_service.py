@@ -1,5 +1,7 @@
 from sqlalchemy.orm import Session
-from app.models import MdlIltMeetings, MdlMeetings, MdlUsers, MdlIlts, MdlIltMembers, MdlIltMeetingResponses, MdlMeetingsResponse
+from app.models import MdlIltMeetings, MdlMeetings, MdlUsers, MdlIlts, \
+                    MdlIltMembers, MdlIltMeetingResponses, MdlMeetingsResponse,  \
+                    MdlMeeting_rocks, Mdl_updates, MdlIlt_ToDoTask, MdlIltissue, Mdl_issue
 import sys
 from app.services.ilt_meeting_response_service import IltMeetingResponceService
 
@@ -12,7 +14,7 @@ class IltMeetingService:
                 "confirmMessageID": "string",
                 "statusCode": 404,
                 "userMessage": "User not found"
-                }
+                }                               
         check_ilt = db.query(MdlIlts).filter(MdlIlts.id == ilt_id).one_or_none()
         if check_ilt is None:
             return {
@@ -62,7 +64,6 @@ class IltMeetingService:
             db.refresh(db_meeting)
 
             ilt_members_list = [record.member_id for record in db.query(MdlIltMembers).filter(MdlIltMembers.ilt_id==ilt_id).all()]
-            print(ilt_members_list)
             # create meeting response and update the map table(MdlIltMeetingResponses) for  meeting id and m_response_id
             status, msg = IltMeetingResponceService().create_meeting_responses_empty_for_ILTmember(meeting_id=db_meeting.id, \
                                                                                               member_list = ilt_members_list, db=db)
@@ -122,66 +123,142 @@ class IltMeetingService:
                 "userMessage": f"unable to create the record : {e}"
             }
 
-
     def get_meeting_info(self, User_id:int, iltId:int, meeting_id:int,  db:Session):
         try:
-            user = db.query(MdlUsers).filter(MdlUsers.id == User_id).one_or_none()
+            user = db.query(MdlUsers).filter(MdlUsers.id==User_id).one_or_none()
             if user is None:
                 return {
                     "confirmMessageID": "string",
                     "statusCode": 404,
-                    "userMessage": "User not found"
+                    "userMessage": "User_id not found"
+                    }
+            ilt_record = db.query(MdlIlts).filter(MdlIlts.id==iltId).one_or_none()
+            if ilt_record is None:
+                return {
+                    "confirmMessageID": "string",
+                    "statusCode": 404,
+                    "userMessage": "ilt_id not found"
+                    }
+            ilt_meeting_record = db.query(MdlMeetings).filter(MdlMeetings.id == meeting_id).one_or_none()
+            if ilt_meeting_record is None:
+                return {
+                    "confirmMessageID": "string",
+                    "statusCode": 404,
+                    "userMessage": "ilt_meeting records not found"
                     }
             db_ilt_meeting_record = db.query(MdlIltMeetings).filter(
                                 MdlIltMeetings.ilt_id == iltId,
                                 MdlIltMeetings.ilt_meeting_id == meeting_id
                             ).one_or_none()
-            if db_ilt_meeting_record is not None:
-                
-                db_meeting_record = db.query(MdlMeetings).filter(MdlMeetings.id==meeting_id).one()
-                # ilt_members_ids = [x.member_id for x in db.query(MdlIltMembers).filter(MdlIltMembers.ilt_id==iltId).all()]
-                ilt_members_ids = [User_id]
-                members_Info_dict = []
-                meeting_response_id = 0
-                for uid in ilt_members_ids:
-                    user_record = db.query(MdlUsers).filter(MdlUsers.id==uid).one()
-                    meeting_response_id = db.query(MdlIltMeetingResponses)\
-                                            .filter(MdlIltMeetingResponses.meeting_id==meeting_id,
-                                                    MdlIltMeetingResponses.meeting_user_id==uid).one().meeting_response_id
-                    meeting_response_record = db.query(MdlMeetingsResponse)\
-                                            .filter(MdlMeetingsResponse.id==meeting_response_id).one()
-                    
-                    members_Info_dict.append({"id":user_record.id,
-                                                "first name":user_record.fname, 
-                                                "last name":user_record.lname,
-                                                "attandance":meeting_response_record.attendance_flag,
-                                                "personalBest":meeting_response_record.checkin_personal_best,
-                                                "professionalBest":meeting_response_record.checkin_professional_best,
-                                                "rating":meeting_response_record.rating,
-                                                "feedback":meeting_response_record.feedback,
-                                                "notes":meeting_response_record.notes
-                                                })
-                # note - add rocks, issue, update, to-doList info 
-                return {
-                        "iltMeetingId":db_meeting_record.id,
-                        "meeting_response_id":meeting_response_id,
-                        "location":db_meeting_record.location, 
-                        "schedule_start_at":db_meeting_record.schedule_start_at, 
-                        "start_at":db_meeting_record.start_at,
-                        "end_at":db_meeting_record.end_at, 
-                        "member":members_Info_dict
-                        }
-            else:
+            if db_ilt_meeting_record is None:
                 return {
                     "confirmMessageID": "string",
                     "statusCode": 404,
-                    "userMessage": "enter valid Meeting ID or ILT id"
+                    "userMessage": "Meeting ID is not associated with ILT id"
                     }
+                
+            db_meeting_record = db.query(MdlMeetings).filter(MdlMeetings.id==meeting_id).one_or_none()
+            if db_meeting_record is None:
+                return {
+                    "confirmMessageID": "string",
+                    "statusCode": 404,
+                    "userMessage": "unable to fetch meeting records"
+                    }
+            ilt_members_ids = [x.member_id for x in db.query(MdlIltMembers).filter(MdlIltMembers.ilt_id==iltId).all()]
+            # ilt_members_ids = [User_id]
+            members_Info_dict = []
+            meeting_response_id = 0
+            for uid in ilt_members_ids:
+                user_record = db.query(MdlUsers).filter(MdlUsers.id==uid).one()
+                meeting_response_id = db.query(MdlIltMeetingResponses)\
+                                        .filter(MdlIltMeetingResponses.meeting_id==meeting_id,
+                                                MdlIltMeetingResponses.meeting_user_id==uid).one().meeting_response_id
+                meeting_response_record = db.query(MdlMeetingsResponse)\
+                                        .filter(MdlMeetingsResponse.id==meeting_response_id).one()
+                #fetching all  rocks, issue, update, to-doList records wrt meeting_responce_id 
+                rock_records = db.query(MdlMeeting_rocks)\
+                                .filter(MdlMeeting_rocks.ilt_meeting_response_id==meeting_response_id)\
+                                .all()
+                user_rock_record =  [{
+                                "rockId": record.id,
+                                "onTrack": record.on_track_flag
+                                }  \
+                        for record in rock_records
+                        ]  if rock_records else []
+                update_records = db.query(Mdl_updates)\
+                                .filter(Mdl_updates.meeting_response_id==meeting_response_id)\
+                                .all()
+                user_update_record=[ 
+                                    record.description 
+                                    for record in update_records
+                                ] if update_records else []
+                todo_task_records = db.query(MdlIlt_ToDoTask)\
+                                        .filter(MdlIlt_ToDoTask.meeting_response_id==meeting_response_id)\
+                                        .all()
+                user_todolist_record= [  
+                                        {
+                                        "description": record.description,
+                                        "dueDate": record.due_date,
+                                        "status": record.status
+                                        } 
+                                            for record in todo_task_records
+                                ]  if todo_task_records  else []
+                
+                issue_record =  db.query(MdlIltissue)\
+                            .filter(MdlIltissue.meeting_response_id == meeting_response_id).all()    
+                user_issues_record = [db.query(Mdl_issue)\
+                        .filter(Mdl_issue.id == record.id).one_or_none() for record in issue_record ]  \
+                        if  issue_record  else []
+
+                members_Info_dict.append(
+                                        {  
+                                            "iltMeetingResponseId": meeting_response_id,
+                                            "iltMeetingId": meeting_id,
+                                            "member": {   
+                                                        "id":user_record.id,
+                                                        "first name":user_record.fname,
+                                                        "last name":user_record.lname
+                                                        },
+                                            "attandance":meeting_response_record.attendance_flag,
+                                            "personalBest":meeting_response_record.checkin_personal_best,
+                                            "professionalBest":meeting_response_record.checkin_professional_best,
+                                            "rating":meeting_response_record.rating,
+                                            "feedback":meeting_response_record.feedback,
+                                            "notes":meeting_response_record.notes,
+                                            # added rocks
+                                            "rocks": user_rock_record,
+                                            "updates": user_update_record,
+                                            "todoList": user_todolist_record,
+                                            "issues": [
+                                                [{
+                                                "issueid": user_issues_single_record.id,
+                                                "issue": user_issues_single_record.issue,
+                                                "priorityId": user_issues_single_record.priority,
+                                                "date": user_issues_single_record.created_at,
+                                                "resolvedFlag": user_issues_single_record.resolves_flag,
+                                                "recognizePerformanceFlag": user_issues_single_record.recognize_performance_flag,
+                                                "teacherSupportFlag": user_issues_single_record.teacher_support_flag,
+                                                "leaderSupportFlag": user_issues_single_record.leader_support_flag,
+                                                "advanceEqualityFlag": user_issues_single_record.advance_equality_flag,
+                                                "othersFlag": user_issues_single_record.others_flag
+                                                } for user_issues_single_record in user_issues_record]
+                                            ] if user_issues_record else []
+                                        }
+                                        )
+
+
+            return members_Info_dict
+            # {
+            #         "iltMeetingId":db_meeting_record.id,
+            #         "location":db_meeting_record.location, 
+            #         "schedule_start_at":db_meeting_record.schedule_start_at, 
+            #         "start_at":db_meeting_record.start_at,
+            #         "end_at":db_meeting_record.end_at, 
+            #         "member":members_Info_dict
+            #         }
         except Exception as e:
             return {
                 "confirmMessageID": "string",
                 "statusCode": 500,
-                "userMessage": f"Internal server error{str(e)}"
+                "userMessage": f"Internal server error {str(e)}"
             }
-            
-

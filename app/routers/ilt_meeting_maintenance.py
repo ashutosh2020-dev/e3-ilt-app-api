@@ -23,7 +23,7 @@ def create_ilt_meeting(user_id:int, ilt_id:int, scheduledStartDate:Annotated[Uni
 
 
 @router.get("/api/v1/ilts/{id}/meetings/{meetingId}")
-def get_meeting_info_for_meeting_id(User_id:int, id:int, meetingId:int, db: Session = Depends(get_db)):
+def get_meeting_info_wrt_meeting_id_and_ilt_id(User_id:int, id:int, meetingId:int, db: Session = Depends(get_db)):
     return IltMeetingService.get_meeting_info(meeting_id=meetingId, iltId = id, User_id =User_id, db = db)
 
 

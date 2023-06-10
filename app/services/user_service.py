@@ -70,9 +70,17 @@ class UserService:
                 "userMessage": f"unable to create the record : {e}"
             }
 
-    def update_user(self, user_id: int, fname, lname, email, number, password, is_active, role_id, db: Session):
+    def update_user(self, user_id:int, id: int, fname, lname, email, number, password, is_active, role_id, db: Session):
         try:
-            db_user = db.query(MdlUsers).filter(MdlUsers.id == user_id).one()
+            user_id_re = db.query(MdlUsers).filter(MdlUsers.id == user_id).one_or_none()
+            if user_id_re is None:
+                return {
+                    "confirmMessageID": "string",
+                    "statusCode": 404,
+                    "userMessage": "Record not found."
+                }
+
+            db_user = db.query(MdlUsers).filter(MdlUsers.id == id).one()
             db_user.fname = fname
             db_user.lname = lname
             db_user.email = email
@@ -83,11 +91,11 @@ class UserService:
             db.commit()
             db.refresh(db_user)
             return {
-            "confirmMessageID": "string",
-            "statusCode": 200,
-            "userMessage": "User updated successfully."
-        }
-            
+                "confirmMessageID": "string",
+                "statusCode": 200,
+                "userMessage": "User updated successfully."
+            }
+        
         except NoResultFound:
             return {
                 "confirmMessageID": "string",
@@ -109,6 +117,7 @@ class UserService:
             db_user = db.query(MdlUsers).filter(MdlUsers.id == user_id).one()
             db.delete(db_user)
             db.commit()
+            # delete from ilt, meetings, meeting responce
             return {
                 "confirmMessageID": "string",
                 "statusCode": 200,

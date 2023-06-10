@@ -2,14 +2,14 @@ from fastapi import APIRouter, Depends, Body
 from sqlalchemy.orm import Session
 from app.config.database import get_db
 from app.services.ilt_meeting_response_service import IltMeetingResponceService
-from app.schemas.meeting_response import MeetingResponse, Duedate
+from app.schemas.meeting_response import MeetingResponse, Duedate, Createdate
 from datetime import datetime
 from typing import Annotated, Union
 
 
 router = APIRouter()
 IltMeetingResponceService = IltMeetingResponceService()
-
+ 
 
 @router.get("/api/v1/ilts/meetingResponses/{meetingResponseId}")
 def read_meeting_responce_details(user_id: int, meetingResponseId:int,  db: Session = Depends(get_db)):
@@ -42,7 +42,7 @@ def create_ilt_meeting_updates(user_id:int, meetingResponseId:int, description:s
 
 @router.post("/api/v1/ilts/meetingResponses/{meetingResponseId}/issues")
 def create_ilt_meeting_issues(user_id:int, meetingResponseId: int, issue:str, priority:bool, 
-                    created_at:Annotated[Union[datetime, None], Body()],
+                    created_at:Createdate,
                      resolves_flag:bool,
                      recognize_performance_flag:bool,
                      teacher_support_flag:bool,
@@ -51,7 +51,7 @@ def create_ilt_meeting_issues(user_id:int, meetingResponseId: int, issue:str, pr
                      others_flag:bool,db: Session = Depends(get_db)):
     return IltMeetingResponceService.create_issue(user_id=user_id, 
                      meetingResponseId=meetingResponseId, issue=issue, priority=priority, 
-                     created_at = created_at,
+                     created_at = created_at.CreateAt,
                      resolves_flag=resolves_flag,
                      recognize_performance_flag=recognize_performance_flag,
                      teacher_support_flag=teacher_support_flag,

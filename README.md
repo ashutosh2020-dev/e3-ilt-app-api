@@ -27,3 +27,9 @@ app/
 ## for migration
 # alembic revision -m "add crete_by_me column in mdlilts"
 # alembic upgrade head
+
+## creating dummy user guide
+# first create role for admin
+# create admin user
+# create schools
+# create roles for facilitator and member
