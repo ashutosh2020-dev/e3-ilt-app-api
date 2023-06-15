@@ -150,7 +150,7 @@ class IltMeetingResponceService:
                 db.commit()
                 db.refresh(map_record)
                 # if uid in MdlIlt_rocks wrt ilt then add the rock id to the meeting_rosponce 
-
+                
             return (True, "")
         except Exception as e:
             return (False, str(e))
