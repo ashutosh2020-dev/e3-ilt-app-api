@@ -1,0 +1,1148 @@
+{
+	"info": {
+		"_postman_id": "992ed480-00e7-43f8-a3c0-dead11310c03",
+		"name": "middle_ilt_app",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Ilt Maintenance",
+			"item": [
+				{
+					"name": "Get List of ilts for a given user.",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://127.0.0.1/api/v1/ilts/?user_id=5",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"path": [
+								"api",
+								"v1",
+								"ilts",
+								""
+							],
+							"query": [
+								{
+									"key": "user_id",
+									"value": "5"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "create_ilt",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "http://middle-ilt-app.us-east-1.elasticbeanstalk.com/api/v1/ilts/?user_id=1&created_by=1&title=abc_ilt&description=no description&school_id=1&member_id=25&member_id=65&member_id=58&member_id=45\n",
+							"protocol": "http",
+							"host": [
+								"middle-ilt-app",
+								"us-east-1",
+								"elasticbeanstalk",
+								"com"
+							],
+							"path": [
+								"api",
+								"v1",
+								"ilts",
+								""
+							],
+							"query": [
+								{
+									"key": "user_id",
+									"value": "1"
+								},
+								{
+									"key": "created_by",
+									"value": "1"
+								},
+								{
+									"key": "title",
+									"value": "abc_ilt"
+								},
+								{
+									"key": "description",
+									"value": "no description"
+								},
+								{
+									"key": "school_id",
+									"value": "1"
+								},
+								{
+									"key": "member_id",
+									"value": "25"
+								},
+								{
+									"key": "member_id",
+									"value": "65"
+								},
+								{
+									"key": "member_id",
+									"value": "58"
+								},
+								{
+									"key": "member_id",
+									"value": "45\n"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get ilt description",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://127.0.0.1/api/v1/ilts/2",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"path": [
+								"api",
+								"v1",
+								"ilts",
+								"2"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "update ilt",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"title\": \"title undated 2 times\",\r\n  \"description\": \"description updated\",\r\n  \"schoolId\": 4\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://127.0.0.1/api/v1/ilts/{id}?ilt_id=2&user_id=2",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"path": [
+								"api",
+								"v1",
+								"ilts",
+								"{id}"
+							],
+							"query": [
+								{
+									"key": "ilt_id",
+									"value": "2"
+								},
+								{
+									"key": "user_id",
+									"value": "2"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "User Maintenance",
+			"item": [
+				{
+					"name": "get user details",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://127.0.0.1/api/v1/users/?user_id=11",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"path": [
+								"api",
+								"v1",
+								"users",
+								""
+							],
+							"query": [
+								{
+									"key": "user_id",
+									"value": "11"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "create user",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "http://middle-ilt-app.us-east-1.elasticbeanstalk.com/api/v1/users/?fname=rohan&lname=tiwari&email=abc@gmail.com&number=58584759668&password=548fl5rfro&is_active=true&role_id=1&UserId=1",
+							"protocol": "http",
+							"host": [
+								"middle-ilt-app",
+								"us-east-1",
+								"elasticbeanstalk",
+								"com"
+							],
+							"path": [
+								"api",
+								"v1",
+								"users",
+								""
+							],
+							"query": [
+								{
+									"key": "fname",
+									"value": "rohan"
+								},
+								{
+									"key": "lname",
+									"value": "tiwari"
+								},
+								{
+									"key": "email",
+									"value": "abc@gmail.com"
+								},
+								{
+									"key": "number",
+									"value": "58584759668"
+								},
+								{
+									"key": "password",
+									"value": "548fl5rfro"
+								},
+								{
+									"key": "is_active",
+									"value": "true"
+								},
+								{
+									"key": "role_id",
+									"value": "1"
+								},
+								{
+									"key": "UserId",
+									"value": "1"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "update user",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "http://127.0.0.1/api/v1/users/{id}?logged_user_id=2&user_id=15&fname=ram&lname=dinkar&email=ram%401234&number=6516165&password=mkdenkn2311&is_active=true&role_id=1",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"path": [
+								"api",
+								"v1",
+								"users",
+								"{id}"
+							],
+							"query": [
+								{
+									"key": "logged_user_id",
+									"value": "2"
+								},
+								{
+									"key": "user_id",
+									"value": "15"
+								},
+								{
+									"key": "fname",
+									"value": "ram"
+								},
+								{
+									"key": "lname",
+									"value": "dinkar"
+								},
+								{
+									"key": "email",
+									"value": "ram%401234"
+								},
+								{
+									"key": "number",
+									"value": "6516165"
+								},
+								{
+									"key": "password",
+									"value": "mkdenkn2311"
+								},
+								{
+									"key": "is_active",
+									"value": "true"
+								},
+								{
+									"key": "role_id",
+									"value": "1"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "User Dashboard",
+			"item": [
+				{
+					"name": "dashboard view",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "http://127.0.0.1/api/dashboard?user_id=5&ilt_id=10",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"path": [
+								"api",
+								"dashboard"
+							],
+							"query": [
+								{
+									"key": "user_id",
+									"value": "5"
+								},
+								{
+									"key": "ilt_id",
+									"value": "10"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Ilt Meeting Maintence",
+			"item": [
+				{
+					"name": "get list of meeting for given ilt_id",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				},
+				{
+					"name": "create ilt meeting",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"scheduledStartDate\": \"2023-05-31T11:28:51.345Z\",\r\n  \"meetingStart\": \"2023-05-31T11:28:51.345Z\",\r\n  \"meetingEnd\": \"2023-05-31T11:28:51.345Z\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://middle-ilt-app.us-east-1.elasticbeanstalk.com/api/v1/ilts/{id}/meetings?user_id=1&ilt_id=1&location=ktml",
+							"protocol": "http",
+							"host": [
+								"middle-ilt-app",
+								"us-east-1",
+								"elasticbeanstalk",
+								"com"
+							],
+							"path": [
+								"api",
+								"v1",
+								"ilts",
+								"{id}",
+								"meetings"
+							],
+							"query": [
+								{
+									"key": "user_id",
+									"value": "1"
+								},
+								{
+									"key": "ilt_id",
+									"value": "1"
+								},
+								{
+									"key": "location",
+									"value": "ktml"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get members details of meeting wrt user's role in ilt",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://127.0.0.1/api/v1/ilts/10/meetings/10?User_id=18",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"path": [
+								"api",
+								"v1",
+								"ilts",
+								"10",
+								"meetings",
+								"10"
+							],
+							"query": [
+								{
+									"key": "User_id",
+									"value": "18"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Meeting Responce Maintenance",
+			"item": [
+				{
+					"name": "get meeting_responce details",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "http://127.0.0.1/api/v1/ilts/meetingResponses/15?user_id=2",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"path": [
+								"api",
+								"v1",
+								"ilts",
+								"meetingResponses",
+								"15"
+							],
+							"query": [
+								{
+									"key": "user_id",
+									"value": "2"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "update meeting responce",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"iltMeetingResponseId\": 15,\r\n  \"iltMeetingId\": 3,\r\n  \"member\": {\r\n    \"userId\": 5,\r\n    \"firstName\": \"raju\",\r\n    \"lastName\": \"Smith\"\r\n  },\r\n  \"attendance\": true,\r\n  \"personalBest\": \"\",\r\n  \"professionalBest\": \"\",\r\n  \"rating\": 4,\r\n  \"feedback\": \"\",\r\n  \"notes\": \"\",\r\n  \"rocks\": [\r\n    {\r\n      \"rockId\": 2,\r\n      \"onTrack\": false\r\n    },\r\n    {\r\n      \"rockId\": 75,\r\n      \"onTrack\": true\r\n    }\r\n  ],\r\n  \"updates\": [\r\n    {\r\n      \"id\": 19,\r\n      \"description\": \"Also easy huge which century I keep area.\"\r\n    },\r\n    {\r\n      \"id\": 281,\r\n      \"description\": \"Anything activity edge international onto.\"\r\n    }\r\n  ],\r\n  \"todoList\": [\r\n    {\r\n      \"id\": 2,\r\n      \"description\": \"Nature discussion commercial rule.\",\r\n      \"dueDate\": \"2023-06-24T00:00:00\",\r\n      \"status\": 1\r\n    },\r\n    {\r\n      \"id\": 75,\r\n      \"description\": \"Bank size close throughout.\",\r\n      \"dueDate\": \"2023-06-29T00:00:00\",\r\n      \"status\": 0\r\n    }\r\n  ],\r\n  \"issues\": [\r\n    {\r\n      \"issueid\": 2,\r\n      \"issue\": \"Focus prevent indeed world lawyer economy difficult.\",\r\n      \"priorityId\": \"1\",\r\n      \"created_at\": \"2023-06-08T13:51:31.590699\",\r\n      \"resolvedFlag\": true,\r\n      \"recognizePerformanceFlag\": false,\r\n      \"teacherSupportFlag\": false,\r\n      \"leaderSupportFlag\": true,\r\n      \"advanceEqualityFlag\": true,\r\n      \"othersFlag\": false\r\n    },\r\n    {\r\n      \"issueid\": 75,\r\n      \"issue\": \"Middle road your study.\",\r\n      \"priorityId\": \"0\",\r\n      \"created_at\": \"2023-06-08T13:51:36.800304\",\r\n      \"resolvedFlag\": false,\r\n      \"recognizePerformanceFlag\": false,\r\n      \"teacherSupportFlag\": false,\r\n      \"leaderSupportFlag\": false,\r\n      \"advanceEqualityFlag\": true,\r\n      \"othersFlag\": true\r\n    }\r\n  ]\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://127.0.0.1/api/v1/ilts/meetingResponses/{meetingResponseId}",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"path": [
+								"api",
+								"v1",
+								"ilts",
+								"meetingResponses",
+								"{meetingResponseId}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "create ilt's rock",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "http://127.0.0.1/api/v1/ilts/meetingResponses/{meetingResponseId}/create_rocks?user_id=2&name=rock_B&description=this%20is%20rock&Ilt_id=10",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"path": [
+								"api",
+								"v1",
+								"ilts",
+								"meetingResponses",
+								"{meetingResponseId}",
+								"create_rocks"
+							],
+							"query": [
+								{
+									"key": "user_id",
+									"value": "2"
+								},
+								{
+									"key": "name",
+									"value": "rock_B"
+								},
+								{
+									"key": "description",
+									"value": "this%20is%20rock"
+								},
+								{
+									"key": "Ilt_id",
+									"value": "10"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "assign ilt rock to user",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "http://127.0.0.1/api/v1/ilts/meetingResponses/{meetingResponseId}/assign_rocks?logged_user_id=2&user_id=46&Ilt_id=10&rock_id=2",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"path": [
+								"api",
+								"v1",
+								"ilts",
+								"meetingResponses",
+								"{meetingResponseId}",
+								"assign_rocks"
+							],
+							"query": [
+								{
+									"key": "logged_user_id",
+									"value": "2"
+								},
+								{
+									"key": "user_id",
+									"value": "46"
+								},
+								{
+									"key": "Ilt_id",
+									"value": "10"
+								},
+								{
+									"key": "rock_id",
+									"value": "2"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "assign rock wrt meeting responce",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "http://middle-ilt-app.us-east-1.elasticbeanstalk.com/api/v1/ilts/meetingResponses/2/create_rocks?user_id=2&name=rock%20api%20postman%20creation%20&description=rock%20api%20postman%20creation%20&onTrack=true",
+							"protocol": "http",
+							"host": [
+								"middle-ilt-app",
+								"us-east-1",
+								"elasticbeanstalk",
+								"com"
+							],
+							"path": [
+								"api",
+								"v1",
+								"ilts",
+								"meetingResponses",
+								"2",
+								"create_rocks"
+							],
+							"query": [
+								{
+									"key": "user_id",
+									"value": "2"
+								},
+								{
+									"key": "name",
+									"value": "rock%20api%20postman%20creation%20"
+								},
+								{
+									"key": "description",
+									"value": "rock%20api%20postman%20creation%20"
+								},
+								{
+									"key": "onTrack",
+									"value": "true"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "create meeting_response rock for given responce_id",
+					"request": {
+						"method": "POST",
+						"header": []
+					},
+					"response": []
+				},
+				{
+					"name": "create meeting_responce to_do task",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "http://127.0.0.1/api/v1/ilts/meetingResponses/{meetingResponseId}/todolist?user_id=11&meetingResposnceId=20&description=complete%20app%20design&status=high%20priority",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"path": [
+								"api",
+								"v1",
+								"ilts",
+								"meetingResponses",
+								"{meetingResponseId}",
+								"todolist"
+							],
+							"query": [
+								{
+									"key": "user_id",
+									"value": "11"
+								},
+								{
+									"key": "meetingResposnceId",
+									"value": "20"
+								},
+								{
+									"key": "description",
+									"value": "complete%20app%20design"
+								},
+								{
+									"key": "status",
+									"value": "high%20priority"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "update creation",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "http://127.0.0.1/api/v1/ilts/meetingResponses/10/updates?user_id=1&description=no%20updates",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"path": [
+								"api",
+								"v1",
+								"ilts",
+								"meetingResponses",
+								"10",
+								"updates"
+							],
+							"query": [
+								{
+									"key": "user_id",
+									"value": "1"
+								},
+								{
+									"key": "description",
+									"value": "no%20updates"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "issue creation",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"CreateAt\": \"2023-06-14T10:22:15.243Z\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://127.0.0.1/api/v1/ilts/meetingResponses/10/issues?user_id=1&issue=no%20issue&priority=true&resolves_flag=true&recognize_performance_flag=true&teacher_support_flag=true&leader_support_flag=true&advance_equality_flag=true&others_flag=true",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"path": [
+								"api",
+								"v1",
+								"ilts",
+								"meetingResponses",
+								"10",
+								"issues"
+							],
+							"query": [
+								{
+									"key": "user_id",
+									"value": "1"
+								},
+								{
+									"key": "issue",
+									"value": "no%20issue"
+								},
+								{
+									"key": "priority",
+									"value": "true"
+								},
+								{
+									"key": "resolves_flag",
+									"value": "true"
+								},
+								{
+									"key": "recognize_performance_flag",
+									"value": "true"
+								},
+								{
+									"key": "teacher_support_flag",
+									"value": "true"
+								},
+								{
+									"key": "leader_support_flag",
+									"value": "true"
+								},
+								{
+									"key": "advance_equality_flag",
+									"value": "true"
+								},
+								{
+									"key": "others_flag",
+									"value": "true"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "read list of ilt rocks",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://127.0.0.1/api/v1/ilts/10/rocks?user_id=12",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"path": [
+								"api",
+								"v1",
+								"ilts",
+								"10",
+								"rocks"
+							],
+							"query": [
+								{
+									"key": "user_id",
+									"value": "12"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Shared Maintenance",
+			"item": [
+				{
+					"name": "get list of school associeted with user_id",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://127.0.0.1/api/v1/shared/schools?user_id=5",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"path": [
+								"api",
+								"v1",
+								"shared",
+								"schools"
+							],
+							"query": [
+								{
+									"key": "user_id",
+									"value": "5"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get list of rock associeted with user_id",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				},
+				{
+					"name": "Get user roles",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				},
+				{
+					"name": "get list of priority",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://127.0.0.1/api/v1/shared/priorities?UserId=11",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"path": [
+								"api",
+								"v1",
+								"shared",
+								"priorities"
+							],
+							"query": [
+								{
+									"key": "UserId",
+									"value": "11"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get loopkup",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://127.0.0.1/api/v1/shared/lookup?user_id=1",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"path": [
+								"api",
+								"v1",
+								"shared",
+								"lookup"
+							],
+							"query": [
+								{
+									"key": "user_id",
+									"value": "1"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "other_prerequisite",
+			"item": [
+				{
+					"name": "create admin user",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "http://127.0.0.1/api/v1/other/root_user/?fname=ashutosh&lname=tiwari&email=at769773%40gmail.com&number=5121126&password=ajnjfn444&is_active=true&role_id=3",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"path": [
+								"api",
+								"v1",
+								"other",
+								"root_user",
+								""
+							],
+							"query": [
+								{
+									"key": "fname",
+									"value": "ashutosh"
+								},
+								{
+									"key": "lname",
+									"value": "tiwari"
+								},
+								{
+									"key": "email",
+									"value": "at769773%40gmail.com"
+								},
+								{
+									"key": "number",
+									"value": "5121126"
+								},
+								{
+									"key": "password",
+									"value": "ajnjfn444"
+								},
+								{
+									"key": "is_active",
+									"value": "true"
+								},
+								{
+									"key": "role_id",
+									"value": "3"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "create school",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "http://127.0.0.1/api/v1/others/schools/?name=School%20C&location=k&district=k",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"path": [
+								"api",
+								"v1",
+								"others",
+								"schools",
+								""
+							],
+							"query": [
+								{
+									"key": "name",
+									"value": "School%20C"
+								},
+								{
+									"key": "location",
+									"value": "k"
+								},
+								{
+									"key": "district",
+									"value": "k"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "create roles",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "http://127.0.0.1/api/v1/others/roles/?role_name=admin&roleDescription=admin",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"path": [
+								"api",
+								"v1",
+								"others",
+								"roles",
+								""
+							],
+							"query": [
+								{
+									"key": "role_name",
+									"value": "admin"
+								},
+								{
+									"key": "roleDescription",
+									"value": "admin"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "create priority",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "http://127.0.0.1/api/v1/others/priority/?name=first%20priority&description=no%20priority",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"path": [
+								"api",
+								"v1",
+								"others",
+								"priority",
+								""
+							],
+							"query": [
+								{
+									"key": "name",
+									"value": "first%20priority"
+								},
+								{
+									"key": "description",
+									"value": "no%20priority"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}
