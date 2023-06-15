@@ -9,7 +9,7 @@ user_service = UserService()
 @router.get("/api/v1/users/")
 def fn_read_users(user_id: int, db: Session = Depends(get_db)):
     return user_service.get_user(user_id, db =db)
-    
+
 
 @router.post("/api/v1/users/")
 def fn_create_user(UserId: int, fname: str, lname: str, email: str, number: str, \
@@ -18,10 +18,10 @@ def fn_create_user(UserId: int, fname: str, lname: str, email: str, number: str,
                                          password=password, is_active=is_active, role_id=role_id, db=db)
     
 @router.post("/api/v1/users/{id}")
-def fn_update_user(user_id: int, id:int, fname: str, lname: str, email: str, number: str, \
+def fn_update_user(logged_user_id: int, user_id:int, fname: str, lname: str, email: str, number: str, \
                    password: str, is_active: bool, role_id: int, db: Session = Depends(get_db)):
-    return user_service.update_user(user_id, id, fname, lname, email, number, password, is_active, role_id, db=db)
+    return user_service.update_user(logged_user_id, user_id, fname, lname, email, number, password, is_active, role_id, db=db)
 
 @router.post("/api/v1/users/{id}/delete")
 def fn_delete_user(user_id: int, db: Session = Depends(get_db)):
-    return user_service.delete_user(user_id, db=db)
+    return "functionality is commented"#user_service.delete_user(user_id, db=db)

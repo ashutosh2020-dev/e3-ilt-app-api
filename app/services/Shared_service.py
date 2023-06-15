@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Session
 from app.models import MdlIlts, MdlIltMembers, MdlUsers, MdlSchools
-from app.models import MdlIltMeetingResponses, MdlMeeting_rocks, MdlRocks, MdlRoles, MdlIltPriorities, MdlUsers, MdlPriorities
+from app.models import MdlIltMeetingResponses, MdlMeeting_rocks, MdlRocks,\
+                MdlRoles, MdlIltPriorities, MdlUsers, MdlPriorities, MdlIltissue, Mdl_issue
 from sqlalchemy.exc import SQLAlchemyError
 from fastapi import HTTPException
 
@@ -87,8 +88,8 @@ class SharedService:
 
 
     def get_role_details(self, user_id: int, db: Session):
-        user = db.query(MdlUsers).filter(MdlUsers.id == user_id).first()
-        if not user:
+        user_record = db.query(MdlUsers).filter(MdlUsers.id == user_id).one_or_none()
+        if user_record is None:
             return {
                 "confirmMessageID": "string",
                 "statusCode": 404,
@@ -96,22 +97,12 @@ class SharedService:
                 }
         
         try:
-            role_id = db.query(MdlUsers).filter(MdlUsers.id == user_id).first()
-
-            if not role_id:
-                role_details = db.query(MdlRoles).filter(MdlRoles.id == role_id.role_id).first()
-
-                return {
-                    "roleId" : role_details.id,
-                    "roleName" : role_details.name,
-                    "roleDescription" : role_details.description
-                }
-            else:
-                return {
-                "confirmMessageID": "string",
-                "statusCode": 0,
-                "userMessage": "User not found"
-                }
+            role_details = db.query(MdlRoles).filter(MdlRoles.id == user_record.role_id).first()
+            return {
+                "roleId" : role_details.id,
+                "roleName" : role_details.name,
+                "roleDescription" : role_details.description
+            }
         
         except Exception as e:
             return {
@@ -128,17 +119,41 @@ class SharedService:
                     "statusCode": 0,
                     "userMessage": "User not found"
                 }
-            user_priority_id_list = [record.priorities_id for record in db.query(MdlIltPriorities).filter(MdlIltPriorities.role_id==user_record.role_id).all()]
-            priority_list = []
-            for pid in user_priority_id_list:
-                priority_record= db.query(MdlPriorities).filter(MdlPriorities.id==pid).one_or_none()
-                priority_list.append({"priorityId":priority_record.id,"name":priority_record.name, "description":priority_record.description})
-            return priority_list
+            
+            meeting_response_id_list = [record.meeting_response_id
+                                        for record in db.query(MdlIltMeetingResponses)
+                                                        .filter(MdlIltMeetingResponses.meeting_user_id == UserId)
+                                                        .all()]
+
+            priority_id_list=[]
+
+            for response_id in meeting_response_id_list:
+                s_meeting_issue_ids = [record.issue_id
+                              for record in db.query(MdlIltissue)
+                                            .filter(MdlIltissue.meeting_response_id == response_id)
+                                            .all()]
+                s_meeting_priority_ids = [db.query(Mdl_issue)
+                                            .filter(Mdl_issue.id == iss_id)
+                                            .one_or_none().priority for iss_id in s_meeting_issue_ids] 
+                priority_id_list.extend(s_meeting_priority_ids)
+
+            priority_id_list = list(set(priority_id_list))
+           
+            priority_details_list=[]
+
+            for p_id in priority_id_list:
+                record = db.query(MdlPriorities).filter(MdlPriorities.id == p_id).one()
+                priority_details_list.append({
+                    "id" : record.id,
+                    "name" : record.name,
+                    "description":record.description  
+                })
+
         except Exception as e:
             return {
                  "confirmMessageID": "string",
                 "statusCode": 500,
-                "userMessage": f"Internal Error, unable to process your request {e}"
+                "userMessage": f"Internal Error, unable to process your request; error - {e}"
             }
     def get_lookup_details(self, user_id, db:Session):
         try:

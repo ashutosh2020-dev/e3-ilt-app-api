@@ -82,33 +82,29 @@ class MdlIltMeetingResponses(Base):
     meeting_id = Column(Integer, ForeignKey("Ilt_meetings.id"), nullable=False, index=True)
     meeting_user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
     meeting_response_id = Column(Integer, ForeignKey("meeting_response.id"), nullable=False, index=True)
-
-class MdlPriorities(Base):
-    __tablename__ = "Ilt_priorities"
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    name = Column(String, nullable=False)
-    description = Column(String, nullable=False)
-
-class MdlIltPriorities(Base):
-    __tablename__ = "Ilt_priorities_mapping"
-    __table_args__ = (UniqueConstraint('role_id', 'priorities_id'),)
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    role_id = Column(Integer, ForeignKey("roles.id"), nullable=False, index=True)
-    priorities_id = Column(Integer, ForeignKey("Ilt_priorities.id"), nullable=False, index=True)
-
     
 class MdlRocks(Base):
     __tablename__ = "Ilt_rocks"
     id = Column(Integer, primary_key=True, autoincrement=True)
+    ilt_id = Column(Integer, ForeignKey("Ilts.id"), nullable=False, index=True)
     name = Column(String, nullable=False)
     description = Column(String, nullable=False)
     # on_track_flag = Column(Boolean, nullable=False)
+
+class MdlIlt_rocks(Base):
+    __tablename__ = "Ilt_user_rocks_mapping"
+    __table_args__ = (UniqueConstraint('ilt_id','user_id', 'ilt_rock_id'),)
+    id  =  Column(Integer, primary_key=True, autoincrement=True)
+    ilt_id = Column(Integer, ForeignKey("Ilts.id"), nullable=False, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=True, index=True)
+    ilt_rock_id = Column(Integer, ForeignKey("Ilt_rocks.id"), nullable=True, index=True)
+    
 
 class MdlMeeting_rocks(Base):
     __tablename__ = "Ilt_meeting_rocks_maping"
     __table_args__ = (UniqueConstraint('ilt_meeting_response_id', 'rock_id'),)
     id = Column(Integer, primary_key=True, autoincrement=True)
-    ilt_meeting_response_id =  Column(Integer, ForeignKey("Ilts.id"), nullable=False, index=True)
+    ilt_meeting_response_id =  Column(Integer, ForeignKey("meeting_response.id"), nullable=False, index=True)
     rock_id = Column(Integer, ForeignKey("Ilt_rocks.id"), nullable=False, unique=True, index=True)
     on_track_flag = Column(Boolean, nullable=False)
 
@@ -126,11 +122,17 @@ class Mdl_updates(Base):
     meeting_response_id = Column(Integer, ForeignKey("meeting_response.id"), nullable=False, index=True)
     description = Column(String, nullable=False)
 
+class MdlPriorities(Base):
+    __tablename__ = "Ilt_priorities"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    name = Column(String, nullable=False)
+    description = Column(String, nullable=False)
+
 class Mdl_issue(Base):
     __tablename__ = "issue"
     id = Column(Integer, primary_key=True, autoincrement=True)
     issue = Column(String, nullable=True)
-    priority = Column(String, nullable=True)
+    priority = Column(Integer, ForeignKey("Ilt_priorities.id"), nullable=False, index=True)
     created_at = Column(DateTime, nullable=True)
     resolves_flag = Column(Boolean, nullable=True)
     recognize_performance_flag = Column(Boolean, nullable=True)
@@ -145,3 +147,11 @@ class MdlIltissue(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     meeting_response_id = Column(Integer, ForeignKey("meeting_response.id"), nullable=False, index=True)
     issue_id = Column(Integer, ForeignKey("issue.id"), nullable=False, index=True)
+
+class MdlIltPriorities(Base):
+    __tablename__ = "Ilt_issue_priorities_mapping"
+    __table_args__ = (UniqueConstraint('issue_id', 'priorities_id'),)
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    issue_id = Column(Integer, ForeignKey("issue.id"), nullable=False, index=True)
+    priorities_id = Column(Integer, ForeignKey("Ilt_priorities.id"), nullable=False, index=True)
+

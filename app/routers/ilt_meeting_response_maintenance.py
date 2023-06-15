@@ -15,22 +15,29 @@ IltMeetingResponceService = IltMeetingResponceService()
 def read_meeting_responce_details(user_id: int, meetingResponseId:int,  db: Session = Depends(get_db)):
     return IltMeetingResponceService.get_Ilts_meeting_list(user_id=user_id, meetingResponseId=meetingResponseId, db=db)
 
+@router.get("/api/v1/ilts/{id}/rocks")
+def read_ilt_rocks(user_id:int, id:int, db: Session = Depends(get_db)):
+    return IltMeetingResponceService.read_ilt_rock(user_id=user_id, ilt_id=id, db=db)
+
 
 @router.post("/api/v1/ilts/meetingResponses/{meetingResponseId}/create_rocks")
-def create_ilt_rocks(user_id: int, name: str, description:str,meetingResponseId:int, onTrack:bool, db: Session = Depends(get_db)):
-    return IltMeetingResponceService.create_ilts_rocks_meeting(user_id=user_id, meetingResponseId=meetingResponseId,
-                                                                name=name, description=description, onTrack=onTrack, db=db)
+def create_ilt_rocks(user_id: int, name: str, description:str,Ilt_id:int, db: Session = Depends(get_db)):
+    return IltMeetingResponceService.create_ilts_rocks(user_id=user_id, name=name,
+                                                        description=description, Ilt_id=Ilt_id, db=db)
+
+
+@router.post("/api/v1/ilts/meetingResponses/{meetingResponseId}/assign_rocks")
+def assign_ilt_rocks_to_user(logged_user_id: int, user_id:int, Ilt_id:int, rock_id:int, db: Session = Depends(get_db)):
+    return IltMeetingResponceService.assign_ilts_rocks(user_id=user_id, Ilt_id=Ilt_id,rock_id=rock_id, db=db)
 
 @router.post("/api/v1/ilts/meetingResponses/{meetingResponseId}/rocks")
-def create_ilt_meetings_rocks(user_id: int, meetingResponseId:int, rock_id: int, onTrack:bool, db: Session = Depends(get_db)):
+def assign_ilt_rocks_to_meetingResponse(user_id: int, meetingResponseId:int, rock_id: int, onTrack:bool, db: Session = Depends(get_db)):
     return IltMeetingResponceService.create_ilts_meeting_rocks(user_id= user_id, meetingResponseId= meetingResponseId,
                                                                 rockId= rock_id, onTrack = onTrack, db = db)
 
-
 @router.post("/api/v1/ilts/meetingResponses/{meetingResponseId}/todolist")
 def create_ilt_meeting_todolist(user_id:int, meetingResposnceId:int, description:str, dueDate:Duedate, 
-                       status:bool , db: Session = Depends(get_db)):
-    print(dueDate.Duedate)
+                       status:str , db: Session = Depends(get_db)):
     return IltMeetingResponceService.create_to_do_list(user_id=user_id, meetingResponseId=meetingResposnceId, description=description, \
                           dueDate=dueDate.Duedate, status=status, db=db)
 
@@ -41,7 +48,7 @@ def create_ilt_meeting_updates(user_id:int, meetingResponseId:int, description:s
 
 
 @router.post("/api/v1/ilts/meetingResponses/{meetingResponseId}/issues")
-def create_ilt_meeting_issues(user_id:int, meetingResponseId: int, issue:str, priority:bool, 
+def create_ilt_meeting_issues(user_id:int, meetingResponseId: int, issue:str, priorityId:bool, 
                     created_at:Createdate,
                      resolves_flag:bool,
                      recognize_performance_flag:bool,
@@ -50,7 +57,7 @@ def create_ilt_meeting_issues(user_id:int, meetingResponseId: int, issue:str, pr
                      advance_equality_flag:bool,
                      others_flag:bool,db: Session = Depends(get_db)):
     return IltMeetingResponceService.create_issue(user_id=user_id, 
-                     meetingResponseId=meetingResponseId, issue=issue, priority=priority, 
+                     meetingResponseId=meetingResponseId, issue=issue, priority=priorityId, 
                      created_at = created_at.CreateAt,
                      resolves_flag=resolves_flag,
                      recognize_performance_flag=recognize_performance_flag,

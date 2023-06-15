@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from app.config.database import get_db
 from app.services.ilt_services import IltService
 from typing import Annotated, Union
-
+from app.schemas.ilt_schemas import Ilt
 
 router = APIRouter()
 IltService = IltService()
@@ -24,8 +24,8 @@ def read_ilts_description(id: int, db: Session = Depends(get_db)):
 
 
 @router.post("/api/v1/ilts/{id}")
-def pending_update_ilt(ilt_id:int, user_id:int, title: str, description: str, \
-                     school_id: int, member_id: list ,db: Session = Depends(get_db)):
-    return {"still in development phase"} # IltService.update_ilt()    
+def update_ilt(ilt_data:Ilt, ilt_id:int, user_id:int, db: Session = Depends(get_db)):
+    return  IltService.update_ilt(ilt_data=ilt_data, user_id =user_id, ilt_id=ilt_id, db=db)
+
 # @router.get("/api/v1/ilts/{id}") # Get List of ilts for a given user.
 # @router.post("/api/v1/ilts/{id}") # Create new ILT for a given user.

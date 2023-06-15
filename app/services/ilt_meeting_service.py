@@ -146,26 +146,33 @@ class IltMeetingService:
                     "statusCode": 404,
                     "userMessage": "ilt_meeting records not found"
                     }
-            db_ilt_meeting_record = db.query(MdlIltMeetings).filter(
-                                MdlIltMeetings.ilt_id == iltId,
-                                MdlIltMeetings.ilt_meeting_id == meeting_id
-                            ).one_or_none()
+            db_ilt_meeting_record = (db.query(MdlIltMeetings)
+                                    .filter( MdlIltMeetings.ilt_id == iltId,
+                                            MdlIltMeetings.ilt_meeting_id == meeting_id)
+                                    .one_or_none())
             if db_ilt_meeting_record is None:
                 return {
                     "confirmMessageID": "string",
                     "statusCode": 404,
                     "userMessage": "Meeting ID is not associated with ILT id"
                     }
+            if ilt_record.owner_id==User_id:
+                ilt_members_ids = [ x.member_id for x in db.query(MdlIltMembers)
+                                .filter(MdlIltMembers.ilt_id==iltId)
+                                .all()
+                                ]
+            else:
+                check_ilt_user_map_record = (db.query(MdlIltMembers)
+                               .filter(MdlIltMembers.ilt_id==iltId, MdlIltMembers.member_id==User_id )
+                               .one_or_none())
+                if check_ilt_user_map_record is None:
+                    return {
+                        "confirmMessageID": "string",
+                        "statusCode": 404,
+                        "userMessage": "User ID is not associated with ILT"
+                        }
+                ilt_members_ids = [User_id]
                 
-            db_meeting_record = db.query(MdlMeetings).filter(MdlMeetings.id==meeting_id).one_or_none()
-            if db_meeting_record is None:
-                return {
-                    "confirmMessageID": "string",
-                    "statusCode": 404,
-                    "userMessage": "unable to fetch meeting records"
-                    }
-            ilt_members_ids = [x.member_id for x in db.query(MdlIltMembers).filter(MdlIltMembers.ilt_id==iltId).all()]
-            # ilt_members_ids = [User_id]
             members_Info_dict = []
             meeting_response_id = 0
             for uid in ilt_members_ids:

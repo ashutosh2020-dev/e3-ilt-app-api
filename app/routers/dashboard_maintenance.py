@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 from app.config.database import get_db
-from app.services.ilt_services import IltService
+from app.services.dashboard_service import DashboardService
 
 router = APIRouter()
 Dashboard_Service = DashboardService()

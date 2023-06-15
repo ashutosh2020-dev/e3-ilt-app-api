@@ -2,7 +2,7 @@ from fastapi import FastAPI, Depends
 from sqlalchemy.orm import Session
 from app.config.app_settings import settings
 from app.config.database import engine, SessionLocal, Base
-from app.routers import user_maintenance, ilt_maintenance, ilt_meeting_maintenance,\
+from app.routers import user_maintenance, dashboard_maintenance, ilt_maintenance, ilt_meeting_maintenance,\
                 ilt_meeting_response_maintenance, shared_maintenance, other_maintenance
 import uvicorn
 
@@ -13,6 +13,10 @@ tags_metadata = [
     },
     {
         "name": "User Login",
+        "description": "Operations with users. The **login** logic is also here.",
+    },
+    {
+        "name": "User Dashboard",
         "description": "Operations with users. The **login** logic is also here.",
     },
     {
@@ -53,6 +57,7 @@ app = FastAPI(
 Base.metadata.create_all(bind=engine)
 
 app.include_router(ilt_maintenance.router, tags=["ILT Maintenance"])
+app.include_router(dashboard_maintenance.router, tags=["User Dashboard"])
 app.include_router(user_maintenance.router, tags=["User Maintenance"])
 app.include_router(ilt_meeting_maintenance.router, tags=["Ilt Meetings Maintenance"])
 app.include_router(ilt_meeting_response_maintenance.router, tags=["ILT Meeting Response Maintenance"])

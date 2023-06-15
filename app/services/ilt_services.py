@@ -1,5 +1,7 @@
 from sqlalchemy.orm import Session
 from app.models import MdlIlts, MdlIltMembers, MdlUsers, MdlSchools
+from app.schemas.ilt_schemas import Ilt
+# from app.schemas.meeting_response import MeetingResponse, Duedate
 from sqlalchemy.exc import SQLAlchemyError
 from fastapi import HTTPException
 
@@ -146,23 +148,46 @@ class IltService:
                 "userMessage": f"unable to process your request: {str(e)}"
                 }
 
-
-
-    # def update_ilt(self,ilt_id:int, user_id:int, title: str, description: str, 
-    #                  school_id: int, member_id: list ,db: Session):
-    #     # check user_id?
-    #     db_user = db.query(MdlIlts).filter(MdlIlts.id == ilt_id).first()
-    #     if db_user: 
-    #         db_user.fname = fname
-    #         db_user.lname = lname
-    #         db_user.email = email
-    #         db_user.number = number
-    #         db_user.password = password
-    #         db_user.is_active = is_active
-    #         db_user.role_id = role_id
-    #         db.commit()
-    #         db.refresh(db_user)
-    #         return True
-    #     else:
-    #         return False
-
+    
+    def update_ilt(self,ilt_data:Ilt,user_id, ilt_id, db: Session):
+        try:
+            if db.query(MdlUsers).filter(MdlUsers.id==user_id).one_or_none() is None:
+                return {
+                        "confirmMessageID": "string",
+                        "statusCode": 404,
+                        "userMessage": "User did not found"
+                    }
+            if ilt_data.schoolId != 0:
+                if db.query(MdlSchools).filter(MdlSchools.id == ilt_data.schoolId).one_or_none() is None:
+                    return {
+                            "confirmMessageID": "string",
+                            "statusCode": 404,
+                            "userMessage": "school did not found"
+                        }
+            db_ilt = db.query(MdlIlts).filter(MdlIlts.id == ilt_id).one_or_none()
+            if db_ilt is None:
+                return {
+                        "confirmMessageID": "string",
+                        "statusCode": 404,
+                        "userMessage": "ilt did not found"
+                    }
+            # need to add members, change owner_id functionality 
+            if ilt_data.title:
+                db_ilt.title = ilt_data.title
+            if ilt_data.description:
+                db_ilt.description = ilt_data.description
+            if ilt_data.schoolId:    
+                db_ilt.school_id = ilt_data.schoolId
+            db.commit()
+            db.refresh(db_ilt)
+            return {
+                    "confirmMessageID": "string",
+                    "statusCode": 200,
+                    "userMessage": "ilt has updated successfully"
+                }
+        except Exception as e:
+            return {
+                        "confirmMessageID": "string",
+                        "statusCode": 500,
+                        "userMessage": "unable to process your request"
+                }

@@ -8,15 +8,29 @@ import random
     create_issues_data() ->  "user_id, meeting_response_id, issue, priority, resolves_flag, recognize_performance_flag, teacher_support_flag, leader_support_flag, advance_equality_flag, others_flag"
     create_update_data() ->  "user_id, meeting_response_id, description"
 """
-num_meetingResponse = 216
+user_per_ilt = 7
+num_school = 4
+num_ilt = 4
+meetings_per_ilt = 2
+
+total_num_user = num_school*num_ilt*user_per_ilt # 112
+total_ilts = num_school*num_ilt # 16
+total_meetings = total_ilts*meetings_per_ilt # 32
+
+total_meetingResponse = total_meetings*user_per_ilt #224
+num_of_priority = 25
+num_of_rock = 25
+
+total_responce_data =total_meetingResponse * 2 # 448
+
 def create_rock_data():
-    n = 448
+    n = total_responce_data # 448
     fake = Faker()
     data = []
     for _ in range(n):
         row = {
-            "meetingResponseId": fake.random_int(min=1, max=num_meetingResponse),
-            "user_id": fake.random_int(min=1, max=100),
+            "meetingResponseId": fake.random_int(min=1, max=total_meetingResponse),
+            "user_id": fake.random_int(min=1, max=total_num_user),
             "name": fake.word().capitalize(),
             "description": fake.sentence(),
             "on_track_flag": random.choice([True, False]),
@@ -28,13 +42,13 @@ def create_rock_data():
     print(f"Data saved to {filename} successfully!")
 
 def create_to_do_list():
-    n = 448
+    n = total_responce_data # 448
     fake = Faker()
     data = []
     for _ in range(n):
         row = {
             "user_id": fake.random_int(min=1, max=100),
-            "meeting_response_id": fake.random_int(min=1, max=num_meetingResponse),
+            "meeting_response_id": fake.random_int(min=1, max=total_meetingResponse),
             "description": fake.sentence(),
             "due_date": fake.date_between(start_date="+1d", end_date="+30d").strftime('%Y-%m-%d'),
             "status": random.choice(["Not Started", "On Going", "Completed"]),
@@ -46,15 +60,15 @@ def create_to_do_list():
     print(f"Data saved to {filename} successfully!")
 
 def create_issues_data():
-    n = 448
+    n = total_responce_data # 448
     fake = Faker()
     data = []
     for _ in range(n):
         row = {
             "user_id": fake.random_int(min=1, max=100),
-            "meeting_response_id": fake.random_int(min=1, max=num_meetingResponse),
+            "meeting_response_id": fake.random_int(min=1, max=total_meetingResponse),
             "issue": fake.sentence(),
-            "priority": random.choice([True, False]),
+            "priority": fake.random_int(min=1, max=num_of_priority),
             "resolves_flag": random.choice([True, False]),
             "recognize_performance_flag": random.choice([True, False]),
             "teacher_support_flag": random.choice([True, False]),
@@ -69,13 +83,13 @@ def create_issues_data():
     print(f"Data saved to {filename} successfully!")
 
 def create_update_data():
-    n = 448
+    n = total_responce_data # 448
     fake = Faker()
     data = []
     for _ in range(n):
         row = {
             "user_id": fake.random_int(min=1, max=100),
-            "meeting_response_id": fake.random_int(min=1, max=num_meetingResponse),
+            "meeting_response_id": fake.random_int(min=1, max=total_meetingResponse),
             "description": fake.sentence(),
         }
         data.append(row)

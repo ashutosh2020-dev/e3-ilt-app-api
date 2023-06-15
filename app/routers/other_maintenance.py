@@ -22,5 +22,5 @@ def create_user_roles(role_name:str, roleDescription:str, db:Session=Depends(get
     return create_api_service.create_roles(role_name=role_name, roleDescription=roleDescription, db=db)
 
 @router.post("/api/v1/others/priority/")
-def create_user_priority(role_id:int, name:str, description:str, db:Session=Depends(get_db)):
-    return create_api_service.create_priority(role_id = role_id, name=name, description=description, db=db)
+def create_user_priority(name:str, description:str, db:Session=Depends(get_db)):
+    return create_api_service.create_priority( name=name, description=description, db=db)

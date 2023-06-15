@@ -9,17 +9,22 @@ class Member(BaseModel):
 class Rock(BaseModel):
     rockId: int
     onTrack: bool
+class Updates(BaseModel):
+    id: int
+    description: str
 
 class TodoItem(BaseModel):
+    id:int
     description: str
-    dueDate: str="2023-05-23"
+    dueDate: datetime
     status: str
 
 class Issue(BaseModel):
     issueid: int
     issue: str
-    priority: int
-    created_at: str
+    priorityId: str
+    # priorityId: int
+    created_at: datetime
     resolvedFlag: bool
     recognizePerformanceFlag: bool
     teacherSupportFlag: bool
@@ -28,17 +33,17 @@ class Issue(BaseModel):
     othersFlag: bool
 
 class MeetingResponse(BaseModel):
-    iltMeetingResponseId: int
-    iltMeetingId: int
+    iltMeetingResponseId: int = 0
+    iltMeetingId: int =0
     member: Member
-    attendance: bool
-    personalBest: str
-    professionalBest: str
-    rating: int
-    feedback: str
-    notes: str
+    attendance: bool =False
+    personalBest: str = ""
+    professionalBest: str = ""
+    rating: int = 0
+    feedback: str = ""
+    notes: str = ""
     rocks: List[Rock]
-    updates: List[str]
+    updates: List[Updates]
     todoList: List[TodoItem]
     issues: List[Issue]
 
