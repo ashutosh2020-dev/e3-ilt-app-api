@@ -25,8 +25,8 @@ total_meetings = total_ilts*meetings_per_ilt # 32
 facilitator_ids=[3, 4, 5, 6, 8, 11, 12, 14, 15, 18, 20, 24, 26, 28, 31, 32, 33, 34, 35, 
             36, 37, 38, 45, 47, 53, 58, 60, 61, 63, 64, 65, 66, 70, 71, 74, 75, 77, 
             78, 87, 89, 94, 96, 97, 99, 100, 102, 103, 108]
-# host_url = "http://middle-ilt-app.us-east-1.elasticbeanstalk.com/" 
-host_url = "http://127.0.0.1/"
+host_url = "http://middle-ilt-app.us-east-1.elasticbeanstalk.com/" 
+# host_url = "http://127.0.0.1/"
 
 
 

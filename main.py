@@ -1,9 +1,10 @@
 from fastapi import FastAPI, Depends
+from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from app.config.app_settings import settings
 from app.config.database import engine, SessionLocal, Base
 from app.routers import user_maintenance, dashboard_maintenance, ilt_maintenance, ilt_meeting_maintenance,\
-                ilt_meeting_response_maintenance, shared_maintenance, other_maintenance
+                ilt_meeting_response_maintenance, shared_maintenance, other_maintenance, login_maintenance
 import uvicorn
 
 tags_metadata = [
@@ -55,9 +56,19 @@ app = FastAPI(
     description=settings.app_description
     )
 Base.metadata.create_all(bind=engine)
+origins = ["*"]
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+    
 app.include_router(ilt_maintenance.router, tags=["ILT Maintenance"])
 app.include_router(dashboard_maintenance.router, tags=["User Dashboard"])
+app.include_router(login_maintenance.router, tags=["User Login"])
 app.include_router(user_maintenance.router, tags=["User Maintenance"])
 app.include_router(ilt_meeting_maintenance.router, tags=["Ilt Meetings Maintenance"])
 app.include_router(ilt_meeting_response_maintenance.router, tags=["ILT Meeting Response Maintenance"])
