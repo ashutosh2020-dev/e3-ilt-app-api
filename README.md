@@ -1,35 +1,43 @@
 # middle-ILT-app-api-code
 
 # structure
+
 app/
 ├── config/
-│   ├── app_settings.py
-│   └── database.py
+│ ├── app_settings.py
+│ └── database.py
 ├── models.py
 ├── routers/
-│   ├── ilt_maintenance.py
-│   ├── ilt_meeting_maitenance.py
-|   └── user_maintenance.py
+│ ├── ilt_maintenance.py
+│ ├── ilt_meeting_maintenance.py
+| └── user_maintenance.py
 ├── schemas/
-│   ├── meeting_responce.py  
+│ ├── meeting_response.py  
 ├── services/
-│   ├── ilt_service.py
-│   └── ilt_meeting_service.py
+│ ├── ilt_service.py
+│ └── ilt_meeting_service.py
 └── utils.py
 |main.py
 |Dockerfile
 
-
 ## Run these two commands docker cmd in root dir/path
+
 # docker build -t middle_ilt_app1 -f DockerFile .
-# docker run -p 8000:8000  middle_ilt_app2
+
+# docker run -p 8000:8000 middle_ilt_app2
 
 ## for migration
+
 # alembic revision -m "add crete_by_me column in mdlilts"
+
 # alembic upgrade head
 
 ## creating dummy user guide
+
 # first create role for admin
+
 # create admin user
+
 # create schools
+
 # create roles for facilitator and member
