@@ -1,9 +1,19 @@
 from sqlalchemy.orm import Session
-from app.models import MdlIlts, MdlIltMembers, MdlUsers, MdlSchools
+from sqlalchemy import desc
+from app.models import MdlIlts, MdlIltMembers, MdlUsers, MdlSchools, MdlMeetings, MdlIltMeetings
 from app.schemas.ilt_schemas import Ilt
-# from app.schemas.meeting_response import MeetingResponse, Duedate
 from sqlalchemy.exc import SQLAlchemyError
-from fastapi import HTTPException
+from datetime import datetime, timezone
+# from pytz import utc
+
+def calculate_meeting_status(schedule_start_at, start_at, end_at):
+    current_datetime = datetime.now(timezone.utc)
+    if current_datetime < schedule_start_at:
+        return 0  # notStarted
+    elif current_datetime >= start_at and current_datetime <= end_at:
+        return 1  # inProgress
+    else:
+        return 2  # completed
 
 class IltService:
     def get_Ilts_list(self, user_id: int, db: Session):
@@ -15,12 +25,33 @@ class IltService:
                 ilt_record = db.query(MdlIlts).filter(MdlIlts.id == x).first()
                 ilt_owner_record = db.query(MdlUsers).filter(MdlUsers.id == ilt_record.owner_id).first()
                 owner_name = ilt_owner_record.fname+" "+ilt_owner_record.lname
-                val = {"itlId":ilt_record.id, "title":ilt_record.title, "description": ilt_record.description, "ownerName":owner_name}
+                # find latest meeting
+                current_datetime = datetime.now(timezone.utc)
+                # meeting_ids = [re.ilt_meeting_id for re in db.query(MdlIltMeetings).filter(MdlIltMeetings.ilt_id==x).all()]
+                meeting_record = (db.query(MdlMeetings)
+                                    .filter( MdlMeetings.schedule_start_at < current_datetime)
+                                    .order_by(desc(MdlMeetings.schedule_start_at))
+                                    .first())
+
+                if meeting_record:
+                    latestMeetingId = meeting_record.id
+                    start_meeting_time =  meeting_record.schedule_start_at.replace(tzinfo=timezone.utc) #datetime.strptime(ilt_meeting_start_time, '%Y-%m-%d %H:%M:%S.%f')
+                    end_meeting_time = meeting_record.end_at.replace(tzinfo=timezone.utc)
+                    status = calculate_meeting_status(start_meeting_time, start_meeting_time, end_meeting_time)
+                else:
+                    latestMeetingId = 0
+                    status = 0
+                val = {"itlId":ilt_record.id, 
+                       "title":ilt_record.title, 
+                       "description": ilt_record.description, 
+                       "ownerName":owner_name,
+                       "latestMeetingId":latestMeetingId,
+                       "meetingStatus": status}
                 ilt_list.append(val)
             return ilt_list
         return {
             "confirmMessageID": "string",
-            "statusCode": 0,
+            "statusCode": 404,
             "userMessage": "records Not found"
             }
     def get_ilt_details(self, ilt_id:int, db:Session):
@@ -32,13 +63,13 @@ class IltService:
             "statusCode": 404,
             "userMessage": "records Not found"
             }
-            members_id_list = [record.id for record in db.query(MdlIltMembers).filter(MdlIltMembers.ilt_id==ilt_id).all()]
+            members_id_list = [record.member_id for record in db.query(MdlIltMembers).filter(MdlIltMembers.ilt_id==ilt_id).all()]
             school_record = db.query(MdlSchools).filter(MdlSchools.id==ilt_record.school_id).one()
             owner_record = db.query(MdlUsers).filter(MdlUsers.id==ilt_record.owner_id).one()
             member_info = []
             for uid in members_id_list:
                 user_record = db.query(MdlUsers).filter(MdlUsers.id==uid).one()
-                member_info.append({"user_id":user_record.id,"first_name":user_record.fname, "last_name":user_record.lname})
+                member_info.append({"userId":user_record.id,"firstName":user_record.fname, "lastName":user_record.lname})
             return {
                     "itlId": ilt_record.id,
                     "onwer": {

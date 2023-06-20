@@ -25,8 +25,8 @@ total_meetings = total_ilts*meetings_per_ilt # 32
 facilitator_ids=[3, 4, 5, 6, 8, 11, 12, 14, 15, 18, 20, 24, 26, 28, 31, 32, 33, 34, 35, 
             36, 37, 38, 45, 47, 53, 58, 60, 61, 63, 64, 65, 66, 70, 71, 74, 75, 77, 
             78, 87, 89, 94, 96, 97, 99, 100, 102, 103, 108]
-# host_url = "http://middle-ilt-app.us-east-1.elasticbeanstalk.com/" 
-host_url = "http://127.0.0.1/"
+host_url = "http://middle-ilt-app.us-east-1.elasticbeanstalk.com/" 
+# host_url = "http://127.0.0.1/"
 
 
 
@@ -66,7 +66,9 @@ def generate_random_id():
     return random.randint(1, total_num_user)
 
 def hit_create_ilt_api(host_url, ilt, school_id):
-        endpoint = "api/v1/ilts/?user_id=10"
+        user_id = 10
+        ilt["owner_id"] = int(ilt["owner_id"])
+        endpoint = f"api/v1/ilts/?user_id={user_id}"
         url = host_url + endpoint
         members_ids = []
         while len(members_ids) < num_member_in_ilt:
@@ -78,40 +80,39 @@ def hit_create_ilt_api(host_url, ilt, school_id):
 
         # Convert members_ids to regular integers
         members_ids = [int(id) for id in members_ids]
-        
-        params = {"user_id": 1}
-        payload = {
-            "title": ilt["title"],
-            "description": ilt["description"],
-            "schoolId": school_id,
-            "owner_id": ilt["owner_id"],
-            "memberIds": members_ids
-        }
+        # print(ilt["description"], ilt["title"])
+        # print(type(ilt["description"]), type(ilt["title"]), type(ilt["owner_id"]))
+        # params = {"user_id": 1}
+        payload = json.dumps({  "title": ilt["title"],
+                                "description": ilt["description"],
+                                "schoolId": school_id,
+                                "owner_id": ilt["owner_id"],
+                                "memberIds": members_ids
+                            })
         headers = {
             'Content-Type': 'application/json'
         }
-
-        # response = requests.post(url, headers=headers, data=payload)
-        response = requests.request("POST", url, headers=headers, json=payload)
+        print("================")
+        response = requests.post(url, headers=headers, data=payload)
+        # response = requests.request("POST", url, headers=headers, json=payload)
         print(response.text)
 
 def hit_create_iltMeeting_api(host_url, ilt_meeting, ilt_owner_id, ilt_id):
     date = ilt_meeting['startDate']
     params = {
             "user_id":ilt_owner_id, 
-            "ilt_id":ilt_id,
-            "location":ilt_meeting["location"]
             }
     payload = json.dumps({
                             "scheduledStartDate": f"{date}T{ilt_meeting['meetingStart']}.00",
                             "meetingStart": f"{date}T{ilt_meeting['meetingStart']}.00",
-                            "meetingEnd": f"{date}T{ilt_meeting['meetingEnd']}.00"
+                            "meetingEnd": f"{date}T{ilt_meeting['meetingEnd']}.00", 
+                            "location":ilt_meeting["location"]
                         })
     
     headers = {
             'Content-Type': 'application/json'
             }
-    endpoint = "api/v1/ilts/{id}/meetings/"
+    endpoint = f"api/v1/ilts/{ilt_id}/meetings/"
     url = host_url + endpoint
     response = requests.post(url, params=params, headers=headers, data=payload)
     if '200' not in response.text:
@@ -131,6 +132,7 @@ def run_create_ilt_api():
             except Exception as e:
                 print(f"error{e}")
                 pass
+        
             
     print("created successfully")
 
@@ -152,6 +154,6 @@ def run_create_iltMeeting_api():
     print("created successfully")
 
 if __name__ == "__main__":
-    # run_create_user_api()
+    run_create_user_api()
     run_create_ilt_api()
-    # run_create_iltMeeting_api()
+    run_create_iltMeeting_api()

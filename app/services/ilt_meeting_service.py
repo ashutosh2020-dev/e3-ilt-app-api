@@ -4,8 +4,17 @@ from app.models import MdlIltMeetings, MdlMeetings, MdlUsers, MdlIlts, \
                     MdlMeeting_rocks, Mdl_updates, MdlIlt_ToDoTask, MdlIltissue, Mdl_issue
 import sys
 from app.services.ilt_meeting_response_service import IltMeetingResponceService
+from datetime import datetime, timezone
 
-
+def calculate_meeting_status(schedule_start_at, start_at, end_at):
+    current_datetime = datetime.now(timezone.utc)
+    if current_datetime < schedule_start_at:
+        return 0  # notStarted
+    elif current_datetime >= start_at and current_datetime <= end_at:
+        return 1  # inProgress
+    else:
+        return 2  # completed
+    
 class IltMeetingService:
     def get_Ilts_meeting_list(self, user_id: int, ilt_id:int, db: Session):
         user = db.query(MdlUsers).filter(MdlUsers.id == user_id).first()
@@ -27,8 +36,13 @@ class IltMeetingService:
             ilt_list = []
             for mid in list_meetings:
                 meeting_record = db.query(MdlMeetings).filter(MdlMeetings.id == mid).first()
+                start_meeting_time =  meeting_record.schedule_start_at.replace(tzinfo=timezone.utc) #datetime.strptime(ilt_meeting_start_time, '%Y-%m-%d %H:%M:%S.%f')
+                end_meeting_time = meeting_record.end_at.replace(tzinfo=timezone.utc)
+                status = calculate_meeting_status(start_meeting_time, start_meeting_time, end_meeting_time)
+
                 val = {"iltId":ilt_id, "ilt_meeting_id":mid, "scheduledStartDate":meeting_record.schedule_start_at,
-                        "meetingStart": meeting_record.start_at,"meetingEnd": meeting_record.end_at}
+                        "meetingStart": meeting_record.start_at,
+                        "meetingEnd": meeting_record.end_at, "meetingStatus": status}
                 ilt_list.append(val)
 
             return ilt_list
@@ -224,8 +238,8 @@ class IltMeetingService:
                                             "iltMeetingId": meeting_id,
                                             "member": {   
                                                         "id":user_record.id,
-                                                        "first name":user_record.fname,
-                                                        "last name":user_record.lname
+                                                        "firstName":user_record.fname,
+                                                        "lastName":user_record.lname
                                                         },
                                             "attandance":meeting_response_record.attendance_flag,
                                             "personalBest":meeting_response_record.checkin_personal_best,

@@ -240,12 +240,12 @@ class IltMeetingResponceService:
                             .filter(MdlIltMembers.ilt_id == Ilt_id, MdlIltMembers.member_id == user_id)
                             .exists()
                         ).scalar()
-        
+        print("----------",ilt_member_exists)
         if not ilt_member_exists:
             return {
                 "confirmMessageID": "string",
                 "statusCode": 404,
-                "userMessage": "record not found wrt user and ilt id, user is associated with the ilt"
+                "userMessage": "record not found wrt user and ilt id, user is not a member of the ilt"
             }
         
         # check_rock = db.query(MdlRocks).filter(MdlRocks.id==rock_id).one_or_none()
