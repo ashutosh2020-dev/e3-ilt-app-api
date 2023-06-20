@@ -1,7 +1,9 @@
 from sqlalchemy.orm import Session
 from app.models import MdlMeeting_rocks, MdlIlt_ToDoTask, Mdl_updates, \
             MdlMeetingsResponse, MdlIltMeetingResponses, MdlRocks, \
-            Mdl_issue, MdlUsers, MdlIltissue, MdlMeetings, MdlIlts, MdlIlt_rocks, MdlIltMembers
+            Mdl_issue, MdlUsers, MdlIltissue, MdlMeetings, MdlIlts, \
+            MdlIlt_rocks, MdlIltMembers, MdlIltMeetings, MdlPriorities
+            
 from app.schemas.meeting_response import MeetingResponse, Duedate
 from datetime import datetime, timezone
 from typing import Annotated, Union
@@ -45,6 +47,7 @@ class IltMeetingResponceService:
                         .filter(MdlMeeting_rocks.ilt_meeting_response_id==meetingResponseId)\
                         .all()
                         ]  
+            
             user_update_record=[ 
                                 {
                                     "id":record.id,
@@ -64,68 +67,42 @@ class IltMeetingResponceService:
                             .filter(MdlIlt_ToDoTask.meeting_response_id==meetingResponseId).all()]
             issue_record =  db.query(MdlIltissue)\
                         .filter(MdlIltissue.meeting_response_id == meetingResponseId).all()
-            if not issue_record:
-                return  {
-                            "iltMeetingResponseId": meetingResponseId,
-                            "iltMeetingId": ilt_meet_id,
-                            "member": members_Info_dict,
-                            "rocks": user_rock_record,
-                            "updates": [
-                                
-                            ],
-                            "todoList": [
-                                {
-                                "description": "",
-                                "dueDate": "",
-                                "status": ""
-                                }
-                            ],
-                            "issues": [
-                                {
-                                "issueid": "",
-                                "issue": "",
-                                "priorityId": "",
-                                "date": "",
-                                "resolvedFlag": "",
-                                "recognizePerformanceFlag": "",
-                                "teacherSupportFlag": "",
-                                "leaderSupportFlag": "",
-                                "advanceEqualityFlag": "",
-                                "othersFlag": ""
-                                }
-                            ]
-                        } 
-
+            
             user_issues_record = [db.query(Mdl_issue)\
                         .filter(Mdl_issue.id == record.id).one_or_none() for record in issue_record]
+            iltMeetingResponse_issues = [
+                            {
+                                "issueid": user_issues_single_record.id,
+                                "issue": user_issues_single_record.issue,
+                                "priorityId": user_issues_single_record.priority,
+                                "created_at": user_issues_single_record.created_at,
+                                "resolvedFlag": user_issues_single_record.resolves_flag,
+                                "recognizePerformanceFlag": user_issues_single_record.recognize_performance_flag,
+                                "teacherSupportFlag": user_issues_single_record.teacher_support_flag,
+                                "leaderSupportFlag": user_issues_single_record.leader_support_flag,
+                                "advanceEqualityFlag": user_issues_single_record.advance_equality_flag,
+                                "othersFlag": user_issues_single_record.others_flag
+                            } for user_issues_single_record in user_issues_record
+                            ]
             
+                  
             return {
                             "iltMeetingResponseId": meetingResponseId,
                             "iltMeetingId": ilt_meet_id,
                             "member": members_Info_dict,
-                            "attendance":user_meetingResponse_record.attendance_flag,
-                            "personalBest":user_meetingResponse_record.checkin_personal_best,
-                            "professionalBest":user_meetingResponse_record.checkin_professional_best,
-                            "rating":user_meetingResponse_record.rating,
+                            "attendance": user_meetingResponse_record.attendance_flag 
+                                            if user_meetingResponse_record.attendance_flag else None,
+                            "personalBest": user_meetingResponse_record.checkin_personal_best 
+                                            if user_meetingResponse_record.checkin_personal_best else "",
+                            "professionalBest":user_meetingResponse_record.checkin_professional_best 
+                                                if user_meetingResponse_record.checkin_professional_best else "",
+                            "rating":user_meetingResponse_record.rating if user_meetingResponse_record.rating else 0,
                             "feedback":user_meetingResponse_record.feedback,
                             "notes":user_meetingResponse_record.notes,
                             "rocks": user_rock_record,
                             "updates": user_update_record,
                             "todoList": user_todolist_record,
-                            "issues": [
-                                {
-                                    "issueid": user_issues_single_record.id,
-                                    "issue": user_issues_single_record.issue,
-                                    "priorityId": user_issues_single_record.priority,
-                                    "created_at": user_issues_single_record.created_at,
-                                    "resolvedFlag": user_issues_single_record.resolves_flag,
-                                    "recognizePerformanceFlag": user_issues_single_record.recognize_performance_flag,
-                                    "teacherSupportFlag": user_issues_single_record.teacher_support_flag,
-                                    "leaderSupportFlag": user_issues_single_record.leader_support_flag,
-                                    "advanceEqualityFlag": user_issues_single_record.advance_equality_flag,
-                                    "othersFlag": user_issues_single_record.others_flag
-                                } for user_issues_single_record in user_issues_record
-                                ]
+                            "issues": iltMeetingResponse_issues
                         } 
         except Exception as e:
             return {
@@ -134,9 +111,8 @@ class IltMeetingResponceService:
                     "userMessage": f"unable to process your request: {e} "
                     }
     
-    def create_meeting_responses_empty_for_ILTmember(self, meeting_id:int, member_list:list,db:Session):
+    def create_meeting_responses_empty_for_ILTmember(self, meeting_id:int, member_list:list, iltId:int, db:Session):
         try:
-            
             for uid in member_list:
                 db_meeting_response = MdlMeetingsResponse(attendance_flag = None , 
                                 checkin_personal_best=None, checkin_professional_best=None,
@@ -149,8 +125,24 @@ class IltMeetingResponceService:
                 db.add(map_record)
                 db.commit()
                 db.refresh(map_record)
-                # if uid in MdlIlt_rocks wrt ilt then add the rock id to the meeting_rosponce 
-                
+                # if uid in MdlIlt_rocks wrt ilt then add the rock id to the meeting_rosponce
+                user_ilt_map_record= (db.query(MdlIlt_rocks)
+                                        .filter(MdlIlt_rocks.ilt_id==iltId, MdlIlt_rocks.user_id==uid)
+                                        .all())
+                # if present then add it the meetingResponce
+                if user_ilt_map_record:
+                    user_rock_ids = [record.ilt_rock_id for record in user_ilt_map_record]
+                    for rid in user_rock_ids:
+                        db_meeting_rocks = (MdlMeeting_rocks(   ilt_meeting_response_id=db_meeting_response.id,
+                                                                rock_id = rid, 
+                                                                on_track_flag=False))
+                        db.add(db_meeting_rocks)
+                        db.commit()
+                        db.refresh(db_meeting_rocks)
+                else:
+                    pass
+                # if issue is last ended meeting unresolve in previous meeting
+
             return (True, "")
         except Exception as e:
             return (False, str(e))
@@ -234,7 +226,14 @@ class IltMeetingResponceService:
                     "userMessage": f"unable to process your request{e}"
                 }
 
-    def assign_ilts_rocks(self, user_id:int, Ilt_id:int,rock_id:int, db:Session):
+    def assign_ilts_rocks(self, logged_user_id:int, user_id:int, Ilt_id:int,rock_id:int, db:Session):
+
+        if db.query(MdlUsers).filter(MdlUsers.id==logged_user_id).one_or_none() is None:
+            return  {
+                "confirmMessageID": "string",
+                "statusCode": 404,
+                "userMessage": "logged userId is not found"
+            }
         # check user, ilt, rock
         ilt_member_exists = db.query(
                             db.query(MdlIltMembers)
@@ -332,12 +331,24 @@ class IltMeetingResponceService:
     def create_to_do_list(self, user_id:int, meetingResponseId: int, description:str, 
                           dueDate:Duedate, status:bool, db:Session):
         try:
+            if db.query(MdlUsers).filter(MdlUsers.id ==user_id).one_or_none() is None:
+                return {
+                "confirmMessageID": "string",
+                "statusCode": 404,
+                "userMessage": f" userId is not valid"
+                }
+            if db.query(MdlMeetingsResponse).filter(MdlMeetingsResponse.id ==meetingResponseId).one_or_none() is None:
+                return {
+                "confirmMessageID": "string",
+                "statusCode": 404,
+                "userMessage": f" meetingResponseId is not valid"
+                }
             # check if user_id is inside MdlIltMembers
-            db_meeting_rocks = MdlIlt_ToDoTask(meeting_response_id = meetingResponseId, 
+            db_meeting_todo = MdlIlt_ToDoTask(meeting_response_id = meetingResponseId, 
                                                 description=description, due_date=dueDate, status=status)
-            db.add(db_meeting_rocks)
+            db.add(db_meeting_todo)
             db.commit()
-            db.refresh(db_meeting_rocks)
+            db.refresh(db_meeting_todo)
             return {
                 "confirmMessageID": "string",
                 "statusCode": 200,
@@ -346,7 +357,7 @@ class IltMeetingResponceService:
         except Exception as e:
             return {
                 "confirmMessageID": "string",
-                "statusCode": 0,
+                "statusCode": 500,
                 "userMessage": f"unable to process your request: {str(e)} "
                 }
     
@@ -360,6 +371,13 @@ class IltMeetingResponceService:
                     "statusCode": 404,
                     "userMessage": "User not found"
                     }
+            if db.query(MdlMeetingsResponse).filter(MdlMeetingsResponse.id ==meetingResponseId).one_or_none() is None:
+                return {
+                "confirmMessageID": "string",
+                "statusCode": 404,
+                "userMessage": f" meetingResponseId is not valid"
+                }
+            
             db_meeting_update = Mdl_updates(meeting_response_id = meetingResponseId, 
                                                 description=description)
             db.add(db_meeting_update)
@@ -373,7 +391,7 @@ class IltMeetingResponceService:
         except Exception as e:
             return {
                 "confirmMessageID": "string",
-                "statusCode": 0,
+                "statusCode": 500,
                 "userMessage": "unable to process your request {str(e)}"
                 }
     
@@ -403,23 +421,48 @@ class IltMeetingResponceService:
                     "statusCode": 404,
                     "userMessage": "responce_id not found"
                     }
-            db_issue = Mdl_issue(issue=issue,
-                                        priority=priority,
-                                        created_at=created_at,
-                                        resolves_flag = resolves_flag,
-                                        recognize_performance_flag= recognize_performance_flag,
-                                        teacher_support_flag = teacher_support_flag,
-                                        leader_support_flag =leader_support_flag,
-                                        advance_equality_flag =advance_equality_flag,
-                                        others_flag=others_flag
-                                        )
-            db.add(db_issue)
-            db.commit()
-            db.refresh(db_issue)
-            db_meeting_issue = MdlIltissue(meeting_response_id = meetingResponseId, issue_id=db_issue.id)
-            db.add(db_meeting_issue)
-            db.commit()
-            db.refresh(db_meeting_issue)
+            print("-------------",bool((db.query(MdlPriorities).filter(MdlPriorities.id==priority).one_or_none() is None) and (priority!=0)))
+            if (db.query(MdlPriorities).filter(MdlPriorities.id==priority).one_or_none() is None) and (priority!=0):
+                return {
+                    "confirmMessageID": "string",
+                    "statusCode": 404,
+                    "userMessage": "priority not found"
+                    }
+            if priority == 0:
+                db_issue = Mdl_issue(issue=issue,
+                                            created_at=created_at,
+                                            resolves_flag = resolves_flag,
+                                            recognize_performance_flag= recognize_performance_flag,
+                                            teacher_support_flag = teacher_support_flag,
+                                            leader_support_flag =leader_support_flag,
+                                            advance_equality_flag =advance_equality_flag,
+                                            others_flag=others_flag
+                                            )
+                db.add(db_issue)
+                db.commit()
+                db.refresh(db_issue)
+                db_meeting_issue = MdlIltissue(meeting_response_id = meetingResponseId, issue_id=db_issue.id)
+                db.add(db_meeting_issue)
+                db.commit()
+                db.refresh(db_meeting_issue)
+            else:
+                db_issue = Mdl_issue(issue=issue,
+                                            priority=priority,
+                                            created_at=created_at,
+                                            resolves_flag = resolves_flag,
+                                            recognize_performance_flag= recognize_performance_flag,
+                                            teacher_support_flag = teacher_support_flag,
+                                            leader_support_flag =leader_support_flag,
+                                            advance_equality_flag =advance_equality_flag,
+                                            others_flag=others_flag
+                                            )
+                db.add(db_issue)
+                db.commit()
+                db.refresh(db_issue)
+                db_meeting_issue = MdlIltissue(meeting_response_id = meetingResponseId, issue_id=db_issue.id)
+                db.add(db_meeting_issue)
+                db.commit()
+                db.refresh(db_meeting_issue)
             return {
                 "confirmMessageID": "string",
                 "statusCode": 200,
@@ -450,16 +493,6 @@ class IltMeetingResponceService:
                 todoList: List[TodoItem]
                 issues: List[Issue],
         """
-        
-            
-        # db.commit()                                                            
-        # db.refresh(user_record)
-        # db.refresh(user_meetingResponse_record)
-        # db.refresh(user_rock)
-        # db.refresh(user_update_record)
-        # db.refresh(user_todo_record)
-        
-
         try:
             try:
                 meetingResponse = db.query(MdlMeetingsResponse).filter(MdlMeetingsResponse.id == data.iltMeetingResponseId).one_or_none()
@@ -489,11 +522,12 @@ class IltMeetingResponceService:
                         }
                 
                 meetingResponseId = data.iltMeetingResponseId
-                if data.attendance or data.personalBest or data.professionalBest or data.rating or data.feedback or data.notes:
+                if (data.attendance != None) or data.personalBest or data.professionalBest or data.rating or data.feedback or data.notes:
                     user_meetingResponse_record = db.query(MdlMeetingsResponse)\
                                                 .filter(MdlMeetingsResponse.id==meetingResponseId).one() 
-                    if data.attendance:
-                        user_meetingResponse_record.attendance_flag = data.attendance
+                    print("------------------------------",data.attendance)
+                    if data.attendance != None:
+                        user_meetingResponse_record.attendance_flag =  data.attendance
                     if data.personalBest:
                         user_meetingResponse_record.checkin_personal_best = data.personalBest
                     if data.professionalBest:

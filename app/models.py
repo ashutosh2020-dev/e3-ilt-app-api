@@ -13,7 +13,7 @@ class MdlUsers(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     fname  = Column(String, nullable=False)
     lname = Column(String, nullable=False)
-    email = Column(String, unique=True,nullable=False)
+    email = Column(String, unique=True, nullable=False)
     number = Column(Integer, unique=True, nullable=False)
     password = Column(String, nullable=False)
     is_active = Column(Boolean, default=False, nullable=False)
@@ -98,7 +98,6 @@ class MdlIlt_rocks(Base):
     ilt_id = Column(Integer, ForeignKey("Ilts.id"), nullable=False, index=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=True, index=True)
     ilt_rock_id = Column(Integer, ForeignKey("Ilt_rocks.id"), nullable=True, index=True)
-    
 
 class MdlMeeting_rocks(Base):
     __tablename__ = "Ilt_meeting_rocks_maping"
@@ -132,7 +131,7 @@ class Mdl_issue(Base):
     __tablename__ = "issue"
     id = Column(Integer, primary_key=True, autoincrement=True)
     issue = Column(String, nullable=True)
-    priority = Column(Integer, ForeignKey("Ilt_priorities.id"), nullable=False, index=True)
+    priority = Column(Integer, ForeignKey("Ilt_priorities.id"), nullable=True, index=True)
     created_at = Column(DateTime, nullable=True)
     resolves_flag = Column(Boolean, nullable=True)
     recognize_performance_flag = Column(Boolean, nullable=True)

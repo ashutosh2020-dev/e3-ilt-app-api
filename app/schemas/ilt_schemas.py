@@ -5,6 +5,14 @@ from datetime import datetime
 class member(BaseModel):
     id: int
 
+
+class Createilt(BaseModel):
+    title: str
+    description: str
+    schoolId: int
+    owner_id:int
+    memberIds: List[int]
+
 class Ilt(BaseModel):
     title: str=""
     description: str=""

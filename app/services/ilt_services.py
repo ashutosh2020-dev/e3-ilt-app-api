@@ -15,7 +15,7 @@ class IltService:
                 ilt_record = db.query(MdlIlts).filter(MdlIlts.id == x).first()
                 ilt_owner_record = db.query(MdlUsers).filter(MdlUsers.id == ilt_record.owner_id).first()
                 owner_name = ilt_owner_record.fname+" "+ilt_owner_record.lname
-                val = {"itlId":ilt_record.id, "title":ilt_record.title, "description": ilt_record.description, "owner name":owner_name}
+                val = {"itlId":ilt_record.id, "title":ilt_record.title, "description": ilt_record.description, "ownerName":owner_name}
                 ilt_list.append(val)
             return ilt_list
         return {
