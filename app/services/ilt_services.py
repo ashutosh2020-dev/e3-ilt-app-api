@@ -54,8 +54,15 @@ class IltService:
             "statusCode": 404,
             "userMessage": "records Not found"
             }
-    def get_ilt_details(self, ilt_id:int, db:Session):
+    def get_ilt_details(self, user_id:int, ilt_id:int, db:Session):
         try:
+
+            if db.query(MdlUsers).filter(MdlUsers.id==user_id).one_or_none() is None:
+                return {
+                    "confirmMessageID": "string",
+                    "statusCode": 404,
+                    "userMessage": "userId did not found"
+                    }
             ilt_record = db.query(MdlIlts).filter(MdlIlts.id==ilt_id).one_or_none()
             if ilt_record is None:
                 return {
@@ -69,7 +76,9 @@ class IltService:
             member_info = []
             for uid in members_id_list:
                 user_record = db.query(MdlUsers).filter(MdlUsers.id==uid).one()
-                member_info.append({"userId":user_record.id,"firstName":user_record.fname, "lastName":user_record.lname})
+                member_info.append({"userId":user_record.id,
+                                    "firstName":user_record.fname, 
+                                    "lastName":user_record.lname})
             return {
                     "itlId": ilt_record.id,
                     "onwer": {

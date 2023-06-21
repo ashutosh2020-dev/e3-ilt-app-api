@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Body
+from fastapi import APIRouter, Depends, Body, Header
 from sqlalchemy.orm import Session
 from app.config.database import get_db
 from app.services.ilt_meeting_service import IltMeetingService
@@ -12,14 +12,14 @@ IltMeetingService = IltMeetingService()
 IltMeetingResponceService = IltMeetingResponceService()
 
 @router.get("/api/v1/ilts/{id}/meetings")
-def get_ilt_meetings(user_id: int, ilt_id: int, db: Session = Depends(get_db)):
-    return IltMeetingService.get_Ilts_meeting_list(user_id = user_id, ilt_id = ilt_id, db =db )
+def get_ilt_meetings( iltId: int, UserId: int=Header(convert_underscores=False), db: Session = Depends(get_db)):
+    return IltMeetingService.get_Ilts_meeting_list(user_id = UserId, ilt_id = iltId, db =db )
     
 
 @router.post("/api/v1/ilts/{id}/meetings")
-def create_ilt_meeting(user_id:int, id:int, ilt:MeetingData, db: Session = Depends(get_db)):
+def create_ilt_meeting( id:int, ilt:MeetingData, UserId: int=Header(convert_underscores=False), db: Session = Depends(get_db)):
     return IltMeetingService.create_ilts_meeting(ilt_id=id, 
-                                                 user_id=user_id, 
+                                                 user_id=UserId, 
                                                  scheduledStartDate = ilt.scheduledStartDate, 
                                                  meetingStart = ilt.meetingStart, 
                                                  meetingEnd = ilt.meetingEnd, 
@@ -28,8 +28,8 @@ def create_ilt_meeting(user_id:int, id:int, ilt:MeetingData, db: Session = Depen
 
 
 @router.get("/api/v1/ilts/{id}/meetings/{meetingId}")
-def get_meeting_info_wrt_meeting_id_and_ilt_id(User_id:int, id:int, meetingId:int, db: Session = Depends(get_db)):
-    return IltMeetingService.get_meeting_info(meeting_id=meetingId, iltId = id, User_id =User_id, db = db)
+def get_meeting_info_wrt_meeting_id_and_ilt_id(id:int, meetingId:int, UserId: int=Header(convert_underscores=False), db: Session = Depends(get_db)):
+    return IltMeetingService.get_meeting_info(meeting_id=meetingId, iltId = id, User_id =UserId, db = db)
 
 
 # @router.post("/api/v1/ilts/{id}/meetings/{meetingId}")
@@ -39,13 +39,13 @@ def get_meeting_info_wrt_meeting_id_and_ilt_id(User_id:int, id:int, meetingId:in
 #     return True
 
 @router.get("/api/v1/ilts/{id}/rocks")
-def read_ilt_rocks(user_id:int, id:int, db: Session = Depends(get_db)):
-    return IltMeetingResponceService.read_ilt_rock(user_id=user_id, ilt_id=id, db=db)
+def read_ilt_rocks(id:int, UserId: int=Header(convert_underscores=False), db: Session = Depends(get_db)):
+    return IltMeetingResponceService.read_ilt_rock(user_id=UserId, ilt_id=id, db=db)
 
 
 @router.post("/api/v1/ilts/meeting/create_rocks")
-def create_ilt_rocks(user_id: int, rock:rockData, db: Session = Depends(get_db)):
-    return IltMeetingResponceService.create_ilts_rocks(user_id=user_id, 
+def create_ilt_rocks(rock:rockData, UserId: int=Header(convert_underscores=False), db: Session = Depends(get_db)):
+    return IltMeetingResponceService.create_ilts_rocks(user_id=UserId, 
                                                        name=rock.name,
                                                        description=rock.description, 
                                                        Ilt_id=rock.ilt_id, 
@@ -53,10 +53,10 @@ def create_ilt_rocks(user_id: int, rock:rockData, db: Session = Depends(get_db))
 
 
 @router.post("/api/v1/ilts/meeting/assign_rocks")
-def assign_ilt_rocks_to_user(logged_user_id: int, 
-                             rock:rockData_map,
+def assign_ilt_rocks_to_user(rock:rockData_map,
+                             UserId: int=Header(convert_underscores=False),
                              db: Session = Depends(get_db)):
-    return IltMeetingResponceService.assign_ilts_rocks(logged_user_id=logged_user_id,
+    return IltMeetingResponceService.assign_ilts_rocks(logged_user_id=UserId,
                                                        user_id=rock.user_id, 
                                                        Ilt_id=rock.Ilt_id,
                                                        rock_id=rock.rock_id, 
