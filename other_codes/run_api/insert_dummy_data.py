@@ -32,7 +32,7 @@ host_url = "http://middle-ilt-app.us-east-1.elasticbeanstalk.com/"
 
 
 def hit_create_user_api(host_url, user, payload={}, headers={}):
-    endpoint = f"""api/v1/users/?UserId=1"""
+    endpoint = f"""api/v1/users/"""
     # params = {"UserId":user['parent_id'] }
     
     url = host_url + endpoint 
@@ -46,7 +46,8 @@ def hit_create_user_api(host_url, user, payload={}, headers={}):
                 "roleId": user['role_id']
                 })
     headers = {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'UserId':'1'
                 }
     response = requests.post(url, headers=headers, data=payload)
     if '200' not in response.text:
@@ -68,7 +69,7 @@ def generate_random_id():
 def hit_create_ilt_api(host_url, ilt, school_id):
         user_id = 10
         ilt["owner_id"] = int(ilt["owner_id"])
-        endpoint = f"api/v1/ilts/?user_id={user_id}"
+        endpoint = f"api/v1/ilts/"
         url = host_url + endpoint
         members_ids = []
         while len(members_ids) < num_member_in_ilt:
@@ -90,7 +91,8 @@ def hit_create_ilt_api(host_url, ilt, school_id):
                                 "memberIds": members_ids
                             })
         headers = {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'UserId':str(user_id)
         }
         print("================")
         response = requests.post(url, headers=headers, data=payload)
@@ -99,9 +101,6 @@ def hit_create_ilt_api(host_url, ilt, school_id):
 
 def hit_create_iltMeeting_api(host_url, ilt_meeting, ilt_owner_id, ilt_id):
     date = ilt_meeting['startDate']
-    params = {
-            "user_id":ilt_owner_id, 
-            }
     payload = json.dumps({
                             "scheduledStartDate": f"{date}T{ilt_meeting['meetingStart']}.00",
                             "meetingStart": f"{date}T{ilt_meeting['meetingStart']}.00",
@@ -110,11 +109,12 @@ def hit_create_iltMeeting_api(host_url, ilt_meeting, ilt_owner_id, ilt_id):
                         })
     
     headers = {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            "UserId":str(ilt_owner_id)
             }
     endpoint = f"api/v1/ilts/{ilt_id}/meetings/"
     url = host_url + endpoint
-    response = requests.post(url, params=params, headers=headers, data=payload)
+    response = requests.post(url, headers=headers, data=payload)
     if '200' not in response.text:
        print(response.text)
 

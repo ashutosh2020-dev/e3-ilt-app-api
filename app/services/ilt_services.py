@@ -1,5 +1,5 @@
-from sqlalchemy.orm import Session
-from sqlalchemy import desc
+from sqlalchemy.orm import Session, joinedload
+from sqlalchemy import desc, join
 from app.models import MdlIlts, MdlIltMembers, MdlUsers, MdlSchools, MdlMeetings, MdlIltMeetings
 from app.schemas.ilt_schemas import Ilt
 from sqlalchemy.exc import SQLAlchemyError
@@ -26,12 +26,18 @@ class IltService:
                 ilt_owner_record = db.query(MdlUsers).filter(MdlUsers.id == ilt_record.owner_id).first()
                 owner_name = ilt_owner_record.fname+" "+ilt_owner_record.lname
                 # find latest meeting
-                current_datetime = datetime.now(timezone.utc)
+                # current_datetime = datetime.now(timezone.utc)
                 # meeting_ids = [re.ilt_meeting_id for re in db.query(MdlIltMeetings).filter(MdlIltMeetings.ilt_id==x).all()]
-                meeting_record = (db.query(MdlMeetings)
-                                    .filter( MdlMeetings.schedule_start_at < current_datetime)
-                                    .order_by(desc(MdlMeetings.schedule_start_at))
-                                    .first())
+                # meeting_record = (db.query(MdlMeetings)
+                #                     .filter( MdlMeetings.schedule_start_at < current_datetime)
+                #                     .order_by(desc(MdlMeetings.schedule_start_at))
+                #                     .first())
+                meeting_record = (
+                                db.query(MdlMeetings)
+                                .join(MdlIltMeetings, MdlMeetings.id == MdlIltMeetings.ilt_meeting_id)
+                                .order_by(desc(MdlMeetings.schedule_start_at))
+                                .first()
+                            )
 
                 if meeting_record:
                     latestMeetingId = meeting_record.id
@@ -70,6 +76,7 @@ class IltService:
             "statusCode": 404,
             "userMessage": "records Not found"
             }
+            
             members_id_list = [record.member_id for record in db.query(MdlIltMembers).filter(MdlIltMembers.ilt_id==ilt_id).all()]
             school_record = db.query(MdlSchools).filter(MdlSchools.id==ilt_record.school_id).one()
             owner_record = db.query(MdlUsers).filter(MdlUsers.id==ilt_record.owner_id).one()

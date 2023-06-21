@@ -24,15 +24,22 @@ class Create_otherService:
                 "userMessage": f"unable to create the record : {e}"
             }
     def create_schools(self, name, location, district, db:Session):
-        db_school = MdlSchools(name=name, location=location, district=district)
-        db.add(db_school)
-        db.commit()
-        db.refresh(db_school) 
-        return {
+        try:
+            db_school = MdlSchools(name=name, location=location, district=district)
+            db.add(db_school)
+            db.commit()
+            db.refresh(db_school) 
+            return {
+                    "confirmMessageID": "string",
+                    "statusCode": 200,
+                    "userMessage": "school has created successfully."
+                    }
+        except Exception as e:
+            return {
                 "confirmMessageID": "string",
-                "statusCode": 200,
-                "userMessage": "school has created successfully."
-                }
+                "statusCode": 500,
+                "userMessage": f"unable to create school, this school's name already exist.{e}"
+            }
     
     def create_roles(self, role_name:str, roleDescription:str, db:Session):
         db_role = MdlRoles(name=role_name, description=roleDescription)

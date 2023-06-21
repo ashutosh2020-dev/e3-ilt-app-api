@@ -104,7 +104,7 @@ class MdlMeeting_rocks(Base):
     __table_args__ = (UniqueConstraint('ilt_meeting_response_id', 'rock_id'),)
     id = Column(Integer, primary_key=True, autoincrement=True)
     ilt_meeting_response_id =  Column(Integer, ForeignKey("meeting_response.id"), nullable=False, index=True)
-    rock_id = Column(Integer, ForeignKey("Ilt_rocks.id"), nullable=False, unique=True, index=True)
+    rock_id = Column(Integer, ForeignKey("Ilt_rocks.id"), nullable=False, index=True)
     on_track_flag = Column(Boolean, nullable=False)
 
 class MdlIlt_ToDoTask(Base):

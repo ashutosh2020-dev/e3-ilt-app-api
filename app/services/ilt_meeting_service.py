@@ -77,7 +77,8 @@ class IltMeetingService:
             db.commit()
             db.refresh(db_meeting)
 
-            ilt_members_list = [record.member_id for record in db.query(MdlIltMembers).filter(MdlIltMembers.ilt_id==ilt_id).all()]
+            ilt_members_list = [record.member_id for record in db.query(MdlIltMembers)
+                                .filter(MdlIltMembers.ilt_id==ilt_id).all()]
             # create meeting response and update the map table(MdlIltMeetingResponses) for  meeting id and m_response_id
             status, msg = (IltMeetingResponceService()
                             .create_meeting_responses_empty_for_ILTmember(meeting_id=db_meeting.id, 
