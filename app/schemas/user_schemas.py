@@ -19,3 +19,7 @@ class UpdateUserRequest(BaseModel):
     password: str
     active: bool
     roleId: int
+
+class loginCredential(BaseModel):
+    userName:str
+    password:str

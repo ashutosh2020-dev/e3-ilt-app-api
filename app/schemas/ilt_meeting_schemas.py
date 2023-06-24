@@ -1,4 +1,5 @@
 from pydantic import BaseModel
+from typing import List, Optional
 from datetime import datetime
 
 class MeetingData(BaseModel):
@@ -8,11 +9,14 @@ class MeetingData(BaseModel):
     location: str
 
 class rockData(BaseModel):
-    ilt_id:int
+    iltId:int
     name:str
     description:str
+    
 
 class rockData_map(BaseModel):
-    user_id :int
-    Ilt_id :int
-    rock_id :int
+    userId :List[int]
+    iltId :int
+    rockId :int
+    rockOwnerId:int
+    

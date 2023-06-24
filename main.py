@@ -1,4 +1,5 @@
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI, Depends, Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from app.config.app_settings import settings
@@ -6,6 +7,9 @@ from app.config.database import engine, SessionLocal, Base
 from app.routers import user_maintenance, dashboard_maintenance, ilt_maintenance, ilt_meeting_maintenance,\
                 ilt_meeting_response_maintenance, shared_maintenance, other_maintenance, login_maintenance
 import uvicorn
+from app.exceptions.customException import CustomException
+from fastapi.responses import JSONResponse
+
 
 tags_metadata = [
     {
@@ -51,10 +55,31 @@ tags_metadata = [
 ]
 
 app = FastAPI(
-    title=settings.app_name,
-    version=settings.app_version,
-    description=settings.app_description
+                title=settings.app_name,
+                version=settings.app_version,
+                description=settings.app_description
+                )
+@app.exception_handler(CustomException)
+async def custom_exception_handler(request: Request, exc: CustomException):
+    return JSONResponse(
+        status_code=exc.code,
+        content={"statusCode": exc.code, "userMessage": exc.message}
     )
+
+@app.exception_handler(Exception)
+async def exception_handler(request: Request, exc: Exception):
+    return JSONResponse(
+        status_code=500,
+        content={"statusCode": 500, "userMessage": str(exc)}
+    )
+
+@app.exception_handler(RequestValidationError)
+async def Request_Validation_handler(request: Request, exc: RequestValidationError):
+    return JSONResponse(
+        status_code=422,
+        content={"statusCode": 422, "userMessage": exc.errors()}
+    )
+
 Base.metadata.create_all(bind=engine)
 origins = ["*"]
 

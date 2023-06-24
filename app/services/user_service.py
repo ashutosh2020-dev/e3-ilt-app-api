@@ -6,32 +6,61 @@ import sys
 class UserService:
     def get_user(self, user_id: int, db: Session):
         try:
-            user_record = db.query(MdlUsers).filter(MdlUsers.id == user_id).one_or_none()
-            if user_record is not None:
-                return {
-                            "userId": user_record.id,
-                            "firstName": user_record.fname,
-                            "lastName": user_record.lname,
-                            "emaildId": user_record.email,
-                            "phoneNumber": user_record.number,
-                            "password": user_record.password,
-                            "active": user_record.is_active,
-                            "roleId": user_record.role_id,
-                            "parent_user_Id": user_record.parent_user_id
-
-                        }
-            else:
+            u_record = db.query(MdlUsers).filter(MdlUsers.id == user_id).one_or_none()
+            if u_record is None:
                 return {
                     "confirmMessageID": "string",
                     "statusCode": 404,
-                    "userMessage": "Record not found."
+                    "userMessage": "user records not found."
                 }
+            
+            elif u_record.role_id == 1:
+                return {    "userId": u_record.id,
+                            "firstName": u_record.fname,
+                            "lastName": u_record.lname,
+                            "emaildId": u_record.email,
+                            "phoneNumber": u_record.number,
+                            "password": u_record.password,
+                            "active": u_record.is_active,
+                            "roleId": u_record.role_id,
+                            "parentUserId": u_record.parent_user_id }
+            
+            elif u_record.role_id == 2:
+                users_list = []
+                associated_users_record = db.query(MdlUsers).filter(MdlUsers.parent_user_id == user_id).all()
+                for user_record in associated_users_record:
+                    users_list.append({ "userId": user_record.id,
+                                        "firstName": user_record.fname,
+                                        "lastName": user_record.lname,
+                                        "emaildId": user_record.email,
+                                        "phoneNumber": user_record.number,
+                                        "password": user_record.password,
+                                        "active": user_record.is_active,
+                                        "roleId": user_record.role_id,
+                                        "parentUserId": user_record.parent_user_id })
+                return users_list
+            elif u_record.role_id == 3:
+                users_list = []
+                associated_users_record = [{ "userId": record.id,
+                                            "firstName": record.fname,
+                                            "lastName": record.lname,
+                                            "emaildId": record.email,
+                                            "phoneNumber": record.number,
+                                            "password": record.password,
+                                            "active": record.is_active,
+                                            "roleId": record.role_id,
+                                            "parentUserId": record.parent_user_id 
+                                            } for record in db.query(MdlUsers).order_by(MdlUsers.id).all()]
+                return associated_users_record
+            
+            
+            
         except Exception as e:
-            exc_type, exc_value, exc_traceback = sys.exc_info()
-            status_code = getattr(exc_value, "status_code", 500)  # Default to 500 if status_code is not present
+            # exc_type, exc_value, exc_traceback = sys.exc_info()
+            # status_code = getattr(exc_value, "status_code", 500)  # Default to 500 if status_code is not present
             return {
                 "confirmMessageID": "string",
-                "statusCode": status_code,
+                "statusCode": 500,
                 "userMessage": f"Internal Server Error: {e}"
             }
 

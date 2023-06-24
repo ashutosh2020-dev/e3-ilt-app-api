@@ -47,7 +47,7 @@ def hit_create_user_api(host_url, user, payload={}, headers={}):
                 })
     headers = {
                 'Content-Type': 'application/json',
-                'UserId':'1'
+                'UserId':str(user['parent_id'])
                 }
     response = requests.post(url, headers=headers, data=payload)
     if '200' not in response.text:

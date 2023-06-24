@@ -3,7 +3,8 @@ from app.models import MdlMeeting_rocks, MdlIlt_ToDoTask, Mdl_updates, \
             MdlMeetingsResponse, MdlIltMeetingResponses, MdlRocks, \
             Mdl_issue, MdlUsers, MdlIltissue, MdlMeetings, MdlIlts, \
             MdlIlt_rocks, MdlIltMembers, MdlIltMeetings, MdlPriorities
-            
+from sqlalchemy import desc, join
+from typing import List, Optional    
 from app.schemas.meeting_response import MeetingResponse, Duedate
 from datetime import datetime, timezone
 from typing import Annotated, Union
@@ -28,7 +29,7 @@ class IltMeetingResponceService:
                     "userMessage": "MeetingsResponse record not found"
                     }
             ilt_meet_re = db.query(MdlIltMeetingResponses)\
-                                    .filter(MdlIltMeetingResponses.meeting_response_id==meetingResponseId).first()
+                                    .filter(MdlIltMeetingResponses.meeting_response_id==meetingResponseId).one()
             ilt_meet_id = ilt_meet_re.meeting_id
             user_meetingResponse_record = db.query(MdlMeetingsResponse)\
                                     .filter(MdlMeetingsResponse.id==meetingResponseId).first()        
@@ -142,7 +143,14 @@ class IltMeetingResponceService:
                 else:
                     pass
                 # if issue is last ended meeting unresolve in previous meeting
-
+                # meeting_record = (
+                #                 db.query(MdlMeetings)
+                #                 .join(MdlIltMeetings, MdlMeetings.id == MdlIltMeetings.ilt_meeting_id)
+                #                 .filter(MdlIltMeetings.ilt_id==iltId, MdlMeetings.schedule_start_at>current_dataTime)
+                #                 .order_by(desc(MdlMeetings.end_at))
+                #                 .first()
+                #             )
+                # if meeting_record.
             return (True, "")
         except Exception as e:
             return (False, str(e))
@@ -226,7 +234,7 @@ class IltMeetingResponceService:
                     "userMessage": f"unable to process your request{e}"
                 }
 
-    def assign_ilts_rocks(self, logged_user_id:int, user_id:int, Ilt_id:int,rock_id:int, db:Session):
+    def assign_ilts_rocks(self, logged_user_id:int, user_ids, Ilt_id:int,rock_id:int, db:Session):
 
         if db.query(MdlUsers).filter(MdlUsers.id==logged_user_id).one_or_none() is None:
             return  {
@@ -234,27 +242,23 @@ class IltMeetingResponceService:
                 "statusCode": 404,
                 "userMessage": "logged userId is not found"
             }
-        # check user, ilt, rock
-        ilt_member_exists = db.query(
-                            db.query(MdlIltMembers)
-                            .filter(MdlIltMembers.ilt_id == Ilt_id, MdlIltMembers.member_id == user_id)
-                            .exists()
-                        ).scalar()
-        print("----------",ilt_member_exists)
-        if not ilt_member_exists:
-            return {
-                "confirmMessageID": "string",
-                "statusCode": 404,
-                "userMessage": "record not found wrt user and ilt id, user is not a member of the ilt"
-            }
-        
-        # check_rock = db.query(MdlRocks).filter(MdlRocks.id==rock_id).one_or_none()
-        # if check_rock is None:
-        #     return {
-        #         "confirmMessageID": "string",
-        #         "statusCode": 404,
-        #         "userMessage": "rock record not found"
-        #     }
+        # user_idsa
+        user_ids=list(set(user_ids)) 
+        for user_id in user_ids:
+            ilt_member_exists = db.query(
+                                db.query(MdlIltMembers)
+                                .filter(MdlIltMembers.ilt_id == Ilt_id, MdlIltMembers.member_id == user_id)
+                                .exists()
+                            ).scalar()
+            # print("----------",ilt_member_exists)
+            if not ilt_member_exists:
+                return {
+                    "confirmMessageID": "string",
+                    "statusCode": 404,
+                    "userMessage": "record not found wrt user and ilt id, user is not a member of the ilt"
+                }
+            else:
+                pass
         
         check_ilt_inside_rock = db.query(
                                     db.query(MdlRocks)
@@ -268,11 +272,13 @@ class IltMeetingResponceService:
                 "userMessage": "this rock_id is not create inside ilt"
             }
         try:
-            db_ilt_rocks = MdlIlt_rocks(ilt_id = Ilt_id, user_id=user_id, ilt_rock_id=rock_id) 
-            db.add(db_ilt_rocks)
-            db.commit()
-            db.refresh(db_ilt_rocks)
-            db.close()       
+            for uid in user_ids:
+                ownerStatus = False
+                db_ilt_rocks = MdlIlt_rocks(ilt_id = Ilt_id, user_id=uid, ilt_rock_id=rock_id, is_rock_owner=ownerStatus) 
+                db.add(db_ilt_rocks)
+                db.commit()
+                db.refresh(db_ilt_rocks)
+                db.close()
             return {
                     "confirmMessageID": "string",
                     "statusCode": 200,

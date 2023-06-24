@@ -31,7 +31,10 @@ class IltMeetingService:
                 "statusCode": 404,
                 "userMessage": "Ilt not found"
                 }
-        list_meetings = [record.ilt_meeting_id for record in db.query(MdlIltMeetings).filter(MdlIltMeetings.ilt_id == ilt_id).all()]
+        list_meetings = [record.ilt_meeting_id 
+                            for record in db.query(MdlIltMeetings)
+                                .filter(MdlIltMeetings.ilt_id == ilt_id)
+                                .all()]
         if len(list_meetings)>0:
             ilt_list = []
             for mid in list_meetings:
@@ -40,9 +43,11 @@ class IltMeetingService:
                 end_meeting_time = meeting_record.end_at.replace(tzinfo=timezone.utc)
                 status = calculate_meeting_status(start_meeting_time, start_meeting_time, end_meeting_time)
 
-                val = {"iltId":ilt_id, "ilt_meeting_id":mid, "scheduledStartDate":meeting_record.schedule_start_at,
+                val = {"iltId":ilt_id, "iltMeetingId":mid, "scheduledStartDate":meeting_record.schedule_start_at,
                         "meetingStart": meeting_record.start_at,
-                        "meetingEnd": meeting_record.end_at, "meetingStatus": status}
+                        "meetingEnd": meeting_record.end_at, "location":meeting_record.location,
+                        "meetingStatus": status
+                        }
                 ilt_list.append(val)
 
             return ilt_list
@@ -108,9 +113,15 @@ class IltMeetingService:
                 "userMessage": "meeting and corresponding meeting_response have successfully created"
             }
     
-    def update_ilt_meeting(self, meeting_id: int, ilt_id: int,location, scheduledStartDate, meetingStart, 
+    def update_ilt_meeting(self, UserId:int, meeting_id: int, ilt_id: int,location, scheduledStartDate, meetingStart, 
                            meetingEnd,  db: Session):
         try:
+            if db.query(MdlUsers).filter(MdlUsers.id == UserId).one_or_none() is None:
+                return {
+                        "confirmMessageID": "string",
+                        "statusCode": 404,
+                        "userMessage": "userId did not found "
+                        }
             db_meeting = db.query(MdlMeetings).filter(MdlMeetings.id == meeting_id).one_or_none()
             if db_meeting is not None:
                 db_meeting.location = location
@@ -122,21 +133,21 @@ class IltMeetingService:
                 return {
                         "confirmMessageID": "string",
                         "statusCode": 200,
-                        "userMessage": "meeting have successfully created"
+                        "userMessage": "meeting have successfully updated"
                         }
             else:
                 return {
                     "confirmMessageID": "string",
                     "statusCode": 404,
-                    "userMessage": "records not found"
+                    "userMessage": "meeting records not found"
                     }
         except Exception as e:
-            exc_type, exc_value, exc_traceback = sys.exc_info()
-            status_code = getattr(exc_value, "status_code", 404)  # Default to 404 if status_code is not present
+            # exc_type, exc_value, exc_traceback = sys.exc_info()
+            # status_code = getattr(exc_value, "status_code", 404)  # Default to 404 if status_code is not present
             return {
                 "confirmMessageID": "string",
-                "statusCode": status_code,
-                "userMessage": f"unable to create the record : {e}"
+                "statusCode": 500,
+                "userMessage": f"unable to update the record : {e}"
             }
 
     def get_meeting_info(self, User_id:int, iltId:int, meeting_id:int,  db:Session):
@@ -285,3 +296,89 @@ class IltMeetingService:
                 "statusCode": 500,
                 "userMessage": f"Internal server error {str(e)}"
             }
+
+    def start_ilt_meeting(self, UserId:int, meeting_id: int, ilt_id: int,db: Session, location="", scheduledStartDate="", meetingStart="", 
+                            meetingEnd=""):
+            try:
+                if db.query(MdlUsers).filter(MdlUsers.id == UserId).one_or_none() is None:
+                    return {
+                            "confirmMessageID": "string",
+                            "statusCode": 404,
+                            "userMessage": "userId did not found "
+                            }
+                if db.query(MdlIlts).filter(MdlIlts.id == ilt_id).one_or_none() is None:
+                    return {
+                            "confirmMessageID": "string",
+                            "statusCode": 404,
+                            "userMessage": "ilt_id did not found "
+                            }
+                
+                db_meeting = db.query(MdlMeetings).filter(MdlMeetings.id == meeting_id).one_or_none()
+                if db_meeting is not None:
+                    # db_meeting.location = db_meeting.location
+                    db_meeting.schedule_start_at = datetime.now(timezone.utc)
+                    db_meeting.start_at = datetime.now(timezone.utc)
+                    # db_meeting.end_at = datetime.now(timezone.utc)
+                    db.commit()
+                    db.refresh(db_meeting)
+                    return {
+                            "confirmMessageID": "string",
+                            "statusCode": 200,
+                            "userMessage": "meeting have successfully updated"
+                            }
+                else:
+                    return {
+                        "confirmMessageID": "string",
+                        "statusCode": 404,
+                        "userMessage": "meeting records not found"
+                        }
+            except Exception as e:
+                # exc_type, exc_value, exc_traceback = sys.exc_info()
+                # status_code = getattr(exc_value, "status_code", 404)  # Default to 404 if status_code is not present
+                return {
+                    "confirmMessageID": "string",
+                    "statusCode": 500,
+                    "userMessage": f"unable to update the record : {e}"
+                }
+    def stop_ilt_meeting(self, UserId:int, meeting_id: int, ilt_id: int,db: Session):
+                try:
+                    if db.query(MdlUsers).filter(MdlUsers.id == UserId).one_or_none() is None:
+                        return {
+                                "confirmMessageID": "string",
+                                "statusCode": 404,
+                                "userMessage": "userId did not found "
+                                }
+                    if db.query(MdlIlts).filter(MdlIlts.id == ilt_id).one_or_none() is None:
+                        return {
+                                "confirmMessageID": "string",
+                                "statusCode": 404,
+                                "userMessage": "ilt_id did not found "
+                                }
+                    
+                    db_meeting = db.query(MdlMeetings).filter(MdlMeetings.id == meeting_id).one_or_none()
+                    if db_meeting is not None:
+                        # db_meeting.location = db_meeting.location
+                        # db_meeting.schedule_start_at = datetime.now(timezone.utc)
+                        # db_meeting.start_at = datetime.now(timezone.utc)
+                        db_meeting.end_at = datetime.now(timezone.utc)
+                        db.commit()
+                        db.refresh(db_meeting)
+                        return {
+                                "confirmMessageID": "string",
+                                "statusCode": 200,
+                                "userMessage": "meeting have successfully ended"
+                                }
+                    else:
+                        return {
+                            "confirmMessageID": "string",
+                            "statusCode": 404,
+                            "userMessage": "meeting records not found"
+                            }
+                except Exception as e:
+                    # exc_type, exc_value, exc_traceback = sys.exc_info()
+                    # status_code = getattr(exc_value, "status_code", 404)  # Default to 404 if status_code is not present
+                    return {
+                        "confirmMessageID": "string",
+                        "statusCode": 500,
+                        "userMessage": f"unable to update the record : {e}"
+                    }

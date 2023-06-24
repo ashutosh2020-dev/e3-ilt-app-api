@@ -10,6 +10,7 @@ import random
 user_per_ilt = 7
 num_school = 4
 num_ilt = 4
+num_facilitator = 20
 meetings_per_ilt = 2
 
 total_num_user = num_school*num_ilt*user_per_ilt # 112
@@ -36,7 +37,7 @@ def create_user_list():
             "password": fake.password(),
             "is_active": fake.pybool(),
             "role_id": role_id, #random.sample(range(1, 3), 1)[0]
-            "parent_id":  random.sample(range(1, 3), 1)[0]  #i-1 if i != 0 else 1 
+            "parent_id":  random.sample(range(1, num_facilitator), 1)[0] if i >20 else 1 #i-1 if i != 0 else 1 
         }
         gmail.append(row["email"])
         data.append(row)

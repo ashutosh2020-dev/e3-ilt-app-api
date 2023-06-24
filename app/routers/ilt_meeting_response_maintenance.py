@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Body
+from fastapi import APIRouter, Depends, Body, Header
 from sqlalchemy.orm import Session
 from app.config.database import get_db
 from app.services.ilt_meeting_response_service import IltMeetingResponceService
@@ -12,27 +12,27 @@ IltMeetingResponceService = IltMeetingResponceService()
  
 
 @router.get("/api/v1/ilts/meetingResponses/{meetingResponseId}")
-def read_meeting_responce_details(user_id: int, meetingResponseId:int,  db: Session = Depends(get_db)):
-    return IltMeetingResponceService.get_Ilts_meeting_list(user_id=user_id, meetingResponseId=meetingResponseId, db=db)
+def read_meeting_responce_details( meetingResponseId:int, UserId: int=Header(convert_underscores=False),  db: Session = Depends(get_db)):
+    return IltMeetingResponceService.get_Ilts_meeting_list(user_id=UserId, meetingResponseId=meetingResponseId, db=db)
 
 
 @router.post("/api/v1/ilts/meetingResponses/{meetingResponseId}/rocks")
-def assign_ilt_rocks_to_meetingResponse(user_id: int, meetingResponseId:int, 
-                                        rock:RockUpdate,
+def assign_ilt_rocks_to_meetingResponse( meetingResponseId:int, 
+                                        rock:RockUpdate, UserId: int=Header(convert_underscores=False),
                                         db: Session = Depends(get_db)):
-    return IltMeetingResponceService.create_ilts_meeting_rocks(user_id= user_id, 
+    return IltMeetingResponceService.create_ilts_meeting_rocks(user_id= UserId, 
                                                                meetingResponseId= meetingResponseId,
                                                                rockId= rock.rock_id, 
                                                                onTrack = rock.onTrack,
                                                                db = db)
 
 @router.post("/api/v1/ilts/meetingResponses/{meetingResponseId}/todolist")
-def create_ilt_meeting_todolist(user_id:int, meetingResposnceId:int, toDoData:TodoList, 
-                                db: Session = Depends(get_db)):
+def create_ilt_meeting_todolist( meetingResponseId:int, toDoData:TodoList, 
+                                UserId: int=Header(convert_underscores=False), db: Session = Depends(get_db)):
     try:
         for i in range(len(toDoData.TodoItem)):
-            responce = IltMeetingResponceService.create_to_do_list(user_id=user_id, 
-                                                        meetingResponseId=meetingResposnceId, 
+            responce = IltMeetingResponceService.create_to_do_list(user_id=UserId, 
+                                                        meetingResponseId=meetingResponseId, 
                                                         description=toDoData.TodoItem[i].description,
                                                         dueDate=toDoData.TodoItem[i].duedate,
                                                         status=toDoData.TodoItem[i].status,
@@ -56,11 +56,12 @@ def create_ilt_meeting_todolist(user_id:int, meetingResposnceId:int, toDoData:To
 
 
 @router.post("/api/v1/ilts/meetingResponses/{meetingResponseId}/updates")
-def create_ilt_meeting_updates(user_id:int, meetingResponseId:int,ilt:updatesData, db: Session = Depends(get_db)):
+def create_ilt_meeting_updates( meetingResponseId:int,ilt:updatesData,
+                               UserId: int=Header(convert_underscores=False), db: Session = Depends(get_db)):
      
     try:
         for i in range(len(ilt.descriptions)):
-            responce = IltMeetingResponceService.create_meeting_update(user_id=user_id, 
+            responce = IltMeetingResponceService.create_meeting_update(user_id=UserId, 
                                                            meetingResponseId=meetingResponseId, 
                                                            description=ilt.descriptions[i].description, 
                                                            db=db)
@@ -82,12 +83,13 @@ def create_ilt_meeting_updates(user_id:int, meetingResponseId:int,ilt:updatesDat
 
 
 @router.post("/api/v1/ilts/meetingResponses/{meetingResponseId}/issues")
-def create_ilt_meeting_issues(user_id:int, meetingResponseId: int,
+def create_ilt_meeting_issues( meetingResponseId: int,
                      ilt:IssueList,
+                     UserId: int=Header(convert_underscores=False),
                      db: Session = Depends(get_db)):
     try:
         for i in range(len(ilt.issues)):
-            responce = IltMeetingResponceService.create_issue(user_id=user_id, 
+            responce = IltMeetingResponceService.create_issue(user_id=UserId, 
                      meetingResponseId=meetingResponseId, 
                      issue=ilt.issues[i].issue, 
                      priority=ilt.issues[i].priorityId, 

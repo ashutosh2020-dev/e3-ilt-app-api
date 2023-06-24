@@ -93,11 +93,12 @@ class MdlRocks(Base):
 
 class MdlIlt_rocks(Base):
     __tablename__ = "Ilt_user_rocks_mapping"
-    __table_args__ = (UniqueConstraint('ilt_id','user_id', 'ilt_rock_id'),)
+    #__table_args__ = (UniqueConstraint('ilt_id','user_id', 'ilt_rock_id'),)
     id  =  Column(Integer, primary_key=True, autoincrement=True)
     ilt_id = Column(Integer, ForeignKey("Ilts.id"), nullable=False, index=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=True, index=True)
     ilt_rock_id = Column(Integer, ForeignKey("Ilt_rocks.id"), nullable=True, index=True)
+    is_rock_owner = Column(Boolean, nullable=False, default=False)
 
 class MdlMeeting_rocks(Base):
     __tablename__ = "Ilt_meeting_rocks_maping"
