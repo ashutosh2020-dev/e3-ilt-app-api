@@ -4,6 +4,7 @@ from app.models import MdlIltMeetingResponses, MdlMeeting_rocks, MdlRocks,\
                 MdlRoles, MdlIltPriorities, MdlUsers, MdlPriorities, MdlIltissue, Mdl_issue, MdlIlt_rocks
 from sqlalchemy.exc import SQLAlchemyError
 from fastapi import HTTPException
+from app.exceptions.customException import CustomException
 
 class SharedService:
     def get_list_of_schools(self,  db: Session):
@@ -19,11 +20,7 @@ class SharedService:
             return ilt_school_detail
         
         except Exception as e:
-            return {
-            "confirmMessageID": "string",
-            "statusCode": 500,
-            "userMessage": f"unable to process your requests {e}"
-            }
+            raise CustomException(500, f"unable to process your requests {e}")
         
 
     def get_list_of_rocks(self, db: Session):
@@ -37,20 +34,12 @@ class SharedService:
             return ilt_rock_details
         
         except Exception as e:
-            return {
-            "confirmMessageID": "string",
-            "statusCode": 500,
-            "userMessage": f"unable to process your requests {e}"
-            }   
+            raise CustomException(500, f"unable to process your requests {e}")
 
     def get_list_of_ilt_rocks(self, iltId: int, db: Session):
         ilt_record = db.query(MdlIlts).filter(MdlIlts.id == iltId).one_or_none()
         if ilt_record is None:
-            return {
-                "confirmMessageID": "string",
-                "statusCode": 404,
-                "userMessage": "ilt does not exist"
-                }
+            raise CustomException(400,  "ilt does not exist")
         try:
             # re = db.query(MdlIlt_rocks).filter(MdlIlt_rocks.ilt_rock_id == iltId).all()
             rock_records = (
@@ -68,11 +57,7 @@ class SharedService:
             return ilt_rock_details
         
         except Exception as e:
-            return {
-            "confirmMessageID": "string",
-            "statusCode": 500,
-            "userMessage": f"unable to process your requests {e}"
-            } 
+            raise CustomException(500, f"unable to process your requests {e}")
 
 
     def get_role_details(self,db: Session):
@@ -86,11 +71,7 @@ class SharedService:
             return roles
         
         except Exception as e:
-            return {
-            "confirmMessageID": "string",
-            "statusCode": 500,
-            "userMessage": f"unable to process your requests {e}"
-            } 
+            raise CustomException(500, f"unable to process your requests {e}")
         
     def get_priority_details(self, db:Session):
         try:
@@ -103,20 +84,9 @@ class SharedService:
             return priority
         
         except Exception as e:
-            return {
-            "confirmMessageID": "string",
-            "statusCode": 500,
-            "userMessage": f"unable to process your requests {e}"
-            } 
+            raise CustomException(500, f"unable to process your requests {e}")
     def get_lookup_details(self, db:Session):
         try:
-            # user_record = db.query(MdlUsers).filter(MdlUsers.id==user_id).one_or_none()
-            # if user_record is None:
-            #         {
-            #             "confirmMessageID": "string",
-            #             "statusCode": 0,
-            #             "userMessage": "User not found"
-            #         }
 
             school_details = [{
                                     "schoolId" :  record.id,
@@ -189,9 +159,5 @@ class SharedService:
 
             # return [{"roles":rock_details_list, "schools":ilt_schools_list}]
         except Exception as e:
-            return {
-                 "confirmMessageID": "string",
-                "statusCode": 500,
-                "userMessage": f"Internal Error, unable to process your request {e}"
-            }
+            raise CustomException(500,  f"Internal Error, unable to process your request {e}")
         

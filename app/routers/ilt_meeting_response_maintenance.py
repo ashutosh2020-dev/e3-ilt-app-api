@@ -4,6 +4,7 @@ from app.config.database import get_db
 from app.services.ilt_meeting_response_service import IltMeetingResponceService
 from app.schemas.meeting_response import MeetingResponse, TodoList, Createdate, RockUpdate, updatesData, IssueList
 from datetime import datetime
+from app.exceptions.customException import CustomException
 from typing import Annotated, Union
 
 
@@ -47,11 +48,7 @@ def create_ilt_meeting_todolist( meetingResponseId:int, toDoData:TodoList,
                     "userMessage": "all to-do list created successfully"
                     }
     except Exception as e:
-        return {
-                "confirmMessageID": "string",
-                "statusCode": 500,
-                "userMessage": f"unable to process your request: {str(e)} "
-                }
+        raise CustomException(500,  f"unable to process your request: {str(e)}")
 
 
 
@@ -75,11 +72,7 @@ def create_ilt_meeting_updates( meetingResponseId:int,ilt:updatesData,
                     "userMessage": "all updates has inserted successfully"
                     }
     except Exception as e:
-        return {
-                "confirmMessageID": "string",
-                "statusCode": 500,
-                "userMessage": f"unable to process your request: {str(e)} "
-                }
+        raise CustomException(500,  f"unable to process your request: {str(e)} ")
 
 
 @router.post("/api/v1/ilts/meetingResponses/{meetingResponseId}/issues")
@@ -111,11 +104,7 @@ def create_ilt_meeting_issues( meetingResponseId: int,
                     "userMessage": "all issues has created successfully"
                     }
     except Exception as e:
-        return {
-                "confirmMessageID": "string",
-                "statusCode": 500,
-                "userMessage": f"unable to process your request: {str(e)}"
-                }
+        raise CustomException(500,  f"unable to process your request: {str(e)}")
 
 
 @router.post("/api/v1/ilts/meetingResponses/{meetingResponseId}")

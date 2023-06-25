@@ -8,6 +8,7 @@ from typing import List, Optional
 from app.schemas.meeting_response import MeetingResponse, Duedate
 from datetime import datetime, timezone
 from typing import Annotated, Union
+from app.exceptions.customException import CustomException
 
 
 
@@ -16,18 +17,10 @@ class IltMeetingResponceService:
         try:
             user = db.query(MdlUsers).filter(MdlUsers.id == user_id).one_or_none()
             if user is None:
-                return {
-                    "confirmMessageID": "string",
-                    "statusCode": 404,
-                    "userMessage": "User not found"
-                    }
+                raise CustomException(404,  "User not found")
             MeetingsResponse = db.query(MdlMeetingsResponse).filter(MdlMeetingsResponse.id == meetingResponseId).one_or_none()
             if MeetingsResponse is None:
-                return {
-                    "confirmMessageID": "string",
-                    "statusCode": 404,
-                    "userMessage": "MeetingsResponse record not found"
-                    }
+                raise CustomException(404,  "MeetingsResponse record not found")
             ilt_meet_re = db.query(MdlIltMeetingResponses)\
                                     .filter(MdlIltMeetingResponses.meeting_response_id==meetingResponseId).one()
             ilt_meet_id = ilt_meet_re.meeting_id
@@ -106,11 +99,7 @@ class IltMeetingResponceService:
                             "issues": iltMeetingResponse_issues
                         } 
         except Exception as e:
-            return {
-                    "confirmMessageID": "string",
-                    "statusCode": 500,
-                    "userMessage": f"unable to process your request: {e} "
-                    }
+             raise CustomException(500, f"unable to process your request: {e} ")
     
     def create_meeting_responses_empty_for_ILTmember(self, meeting_id:int, member_list:list, iltId:int, db:Session):
         try:
@@ -174,18 +163,10 @@ class IltMeetingResponceService:
             # check meetingResponseId
             user_re = db.query(MdlUsers).filter(MdlUsers.id == user_id).one_or_none()
             if user_re is None:
-                return {
-                    "confirmMessageID": "string",
-                    "statusCode": 404,
-                    "userMessage": "User_id not found"
-                    }
+                raise CustomException(404,  "User_id not found")
             ilt_re = db.query(MdlIlts).filter(MdlIlts.id == Ilt_id).one_or_none()
             if ilt_re is None:
-                return {
-                    "confirmMessageID": "string",
-                    "statusCode": 404,
-                    "userMessage": "ilt_id not found"
-                    }
+                raise CustomException(404,  "ilt_id not found")
             # db_rock = MdlRocks(name =name, description=description, on_track_flag=onTrack)
             db_rock = MdlRocks(ilt_id=Ilt_id, name =name, description=description)
             db.add(db_rock)
@@ -197,28 +178,16 @@ class IltMeetingResponceService:
                     "userMessage": "rock have successfully created inside the Ilt"
                 }
         except Exception as e:
-            return {
-                    "confirmMessageID": "string",
-                    "statusCode": 500,
-                    "userMessage": f"unable to create rock: {str(e)}"
-                }
+             raise CustomException(500, f"unable to create rock: {str(e)}")
     
     def read_ilt_rock(self,user_id:int, ilt_id:int, db:Session):
         try:
             check_user_id = db.query(MdlUsers).filter(MdlUsers.id==user_id).one_or_none()
             if check_user_id is None:
-                return {
-                    "confirmMessageID": "string",
-                    "statusCode": 404,
-                    "userMessage": "user_id did not exist!"
-                }
+                raise CustomException(404,  "user_id did not exist!")
             check_ilt = db.query(MdlRocks).filter(MdlRocks.ilt_id==ilt_id).first()
             if not check_ilt:
-                return {
-                    "confirmMessageID": "string",
-                    "statusCode": 404,
-                    "userMessage": "No rocks has created for this ilt_id"
-                }
+                raise CustomException(404,  "No rocks has created for this ilt_id")
 
             ilt_rock_records = [{"id":record.id,
                                 "name":record.name,
@@ -228,20 +197,12 @@ class IltMeetingResponceService:
                                 .all()]
             return ilt_rock_records
         except Exception as e:
-            return {
-                    "confirmMessageID": "string",
-                    "statusCode": 404,
-                    "userMessage": f"unable to process your request{e}"
-                }
+            raise CustomException(404,  f"unable to process your request{e}")
 
     def assign_ilts_rocks(self, logged_user_id:int, user_ids, Ilt_id:int,rock_id:int, db:Session):
 
         if db.query(MdlUsers).filter(MdlUsers.id==logged_user_id).one_or_none() is None:
-            return  {
-                "confirmMessageID": "string",
-                "statusCode": 404,
-                "userMessage": "logged userId is not found"
-            }
+            raise CustomException(400,  "logged userId is not found")
         # user_idsa
         user_ids=list(set(user_ids)) 
         for user_id in user_ids:
@@ -252,11 +213,7 @@ class IltMeetingResponceService:
                             ).scalar()
             # print("----------",ilt_member_exists)
             if not ilt_member_exists:
-                return {
-                    "confirmMessageID": "string",
-                    "statusCode": 404,
-                    "userMessage": "record not found wrt user and ilt id, user is not a member of the ilt"
-                }
+                raise CustomException(404,  "record not found wrt user and ilt id, user is not a member of the ilt")
             else:
                 pass
         
@@ -266,11 +223,7 @@ class IltMeetingResponceService:
                                     .exists()
                                 ).scalar()
         if not check_ilt_inside_rock:
-            return {
-                "confirmMessageID": "string",
-                "statusCode": 404,
-                "userMessage": "this rock_id is not create inside ilt"
-            }
+            raise CustomException(400,  "this rock_id is not create inside ilt")
         try:
             for uid in user_ids:
                 ownerStatus = False
@@ -285,36 +238,20 @@ class IltMeetingResponceService:
                     "userMessage": "rock is added to the corresponding user_id successfully"
                     }
         except Exception as e:
-            return {
-                "confirmMessageID": "string",
-                "statusCode": 500,
-                "userMessage": f"unable to process your request, error {e}"
-            }
+            raise CustomException(500,  f"unable to process your request, error {e}")
 
     def create_ilts_meeting_rocks(self, user_id: int, meetingResponseId:int, rockId:int, 
                        onTrack:bool, db:Session):
         try:
             user = db.query(MdlUsers).filter(MdlUsers.id == user_id).one_or_none()
             if user is None:
-                return {
-                    "confirmMessageID": "string",
-                    "statusCode": 404,
-                    "userMessage": "User not found"
-                    }
+                raise CustomException(404,  "User not found")
             MeetingsResponse = db.query(MdlMeetingsResponse).filter(MdlMeetingsResponse.id == meetingResponseId).one_or_none()
             if MeetingsResponse is None:
-                return {
-                    "confirmMessageID": "string",
-                    "statusCode": 404,
-                    "userMessage": "MeetingsResponse record not found"
-                    }
+                raise CustomException(404,  "MeetingsResponse record not found")
             check_rock_re = db.query(MdlRocks).filter(MdlRocks.id == rockId).one_or_none()
             if check_rock_re is None:
-                return {
-                    "confirmMessageID": "string",
-                    "statusCode": 404,
-                    "userMessage": "please enter correct rock id"
-                    }
+                raise CustomException(404,  "please enter correct rock id")
 
             db_meeting_rocks = MdlMeeting_rocks(ilt_meeting_response_id = meetingResponseId, 
                                                 rock_id=rockId, on_track_flag=onTrack)
@@ -328,27 +265,15 @@ class IltMeetingResponceService:
                 "userMessage": "rock added to the corresponding meetingRosponse id successfully"
                 }
         except Exception as e:
-            return {
-                "confirmMessageID": "string",
-                "statusCode": 0,
-                "userMessage": f"unable to process your request {e}"
-                }
+            raise CustomException(500,  f"unable to process your request {e}")
 
     def create_to_do_list(self, user_id:int, meetingResponseId: int, description:str, 
                           dueDate:Duedate, status:bool, db:Session):
         try:
             if db.query(MdlUsers).filter(MdlUsers.id ==user_id).one_or_none() is None:
-                return {
-                "confirmMessageID": "string",
-                "statusCode": 404,
-                "userMessage": f" userId is not valid"
-                }
+                raise CustomException(400,  f" userId is not valid")
             if db.query(MdlMeetingsResponse).filter(MdlMeetingsResponse.id ==meetingResponseId).one_or_none() is None:
-                return {
-                "confirmMessageID": "string",
-                "statusCode": 404,
-                "userMessage": f" meetingResponseId is not valid"
-                }
+                raise CustomException(400,  f" meetingResponseId is not valid")
             # check if user_id is inside MdlIltMembers
             db_meeting_todo = MdlIlt_ToDoTask(meeting_response_id = meetingResponseId, 
                                                 description=description, due_date=dueDate, status=status)
@@ -361,28 +286,16 @@ class IltMeetingResponceService:
                 "userMessage": "to-do list created successfully"
                 }
         except Exception as e:
-            return {
-                "confirmMessageID": "string",
-                "statusCode": 500,
-                "userMessage": f"unable to process your request: {str(e)} "
-                }
+            raise CustomException(500,  f"unable to process your request: {str(e)} ")
     
     def create_meeting_update(self, user_id:int, meetingResponseId: int, description:str, db:Session):
         try:
             # checking if user_id is inside MdlUsers
             user = db.query(MdlUsers).filter(MdlUsers.id == user_id).one_or_none()
             if user is None:
-                return {
-                    "confirmMessageID": "string",
-                    "statusCode": 404,
-                    "userMessage": "User not found"
-                    }
+                raise CustomException(404,  "User not found")
             if db.query(MdlMeetingsResponse).filter(MdlMeetingsResponse.id ==meetingResponseId).one_or_none() is None:
-                return {
-                "confirmMessageID": "string",
-                "statusCode": 404,
-                "userMessage": f" meetingResponseId is not valid"
-                }
+                raise CustomException(400,  f" meetingResponseId is not valid")
             
             db_meeting_update = Mdl_updates(meeting_response_id = meetingResponseId, 
                                                 description=description)
@@ -395,11 +308,7 @@ class IltMeetingResponceService:
                 "userMessage": "updates has beem submited successfully"
                 }
         except Exception as e:
-            return {
-                "confirmMessageID": "string",
-                "statusCode": 500,
-                "userMessage": "unable to process your request {str(e)}"
-                }
+            raise CustomException(500,  "unable to process your request {str(e)}")
     
     def create_issue(self, user_id:int, meetingResponseId: int, issue:str, priority:int, 
                      created_at,
@@ -415,25 +324,13 @@ class IltMeetingResponceService:
             # check if user_id is inside MdlIltMembers
             user = db.query(MdlUsers).filter(MdlUsers.id == user_id).one_or_none()
             if user is None:
-                return {
-                    "confirmMessageID": "string",
-                    "statusCode": 404,
-                    "userMessage": "User not found"
-                    }
+                raise CustomException(404,  "User not found")
             responce_id = db.query(MdlMeetingsResponse).filter(MdlMeetingsResponse.id == meetingResponseId).one_or_none()
             if responce_id is None:
-                return {
-                    "confirmMessageID": "string",
-                    "statusCode": 404,
-                    "userMessage": "responce_id not found"
-                    }
+                raise CustomException(404,  "responce_id not found")
             print("-------------",bool((db.query(MdlPriorities).filter(MdlPriorities.id==priority).one_or_none() is None) and (priority!=0)))
             if (db.query(MdlPriorities).filter(MdlPriorities.id==priority).one_or_none() is None) and (priority!=0):
-                return {
-                    "confirmMessageID": "string",
-                    "statusCode": 404,
-                    "userMessage": "priority not found"
-                    }
+                raise CustomException(404,  "priority not found")
             if priority == 0:
                 db_issue = Mdl_issue(issue=issue,
                                             created_at=created_at,
@@ -475,11 +372,7 @@ class IltMeetingResponceService:
                 "userMessage": "issue have been created successfully"
                 }
         except Exception as e:
-            return {
-                "confirmMessageID": "string",
-                "statusCode": 500,
-                "userMessage": f"unable to process your request {str(e)}"
-                }
+            raise CustomException(500,  f"unable to process your request {str(e)}")
 
     def update_ilt_meeting_responses(self, data:MeetingResponse, db: Session
                              ):
@@ -503,29 +396,17 @@ class IltMeetingResponceService:
             try:
                 meetingResponse = db.query(MdlMeetingsResponse).filter(MdlMeetingsResponse.id == data.iltMeetingResponseId).one_or_none()
                 if meetingResponse is None:
-                    return {
-                        "confirmMessageID": "string",
-                        "statusCode": 404,
-                        "userMessage": "MeetingsResponse record did not found"
-                        }
+                    raise CustomException(404,  "MeetingsResponse record did not found")
                 # checking - is meeting stated
                 ilt_meeting_record= (db.query(MdlMeetings)
                                         .filter(MdlMeetings.id ==  data.iltMeetingId).one_or_none())
                 if ilt_meeting_record is None:
-                    return {
-                        "confirmMessageID": "string",
-                        "statusCode": 404,
-                        "userMessage": "meeting record did not found"
-                        }
+                    raise CustomException(404,  "meeting record did not found")
                 start_meeting_time =  ilt_meeting_record.schedule_start_at.replace(tzinfo=timezone.utc) #datetime.strptime(ilt_meeting_start_time, '%Y-%m-%d %H:%M:%S.%f')
                 end_meeting_time = ilt_meeting_record.end_at.replace(tzinfo=timezone.utc)
                 current_time = datetime.now(timezone.utc)
                 if current_time >= start_meeting_time and  current_time <= end_meeting_time:
-                    return  {
-                        "confirmMessageID": "string",
-                        "statusCode": 404,
-                        "userMessage": "meeting has started, unable to process your requests"
-                        }
+                    raise CustomException(400,  "meeting has started, unable to process your requests")
                 
                 meetingResponseId = data.iltMeetingResponseId
                 if (data.attendance != None) or data.personalBest or data.professionalBest or data.rating or data.feedback or data.notes:
@@ -619,11 +500,7 @@ class IltMeetingResponceService:
                         db.refresh(user_issue_record)
                 
             except Exception as e:
-                return {
-                        "confirmMessageID": "string",
-                        "statusCode": 404,
-                        "userMessage": f"all details with corresponding meeting responceId is not found, error - {str(e)}"
-                        }
+                raise CustomException(404,  f"all details with corresponding meeting responceId is not found, error - {str(e)}")
 
             return {
                         "confirmMessageID": "string",
@@ -631,8 +508,4 @@ class IltMeetingResponceService:
                         "userMessage": "we have successfully added all records"           
                     }
         except Exception as e:  
-            return  {
-                "confirmMessageID": "string",
-                "statusCode": 500,
-                "userMessage": f"Internal Server Error = {str(e)}"
-                }
+            raise CustomException(500,  f"Internal Server Error = {str(e)}")

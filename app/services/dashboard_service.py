@@ -2,7 +2,7 @@ from sqlalchemy.orm import Session
 from app.models import MdlUsers, MdlIltMeetings, MdlMeetings, MdlMeeting_rocks,\
                     MdlIltMembers, MdlIltMeetingResponses, MdlMeetingsResponse, MdlIltissue, Mdl_issue
 from datetime import datetime, timezone
-
+from app.exceptions.customException import CustomException
 """
 meetings wrt to ilt which has finished
 meeting_responce_list for all user wrt each meeting in that ilt
@@ -19,11 +19,7 @@ class DashboardService:
         # check user 
         user_record = db.query(MdlUsers).filter(MdlUsers.id==user_id).one_or_none()
         if user_record is None:
-            return {
-                    "confirmMessageID": "string",
-                    "statusCode": 404,
-                    "userMessage": "user not found"
-                    }
+            raise CustomException(404,  "User not found")
         if user_record.role_id==3:
             """
                 avg_last_ilts_meeting_in_district
@@ -34,11 +30,7 @@ class DashboardService:
                 avg_issue
                 distribution_of_issue
             """
-            return {
-                    "confirmMessageID": "string",
-                    "statusCode": 404,
-                    "userMessage": "functionality is under-construction"
-                    }
+            raise CustomException(404,  "Functionality is under-construction")
 
         try:
             current_time = datetime.now(timezone.utc)
@@ -125,8 +117,4 @@ class DashboardService:
                 "avg_distribution_issue": avg_distribution_issue
             }   
         except Exception as e:
-            return {
-                    "confirmMessageID": "string",
-                    "statusCode": 500,
-                    "userMessage": f"unable to process your request, error - {e}"
-                    }
+             raise CustomException(500, f"unable to process your request, error - {e}")

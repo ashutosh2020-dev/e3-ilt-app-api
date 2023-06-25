@@ -2,17 +2,14 @@ from sqlalchemy.orm import Session
 from app.models import MdlUsers, MdlRoles
 from sqlalchemy.orm.exc import NoResultFound
 import sys
+from app.exceptions.customException import CustomException
 
 class UserService:
     def get_user(self, user_id: int, db: Session):
         try:
             u_record = db.query(MdlUsers).filter(MdlUsers.id == user_id).one_or_none()
             if u_record is None:
-                return {
-                    "confirmMessageID": "string",
-                    "statusCode": 404,
-                    "userMessage": "user records not found."
-                }
+                raise CustomException(404, "user records not found.")
             
             elif u_record.role_id == 1:
                 return {    "userId": u_record.id,
@@ -56,30 +53,16 @@ class UserService:
             
             
         except Exception as e:
-            # exc_type, exc_value, exc_traceback = sys.exc_info()
-            # status_code = getattr(exc_value, "status_code", 500)  # Default to 500 if status_code is not present
-            return {
-                "confirmMessageID": "string",
-                "statusCode": 500,
-                "userMessage": f"Internal Server Error: {e}"
-            }
+            raise CustomException(500,  f"Internal Server Error: {e}")
 
     def create_user(self, parent_user_id, fname, lname, email, number, password, is_active, role_id, db: Session):
         try:
             check_parent_id = db.query(MdlUsers).filter(MdlUsers.id==parent_user_id).one_or_none()
             if check_parent_id is None:
-                return {
-                "confirmMessageID": "string",
-                "statusCode": 404,
-                "userMessage": "User_id not found"
-            }
+                raise CustomException(400,  "User_id not found")
             check_role_id = db.query(MdlRoles).filter(MdlRoles.id==role_id).one_or_none()
             if check_role_id is None:
-                return {
-                "confirmMessageID": "string",
-                "statusCode": 404,
-                "userMessage": "role_id not found"
-            }
+                raise CustomException(400,  "role_id not found")
             db_user = MdlUsers(fname=fname, lname=lname, email=email, number=number, \
                             password=password, is_active=is_active, role_id=role_id, parent_user_id= parent_user_id)
             db.add(db_user)
@@ -93,21 +76,13 @@ class UserService:
         except Exception as e:
             exc_type, exc_value, exc_traceback = sys.exc_info()
             status_code = getattr(exc_value, "status_code", 404)  # Default to 404 if status_code is not present
-            return {
-                "confirmMessageID": "string",
-                "statusCode": status_code,
-                "userMessage": f"unable to create the record : {e}"
-            }
+            raise CustomException(500,  f"unable to create the record : {e}")
 
     def update_user(self, user_id:int, id: int, fname, lname, email, number, password, is_active, role_id, db: Session):
         try:
             user_id_re = db.query(MdlUsers).filter(MdlUsers.id == user_id).one_or_none()
             if user_id_re is None:
-                return {
-                    "confirmMessageID": "string",
-                    "statusCode": 404,
-                    "userMessage": "Record not found."
-                }
+                raise CustomException(404,  "Record not found.")
 
             db_user = db.query(MdlUsers).filter(MdlUsers.id == id).one()
             db_user.fname = fname
@@ -126,19 +101,9 @@ class UserService:
             }
         
         except NoResultFound:
-            return {
-                "confirmMessageID": "string",
-                "statusCode": 404,
-                "userMessage": "User not found."
-            }
+            raise CustomException(400,  "User not found.")
         except Exception as e:
-            exc_type, exc_value, exc_traceback = sys.exc_info()
-            status_code = getattr(exc_value, "status_code", 500)  # Default to 500 if status_code is not present
-            return {
-                "confirmMessageID": "string",
-                "statusCode": status_code,
-                "userMessage": f"Internal Server Error: {e}"
-            }
+            raise CustomException(500,  f"Internal Server Error: {e}")
 
 
     def delete_user(self, user_id: int, db: Session):
@@ -153,16 +118,6 @@ class UserService:
                 "userMessage": "User deleted successfully."
             }
         except NoResultFound:
-            return {
-                "confirmMessageID": "string",
-                "statusCode": 404,
-                "userMessage": "User not found."
-            }
+            raise CustomException(400,  "User not found.")
         except Exception as e:
-            exc_type, exc_value, exc_traceback = sys.exc_info()
-            status_code = getattr(exc_value, "status_code", 500)  # Default to 500 if status_code is not present
-            return {
-                "confirmMessageID": "string",
-                "statusCode": status_code,
-                "userMessage": f"Internal Server Error: {e}"
-            }
+            raise CustomException(500,  f"Internal Server Error: {e}")

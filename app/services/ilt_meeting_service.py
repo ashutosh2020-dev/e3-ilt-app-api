@@ -5,6 +5,7 @@ from app.models import MdlIltMeetings, MdlMeetings, MdlUsers, MdlIlts, \
 import sys
 from app.services.ilt_meeting_response_service import IltMeetingResponceService
 from datetime import datetime, timezone
+from app.exceptions.customException import CustomException
 
 def calculate_meeting_status(schedule_start_at, start_at, end_at):
     current_datetime = datetime.now(timezone.utc)
@@ -19,18 +20,10 @@ class IltMeetingService:
     def get_Ilts_meeting_list(self, user_id: int, ilt_id:int, db: Session):
         user = db.query(MdlUsers).filter(MdlUsers.id == user_id).first()
         if not user:
-            return {
-                "confirmMessageID": "string",
-                "statusCode": 404,
-                "userMessage": "User not found"
-                }                               
+            raise CustomException(400,  "User not found")
         check_ilt = db.query(MdlIlts).filter(MdlIlts.id == ilt_id).one_or_none()
         if check_ilt is None:
-            return {
-                "confirmMessageID": "string",
-                "statusCode": 404,
-                "userMessage": "Ilt not found"
-                }
+            raise CustomException(400,  "Ilt not found")
         list_meetings = [record.ilt_meeting_id 
                             for record in db.query(MdlIltMeetings)
                                 .filter(MdlIltMeetings.ilt_id == ilt_id)
@@ -52,11 +45,7 @@ class IltMeetingService:
 
             return ilt_list
         else:
-            return {
-        "confirmMessageID": "string",
-        "statusCode": 404,
-        "userMessage": "No meeting available for this Ilt id"
-        }
+            raise CustomException(400,  "No meeting available for this Ilt id")
 
     def create_ilts_meeting(self, ilt_id: int,user_id:int,  scheduledStartDate, 
                        meetingStart, meetingEnd, db: Session, location:str):
@@ -64,18 +53,10 @@ class IltMeetingService:
             # check the user_id have relation with ilt_id
             user_record = db.query(MdlUsers).filter(MdlUsers.id == user_id).one_or_none()
             if user_record is None:
-                return {
-                    "confirmMessageID": "string",
-                    "statusCode": 404,
-                    "userMessage": "User not found"
-                    }
+                raise CustomException(404,  "User not found")
             Ilt_record = db.query(MdlIlts).filter(MdlIlts.id == ilt_id).one_or_none()
             if Ilt_record is None:
-                return {
-                    "confirmMessageID": "string",
-                    "statusCode": 404,
-                    "userMessage": "ILT not found"
-                    }
+                raise CustomException(404,  "ILT not found")
             db_meeting = MdlMeetings(location = location, schedule_start_at = scheduledStartDate, 
                                 start_at = meetingStart, end_at = meetingEnd)
             db.add(db_meeting)
@@ -89,11 +70,7 @@ class IltMeetingService:
                             .create_meeting_responses_empty_for_ILTmember(meeting_id=db_meeting.id, 
                             member_list = ilt_members_list, iltId=ilt_id, db=db))
             if status is not True:
-                return {
-                    "confirmMessageID": "string",
-                    "statusCode": 404,
-                    "userMessage": f"Unable to create meeting responce : {msg}"
-                    }
+                raise CustomException(404,  f"Unable to create meeting responce : {msg}")
             # update map table about new ilt and ilt_meeting's relationship
             db_ilt_meeting = MdlIltMeetings(ilt_id = ilt_id, ilt_meeting_id = db_meeting.id, )
             db.add(db_ilt_meeting)
@@ -101,11 +78,7 @@ class IltMeetingService:
             db.refresh(db_ilt_meeting)
 
         except Exception as e:
-            return  {
-                "confirmMessageID": "string",
-                "statusCode": 500,
-                "userMessage": f"Internal Server Error: {e}"
-                }
+            raise CustomException(500,  f"Internal Server Error: {e}")
         
         return {
                 "confirmMessageID": "string",
@@ -117,11 +90,7 @@ class IltMeetingService:
                            meetingEnd,  db: Session):
         try:
             if db.query(MdlUsers).filter(MdlUsers.id == UserId).one_or_none() is None:
-                return {
-                        "confirmMessageID": "string",
-                        "statusCode": 404,
-                        "userMessage": "userId did not found "
-                        }
+                raise CustomException(404,  "userId did not found ")
             db_meeting = db.query(MdlMeetings).filter(MdlMeetings.id == meeting_id).one_or_none()
             if db_meeting is not None:
                 db_meeting.location = location
@@ -136,53 +105,27 @@ class IltMeetingService:
                         "userMessage": "meeting have successfully updated"
                         }
             else:
-                return {
-                    "confirmMessageID": "string",
-                    "statusCode": 404,
-                    "userMessage": "meeting records not found"
-                    }
+                raise CustomException(404,  "meeting records not found")
         except Exception as e:
-            # exc_type, exc_value, exc_traceback = sys.exc_info()
-            # status_code = getattr(exc_value, "status_code", 404)  # Default to 404 if status_code is not present
-            return {
-                "confirmMessageID": "string",
-                "statusCode": 500,
-                "userMessage": f"unable to update the record : {e}"
-            }
+            raise CustomException(500,  f"unable to update the record : {e}")
 
     def get_meeting_info(self, User_id:int, iltId:int, meeting_id:int,  db:Session):
         try:
             user = db.query(MdlUsers).filter(MdlUsers.id==User_id).one_or_none()
             if user is None:
-                return {
-                    "confirmMessageID": "string",
-                    "statusCode": 404,
-                    "userMessage": "User_id not found"
-                    }
+                raise CustomException(404,  "User_id not found")
             ilt_record = db.query(MdlIlts).filter(MdlIlts.id==iltId).one_or_none()
             if ilt_record is None:
-                return {
-                    "confirmMessageID": "string",
-                    "statusCode": 404,
-                    "userMessage": "ilt_id not found"
-                    }
+                raise CustomException(404,  "ilt_id not found")
             ilt_meeting_record = db.query(MdlMeetings).filter(MdlMeetings.id == meeting_id).one_or_none()
             if ilt_meeting_record is None:
-                return {
-                    "confirmMessageID": "string",
-                    "statusCode": 404,
-                    "userMessage": "ilt_meeting records not found"
-                    }
+                raise CustomException(404,  "ilt_meeting records not found")
             db_ilt_meeting_record = (db.query(MdlIltMeetings)
                                     .filter( MdlIltMeetings.ilt_id == iltId,
                                             MdlIltMeetings.ilt_meeting_id == meeting_id)
                                     .one_or_none())
             if db_ilt_meeting_record is None:
-                return {
-                    "confirmMessageID": "string",
-                    "statusCode": 404,
-                    "userMessage": "Meeting ID is not associated with ILT id"
-                    }
+                raise CustomException(404,  "Meeting ID is not associated with ILT id")
             if ilt_record.owner_id==User_id:
                 ilt_members_ids = [ x.member_id for x in db.query(MdlIltMembers)
                                 .filter(MdlIltMembers.ilt_id==iltId)
@@ -193,11 +136,7 @@ class IltMeetingService:
                                .filter(MdlIltMembers.ilt_id==iltId, MdlIltMembers.member_id==User_id )
                                .one_or_none())
                 if check_ilt_user_map_record is None:
-                    return {
-                        "confirmMessageID": "string",
-                        "statusCode": 404,
-                        "userMessage": "User ID is not associated with ILT"
-                        }
+                    raise CustomException(404,  "User ID is not associated with ILT")
                 ilt_members_ids = [User_id]
                 
             members_Info_dict = []
@@ -282,36 +221,16 @@ class IltMeetingService:
 
 
             return members_Info_dict
-            # {
-            #         "iltMeetingId":db_meeting_record.id,
-            #         "location":db_meeting_record.location, 
-            #         "schedule_start_at":db_meeting_record.schedule_start_at, 
-            #         "start_at":db_meeting_record.start_at,
-            #         "end_at":db_meeting_record.end_at, 
-            #         "member":members_Info_dict
-            #         }
         except Exception as e:
-            return {
-                "confirmMessageID": "string",
-                "statusCode": 500,
-                "userMessage": f"Internal server error {str(e)}"
-            }
+            raise CustomException(500,  f"Internal server error {str(e)}")
 
     def start_ilt_meeting(self, UserId:int, meeting_id: int, ilt_id: int,db: Session, location="", scheduledStartDate="", meetingStart="", 
                             meetingEnd=""):
             try:
                 if db.query(MdlUsers).filter(MdlUsers.id == UserId).one_or_none() is None:
-                    return {
-                            "confirmMessageID": "string",
-                            "statusCode": 404,
-                            "userMessage": "userId did not found "
-                            }
+                    raise CustomException(400,  "userId did not found ")
                 if db.query(MdlIlts).filter(MdlIlts.id == ilt_id).one_or_none() is None:
-                    return {
-                            "confirmMessageID": "string",
-                            "statusCode": 404,
-                            "userMessage": "ilt_id did not found "
-                            }
+                    raise CustomException(400,  "ilt_id did not found ")
                 
                 db_meeting = db.query(MdlMeetings).filter(MdlMeetings.id == meeting_id).one_or_none()
                 if db_meeting is not None:
@@ -327,33 +246,17 @@ class IltMeetingService:
                             "userMessage": "meeting have successfully updated"
                             }
                 else:
-                    return {
-                        "confirmMessageID": "string",
-                        "statusCode": 404,
-                        "userMessage": "meeting records not found"
-                        }
+                    raise CustomException(404,  "meeting records not found")
             except Exception as e:
                 # exc_type, exc_value, exc_traceback = sys.exc_info()
                 # status_code = getattr(exc_value, "status_code", 404)  # Default to 404 if status_code is not present
-                return {
-                    "confirmMessageID": "string",
-                    "statusCode": 500,
-                    "userMessage": f"unable to update the record : {e}"
-                }
+                 raise CustomException(500, f"unable to update the record : {e}")
     def stop_ilt_meeting(self, UserId:int, meeting_id: int, ilt_id: int,db: Session):
                 try:
                     if db.query(MdlUsers).filter(MdlUsers.id == UserId).one_or_none() is None:
-                        return {
-                                "confirmMessageID": "string",
-                                "statusCode": 404,
-                                "userMessage": "userId did not found "
-                                }
+                        raise CustomException(400,  "userId did not found ")
                     if db.query(MdlIlts).filter(MdlIlts.id == ilt_id).one_or_none() is None:
-                        return {
-                                "confirmMessageID": "string",
-                                "statusCode": 404,
-                                "userMessage": "ilt_id did not found "
-                                }
+                        raise CustomException(400,  "ilt_id did not found ")
                     
                     db_meeting = db.query(MdlMeetings).filter(MdlMeetings.id == meeting_id).one_or_none()
                     if db_meeting is not None:
@@ -369,16 +272,8 @@ class IltMeetingService:
                                 "userMessage": "meeting have successfully ended"
                                 }
                     else:
-                        return {
-                            "confirmMessageID": "string",
-                            "statusCode": 404,
-                            "userMessage": "meeting records not found"
-                            }
+                        raise CustomException(400,  "meeting records not found")
                 except Exception as e:
                     # exc_type, exc_value, exc_traceback = sys.exc_info()
                     # status_code = getattr(exc_value, "status_code", 404)  # Default to 404 if status_code is not present
-                    return {
-                        "confirmMessageID": "string",
-                        "statusCode": 500,
-                        "userMessage": f"unable to update the record : {e}"
-                    }
+                    raise CustomException(500, f"unable to update the record : {e}")

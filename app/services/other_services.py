@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Session
 from app.models import MdlRoles, MdlUsers, MdlSchools, MdlPriorities
 import sys
+from app.exceptions.customException import CustomException
 
 class Create_otherService:
     def create_root_user(self, fname, lname, email, number, password, is_active, role_id, db: Session):
@@ -16,13 +17,7 @@ class Create_otherService:
                 "userMessage": "root user has created successfully"
                 }
         except Exception as e:
-            exc_type, exc_value, exc_traceback = sys.exc_info()
-            status_code = getattr(exc_value, "status_code", 404)  # Default to 404 if status_code is not present
-            return {
-                "confirmMessageID": "string",
-                "statusCode": status_code,
-                "userMessage": f"unable to create the record : {e}"
-            }
+            raise CustomException(400,  f"unable to create the record : {e}")
     def create_schools(self, name, location, district, db:Session):
         try:
             db_school = MdlSchools(name=name, location=location, district=district)
@@ -35,11 +30,7 @@ class Create_otherService:
                     "userMessage": "school has created successfully."
                     }
         except Exception as e:
-            return {
-                "confirmMessageID": "string",
-                "statusCode": 500,
-                "userMessage": f"unable to create school, this school's name already exist.{e}"
-            }
+            raise CustomException(500,  f"unable to create school, this school's name already exist.{e}")
     
     def create_roles(self, role_name:str, roleDescription:str, db:Session):
         db_role = MdlRoles(name=role_name, description=roleDescription)
@@ -65,8 +56,4 @@ class Create_otherService:
                     "userMessage": "priority has created."
                     }
         except Exception as e:
-            return {
-                    "confirmMessageID": "string",
-                    "statusCode": 500,
-                    "userMessage": f"unable to process your request. error - {e}"
-                    }
+             raise CustomException(500, f"unable to process your request. error - {e}")

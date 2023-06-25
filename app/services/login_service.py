@@ -3,13 +3,13 @@ from fastapi import HTTPException
 from fastapi.responses import JSONResponse
 from app.exceptions.customException import CustomException
 from app.models import  MdlUsers
+from app.exceptions.customException import CustomException
 
 class loginService:
     def check_login(self, userName:str, password:str, db:Session):
         user_re = db.query(MdlUsers).filter(MdlUsers.email==userName).one_or_none()
         if user_re is None: 
-            1/0
-            raise CustomException(404, "user name not found")
+            raise CustomException(400, "Invaild userName/password")
 
         actual_password = user_re.password
         if password.strip() == actual_password:
@@ -21,8 +21,4 @@ class loginService:
                         "roleId": user_re.role_id
                     }
         else: 
-            return {
-                            "confirmMessageID": "string",
-                            "statusCode": 200,
-                            "userMessage": "password doesn't match"
-                        }
+            raise CustomException(400, "Invaild userName/password")

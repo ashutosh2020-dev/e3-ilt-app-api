@@ -4,6 +4,7 @@ from app.models import MdlIlts, MdlIltMembers, MdlUsers, MdlSchools, MdlMeetings
 from app.schemas.ilt_schemas import Ilt
 from sqlalchemy.exc import SQLAlchemyError
 from datetime import datetime, timezone
+from app.exceptions.customException import CustomException
 # from pytz import utc
 
 def calculate_meeting_status(schedule_start_at, start_at, end_at):
@@ -55,27 +56,15 @@ class IltService:
                        "meetingStatus": status}
                 ilt_list.append(val)
             return ilt_list
-        return {
-            "confirmMessageID": "string",
-            "statusCode": 404,
-            "userMessage": "records Not found"
-            }
+        raise CustomException(400,  "records Not found")
     def get_ilt_details(self, user_id:int, ilt_id:int, db:Session):
         try:
 
             if db.query(MdlUsers).filter(MdlUsers.id==user_id).one_or_none() is None:
-                return {
-                    "confirmMessageID": "string",
-                    "statusCode": 404,
-                    "userMessage": "userId did not found"
-                    }
+                raise CustomException(404,  "userId did not found")
             ilt_record = db.query(MdlIlts).filter(MdlIlts.id==ilt_id).one_or_none()
             if ilt_record is None:
-                return {
-            "confirmMessageID": "string",
-            "statusCode": 404,
-            "userMessage": "records Not found"
-            }
+                raise CustomException(400,  "records Not found")
             
             members_id_list = [record.member_id for record in db.query(MdlIltMembers).filter(MdlIltMembers.ilt_id==ilt_id).all()]
             school_record = db.query(MdlSchools).filter(MdlSchools.id==ilt_record.school_id).one()
@@ -127,41 +116,21 @@ class IltService:
             # validate school id existance
             owner_re = db.query(MdlUsers).filter(MdlUsers.id == owner_id).one_or_none()
             if owner_re is None:
-                return {
-                    "confirmMessageID": "string",
-                    "statusCode": 404,
-                    "userMessage": "User not found"
-                    }
+                raise CustomException(404,  "User not found")
             logged_user_re = db.query(MdlUsers).filter(MdlUsers.id == user_id).one_or_none()
             if logged_user_re is None:
-                return {
-                    "confirmMessageID": "string",
-                    "statusCode": 404,
-                    "userMessage": "user not found"
-                    }
+                raise CustomException(404,  "user not found")
             school_re = db.query(MdlSchools).filter(MdlSchools.id == school_id).one_or_none()
             if school_re is None:
-                return {
-                    "confirmMessageID": "string",
-                    "statusCode": 404,
-                    "userMessage": "school not found"
-                    }
+                raise CustomException(404,  "school not found")
             # verify all member id
             if len(member_id_list)==0:
-                return {
-                "confirmMessageID": "string",
-                "statusCode": 500,
-                "userMessage": "please member list."
-                } 
+                raise CustomException(500,  "please member list.")
             member_id_list = list(set(member_id_list))
             try:
                 valid_member_id_list = [db.query(MdlUsers).filter(MdlUsers.id == m_id).first().id for m_id in member_id_list]
             except Exception as e:
-                return {
-                "confirmMessageID": "string",
-                "statusCode": 500,
-                "userMessage": f"please enter existing member id only. Error: {str(e)}"
-                }
+                raise CustomException(500,  f"please enter existing member id only. Error: {str(e)}")
             
             db_ilt = MdlIlts(owner_id = owner_id,created_by=user_id, title= title, description= description, school_id= school_id)
             db.add(db_ilt)
@@ -182,42 +151,22 @@ class IltService:
                 }
         except SQLAlchemyError as e:
             # db.rollback()
-            return {
-                "confirmMessageID": "string",
-                "statusCode": 500,
-                "userMessage": f"Failed to store data in the database. Error: {str(e)}"
-                }
+            raise CustomException(500,  f"Failed to store data in the database. Error: {str(e)}")
         except Exception as e:
             # db.rollback()
-            return {
-                "confirmMessageID": "string",
-                "statusCode": 500,
-                "userMessage": f"unable to process your request: {str(e)}"
-                }
+            raise CustomException(500,  f"unable to process your request: {str(e)}")
 
     
     def update_ilt(self,ilt_data:Ilt,user_id, ilt_id, db: Session):
         try:
             if db.query(MdlUsers).filter(MdlUsers.id==user_id).one_or_none() is None:
-                return {
-                        "confirmMessageID": "string",
-                        "statusCode": 404,
-                        "userMessage": "User did not found"
-                    }
+                raise CustomException(404,  "User did not found")
             if ilt_data.schoolId != 0:
                 if db.query(MdlSchools).filter(MdlSchools.id == ilt_data.schoolId).one_or_none() is None:
-                    return {
-                            "confirmMessageID": "string",
-                            "statusCode": 404,
-                            "userMessage": "school did not found"
-                        }
+                    raise CustomException(400,  "school did not found")
             db_ilt = db.query(MdlIlts).filter(MdlIlts.id == ilt_id).one_or_none()
             if db_ilt is None:
-                return {
-                        "confirmMessageID": "string",
-                        "statusCode": 404,
-                        "userMessage": "ilt did not found"
-                    }
+                raise CustomException(404,  "ilt did not found")
             # need to add members, change owner_id functionality 
             if ilt_data.title:
                 db_ilt.title = ilt_data.title
@@ -233,8 +182,4 @@ class IltService:
                     "userMessage": "ilt has updated successfully"
                 }
         except Exception as e:
-            return {
-                        "confirmMessageID": "string",
-                        "statusCode": 500,
-                        "userMessage": "unable to process your request"
-                }
+            raise CustomException(500,  "unable to process your request")
