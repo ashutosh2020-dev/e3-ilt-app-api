@@ -48,8 +48,8 @@ class IltService:
                 else:
                     latestMeetingId = 0
                     status = 0
-                val = {"itlId":ilt_record.id, 
-                       "title":ilt_record.title, 
+                val = {"iltId":ilt_record.id, 
+                       "tittle":ilt_record.title, 
                        "description": ilt_record.description, 
                        "ownerName":owner_name,
                        "latestMeetingId":latestMeetingId,
@@ -76,13 +76,13 @@ class IltService:
                                     "firstName":user_record.fname, 
                                     "lastName":user_record.lname})
             return {
-                    "itlId": ilt_record.id,
-                    "onwer": {
+                    "iltId": ilt_record.id,
+                    "owner": {
                         "userId": owner_record.id,
                         "firstName": owner_record.fname,
                         "lastName": owner_record.lname
                     },
-                    "tile": ilt_record.title,
+                    "title": ilt_record.title,
                     "description": ilt_record.description,
                     "school": {
                         "schoolId": school_record.id,

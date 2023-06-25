@@ -23,3 +23,11 @@ class UpdateUserRequest(BaseModel):
 class loginCredential(BaseModel):
     userName:str
     password:str
+
+
+class UserAccount():
+    def __init__(self, userId: int, firstName: str, lastName: str, roleId: int):
+        self.userId = userId
+        self.firstName = firstName
+        self.lastName = lastName
+        self.roleId = roleId

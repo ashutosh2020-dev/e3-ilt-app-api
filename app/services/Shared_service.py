@@ -109,12 +109,11 @@ class SharedService:
                             "description": record.description
                         } for record in db.query(MdlPriorities).all()]
 
-            return [ {"roles":roles,
+            return  {"roles":roles,
                 "priorities":priorities,
                 "schools":school_details,
                 "rocks": rock_details}
-                ]
-            
+        
             # ilts_record = db.query(MdlIltMembers).filter(MdlIltMembers.member_id == user_id).all()
             # school_id_list = []
             # for record in ilts_record:

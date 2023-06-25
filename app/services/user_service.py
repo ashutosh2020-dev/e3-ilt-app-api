@@ -3,6 +3,7 @@ from app.models import MdlUsers, MdlRoles
 from sqlalchemy.orm.exc import NoResultFound
 import sys
 from app.exceptions.customException import CustomException
+from app.schemas.user_schemas import UserAccount
 
 class UserService:
     def get_user(self, user_id: int, db: Session):
@@ -10,21 +11,22 @@ class UserService:
             u_record = db.query(MdlUsers).filter(MdlUsers.id == user_id).one_or_none()
             if u_record is None:
                 raise CustomException(404, "user records not found.")
-            
+
             elif u_record.role_id == 1:
-                return {    "userId": u_record.id,
+                return [{   "userId": u_record.id,
                             "firstName": u_record.fname,
                             "lastName": u_record.lname,
-                            "emaildId": u_record.email,
+                            "emailId": u_record.email,
                             "phoneNumber": u_record.number,
                             "password": u_record.password,
                             "active": u_record.is_active,
                             "roleId": u_record.role_id,
-                            "parentUserId": u_record.parent_user_id }
+                            "parentUserId": u_record.parent_user_id }]
             
             elif u_record.role_id == 2:
                 users_list = []
-                associated_users_record = db.query(MdlUsers).filter(MdlUsers.parent_user_id == user_id).all()
+                user_query = db.query(MdlUsers).filter(MdlUsers.parent_user_id == user_id)
+                associated_users_record = user_query.all()
                 for user_record in associated_users_record:
                     users_list.append({ "userId": user_record.id,
                                         "firstName": user_record.fname,
@@ -38,6 +40,7 @@ class UserService:
                 return users_list
             elif u_record.role_id == 3:
                 users_list = []
+                user_query = db.query(MdlUsers)
                 associated_users_record = [{ "userId": record.id,
                                             "firstName": record.fname,
                                             "lastName": record.lname,
@@ -47,13 +50,30 @@ class UserService:
                                             "active": record.is_active,
                                             "roleId": record.role_id,
                                             "parentUserId": record.parent_user_id 
-                                            } for record in db.query(MdlUsers).order_by(MdlUsers.id).all()]
+                                            } for record in user_query.order_by(MdlUsers.id).all()]
                 return associated_users_record
             
             
             
         except Exception as e:
             raise CustomException(500,  f"Internal Server Error: {e}")
+
+    def search_user(self, user_id: int,keyword:str, db: Session):
+        u_record = db.query(MdlUsers).filter(MdlUsers.id == user_id).one_or_none()
+        if u_record is None:
+            raise CustomException(404, "user records not found.")
+        
+        elif u_record.role_id != 1:
+            user_query = db.query(MdlUsers)
+            if keyword:
+                user_query = user_query.filter(MdlUsers.fname.like(f"%{keyword}%") 
+                                                | MdlUsers.lname.like(f"%{keyword}%"))
+            associated_users_record =  [ UserAccount(100, record.fname,record.lname, record.role_id)        
+                                          for record in user_query.order_by(MdlUsers.id).all()]
+            # UserAccount(record.id, record.fname,record.lname, record.role_id)
+            return associated_users_record
+
+
 
     def create_user(self, parent_user_id, fname, lname, email, number, password, is_active, role_id, db: Session):
         try:

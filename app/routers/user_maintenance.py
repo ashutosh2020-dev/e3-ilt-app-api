@@ -7,8 +7,12 @@ router = APIRouter()
 user_service = UserService()
 
 @router.get("/api/v1/users/")
-def fn_read_users(UserId: int=Header(convert_underscores=False), db: Session = Depends(get_db)):
+def fn_read_users(UserId: int=Header(convert_underscores=False),  db: Session = Depends(get_db)):
     return user_service.get_user(UserId, db =db)
+
+@router.get("/api/v1/users/search")
+def fn_read_users(keyword:str, UserId: int=Header(convert_underscores=False),  db: Session = Depends(get_db)):
+    return user_service.search_user(UserId, keyword, db =db)
 
 
 @router.post("/api/v1/users/")
