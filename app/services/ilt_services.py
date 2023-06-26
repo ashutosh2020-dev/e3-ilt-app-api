@@ -2,6 +2,7 @@ from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import desc, join
 from app.models import MdlIlts, MdlIltMembers, MdlUsers, MdlSchools, MdlMeetings, MdlIltMeetings
 from app.schemas.ilt_schemas import Ilt
+from app.services.ilt_meeting_response_service import IltMeetingResponceService
 from sqlalchemy.exc import SQLAlchemyError
 from datetime import datetime, timezone
 from app.exceptions.customException import CustomException
@@ -106,7 +107,7 @@ class IltService:
                 "members": member_info
             }
         except Exception as e:
-            return None
+                raise CustomException(500,  f"unable to process your request: {e}")
 
     def is_user_exist(self, user_id, db):
         user = db.query(MdlUsers).filter(MdlUsers.id == user_id).one_or_none()
@@ -179,17 +180,19 @@ class IltService:
             raise CustomException(
                 500,  f"unable to process your request: {str(e)}")
 
-    def update_ilt(self, ilt_data: Ilt, user_id, ilt_id, db: Session):
+    def update_ilt(self, ilt_data: Ilt, user_id, ilt_id:int, db: Session):
         try:
-            if db.query(MdlUsers).filter(MdlUsers.id == user_id).one_or_none() is None:
-                raise CustomException(404,  "User did not found")
+            loging_user_record = db.query(MdlUsers).filter(MdlUsers.id == user_id).one_or_none() 
+            if loging_user_record is None or loging_user_record.role_id == 1:
+                raise CustomException(404,  "this User can not perform the operation")
             if ilt_data.schoolId != 0:
                 if db.query(MdlSchools).filter(MdlSchools.id == ilt_data.schoolId).one_or_none() is None:
                     raise CustomException(400,  "school did not found")
-            db_ilt = db.query(MdlIlts).filter(
-                MdlIlts.id == ilt_id).one_or_none()
+            
+            db_ilt = db.query(MdlIlts).filter(MdlIlts.id == ilt_id).one_or_none()
             if db_ilt is None:
                 raise CustomException(404,  "ilt did not found")
+            
             # need to add members, change owner_id functionality
             if ilt_data.title:
                 db_ilt.title = ilt_data.title
@@ -197,12 +200,58 @@ class IltService:
                 db_ilt.description = ilt_data.description
             if ilt_data.schoolId:
                 db_ilt.school_id = ilt_data.schoolId
+            db_ilt.update_at = datetime.now(timezone.utc)
+            db_ilt.update_by = user_id
             db.commit()
             db.refresh(db_ilt)
+            if len(ilt_data.memberIds)>=1 and ilt_data.memberIds[0]!=0 :
+                if 0 in ilt_data.memberIds:
+                    raise CustomException(500,  f"unable to process your request: found 0 in member list")
+                msg, count = ("", 0)
+                ilt_query=db.query(MdlIltMembers)
+                #check if user exist
+                verified_member_ids=[]
+                for m_re in list(set(ilt_data.memberIds)):
+                    ilt_record = ilt_query.filter(MdlIltMembers.ilt_id==ilt_id ,
+                                                  MdlIltMembers.member_id==m_re).one_or_none()
+                    if  ilt_record is not None:
+                        count += 1
+                    else:
+                        verified_member_ids.append(m_re)
+                        db_ilt_member = MdlIltMembers(ilt_id=ilt_id, member_id=m_re) # adding to ilt_user_map
+                        db.add(db_ilt_member)
+                        db.commit()
+                        db.refresh(db_ilt_member)
+
+                current_date = datetime.now()
+                upcoming_meeting_list = db.query(MdlMeetings)\
+                                .join(MdlIltMeetings, MdlMeetings.id == MdlIltMeetings.ilt_meeting_id)\
+                                .filter(MdlIltMeetings.ilt_id == ilt_id)\
+                                .filter(MdlMeetings.schedule_start_at > current_date)\
+                                .all()
+                upcoming_meetingId_list = [record.id for record in upcoming_meeting_list]
+                # print(upcoming_meetingId_list)
+                # creating meetingResponce for new members
+                flag, msg = IltMeetingResponceService().create_meeting_responses_empty_for_newMember_for_all_meetings(
+                                meeting_ids =upcoming_meetingId_list, member_list=verified_member_ids, db=db
+                            )
+                
+                if flag != True:
+                    raise CustomException(404,  f"unable to process your request, {msg}")
+                else:
+                    emsg="ilt has updated successfully with all new members."
+                    if count>0:
+                        emsg = f"ilt has updated successfully with all new member whereas {count} member already exist in the ilt"
+                    return {
+                            "confirmMessageID": "string",
+                            "statusCode": 200,
+                            "userMessage": emsg
+                        }
+                
             return {
                 "confirmMessageID": "string",
                 "statusCode": 200,
                 "userMessage": "ilt has updated successfully"
             }
         except Exception as e:
-            raise CustomException(500,  "unable to process your request")
+            raise CustomException(500,  f"unable to process your request, error: {e}")

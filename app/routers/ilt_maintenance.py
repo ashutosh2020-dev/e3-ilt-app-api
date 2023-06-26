@@ -13,14 +13,17 @@ def read_ilts_for_user(UserId: int=Header(convert_underscores=False), db: Sessio
     return IltService.get_Ilts_list(user_id = UserId, db = db)
 
 @router.post("/api/v1/ilts/")
-async def create_ilt(Createilt:Createilt, UserId: int=Header(convert_underscores=False), db: Session = Depends(get_db)):
-    return IltService.create_ilts(owner_id = Createilt.owner_id, 
-                                  user_id=UserId, 
-                                  title = Createilt.title, 
-                                  description = Createilt.description, 
-                                  school_id = Createilt.schoolId,
-                                  member_id_list = Createilt.memberIds, 
-                                  db = db)
+async def create_and_update_ilt(ilt_data:Ilt, UserId: int=Header(convert_underscores=False), db: Session = Depends(get_db)):
+    if ilt_data.iltId>0:
+        return  IltService.update_ilt(ilt_data=ilt_data, user_id =UserId, ilt_id=ilt_data.iltId, db=db)
+    else:
+        return IltService.create_ilts(owner_id = ilt_data.ownerId, 
+                                    user_id=UserId, 
+                                    title = ilt_data.title, 
+                                    description = ilt_data.description, 
+                                    school_id = ilt_data.schoolId,
+                                    member_id_list = ilt_data.memberIds, 
+                                    db = db)
 
 @router.get("/api/v1/ilts/{id}")
 def read_ilts_description(id: int, UserId: int=Header(convert_underscores=False), db: Session = Depends(get_db)):

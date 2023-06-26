@@ -104,7 +104,7 @@ class IltMeetingResponceService:
     def create_meeting_responses_empty_for_ILTmember(self, meeting_id:int, member_list:list, iltId:int, db:Session):
         try:
             for uid in member_list:
-                db_meeting_response = MdlMeetingsResponse(attendance_flag = None , 
+                db_meeting_response = MdlMeetingsResponse(attendance_flag = None,
                                 checkin_personal_best=None, checkin_professional_best=None,
                                 rating = None, feedback=None, notes=None)
                 db.add(db_meeting_response)
@@ -143,6 +143,28 @@ class IltMeetingResponceService:
             return (True, "")
         except Exception as e:
             return (False, str(e))
+
+    def create_meeting_responses_empty_for_newMember_for_all_meetings(self, meeting_ids:list, member_list:list,db:Session):
+            try:
+                for mid in meeting_ids:
+                    for uid in member_list:
+                        db_meeting_response = MdlMeetingsResponse(attendance_flag = None,
+                                        checkin_personal_best=None, checkin_professional_best=None,
+                                        rating = None, feedback=None, notes=None)
+                        db.add(db_meeting_response)
+                        db.commit()
+                        db.refresh(db_meeting_response)
+                        map_record = MdlIltMeetingResponses(meeting_id= mid,
+                                                        meeting_response_id = db_meeting_response.id, meeting_user_id = uid)
+                        db.add(map_record)
+                        db.commit()
+                        db.refresh(map_record)
+
+                return (True, "")
+            except Exception as e:
+                return (False, str(e))
+
+
 
     def create_meeting_responses(self, meeting_id:int, is_attand:bool, checkin_personal_best:str, 
                                  checkin_professional_best:str, ratings:int, feedback:str, notes:str, db:Session):
