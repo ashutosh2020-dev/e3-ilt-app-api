@@ -251,6 +251,7 @@ class IltMeetingService:
                 # exc_type, exc_value, exc_traceback = sys.exc_info()
                 # status_code = getattr(exc_value, "status_code", 404)  # Default to 404 if status_code is not present
                  raise CustomException(500, f"unable to update the record : {e}")
+
     def stop_ilt_meeting(self, UserId:int, meeting_id: int, ilt_id: int,db: Session):
                 try:
                     if db.query(MdlUsers).filter(MdlUsers.id == UserId).one_or_none() is None:

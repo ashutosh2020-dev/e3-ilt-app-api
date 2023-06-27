@@ -155,6 +155,8 @@ class IltService:
                 MdlSchools.id == school_id).one_or_none()
             if school_re is None:
                 raise CustomException(404,  "school not found")
+            if bool(title and description) != True:
+                raise CustomException(400,  "please enter title/description")
             # verify all member id
             valid_member_id_list = []
             if len(member_id_list) >0:
@@ -211,7 +213,7 @@ class IltService:
                 common_msg = "unable to update ownerId for now!"
                 # update tables - ilt, iltMember, upcoming_meetings_responce, for all rocks, and all user_maping  
                 pass
-            db_ilt.update_at = datetime.now(timezone.utc)
+            db_ilt.updated_at = datetime.now(timezone.utc)
             db_ilt.update_by = user_id
             db.commit()
             db.refresh(db_ilt)
@@ -271,21 +273,20 @@ class IltService:
         ilt_record = db.query(MdlIlts).filter(MdlIlts.id == iltId).one_or_none()
         if ilt_record is None:
             raise CustomException(400,  "ilt does not exist")
-        try:
-            # re = db.query(MdlIlt_rocks).filter(MdlIlt_rocks.ilt_rock_id == iltId).all()
-            rock_records = (
-                                db.query(MdlRocks)
-                                .join(MdlIlt_rocks, MdlRocks.ilt_id == MdlIlt_rocks.ilt_id)
-                                .filter(MdlRocks.ilt_id==iltId)
-                                .all()
-                            )
-            ilt_rock_details = [{
-                                    "schoolId" :  ilt_rock_detail.id,
-                                    "schoolName" : ilt_rock_detail.name,
-                                    "schoolDistrict" : ilt_rock_detail.district
-                                 } for ilt_rock_detail in rock_records]
-
-            return ilt_rock_details
         
-        except Exception as e:
-            raise CustomException(500, f"unable to process your requests {e}")
+        # re = db.query(MdlIlt_rocks).filter(MdlIlt_rocks.ilt_rock_id == iltId).all()
+        rock_records = (
+                            db.query(MdlRocks)
+                            # .join(MdlIlt_rocks, MdlRocks.ilt_id == MdlIlt_rocks.ilt_id)
+                            .filter(MdlRocks.ilt_id==iltId)
+                            .all()
+                        )
+
+        ilt_rock_details = [{
+                                "id" :  ilt_rock_detail.id,
+                                "name" : ilt_rock_detail.name,
+                                "description" : ilt_rock_detail.description,
+                                "ownerId":ilt_rock_detail.owner_id if ilt_rock_detail.owner_id else "OwnerId not assigned"
+                                } for ilt_rock_detail in rock_records]
+
+        return ilt_rock_details

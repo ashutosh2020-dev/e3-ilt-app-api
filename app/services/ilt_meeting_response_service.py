@@ -219,11 +219,13 @@ class IltMeetingResponceService:
         except Exception as e:
             raise CustomException(404,  f"unable to process your request{e}")
 
-    def assign_ilts_rocks(self, logged_user_id:int, user_ids, Ilt_id:int,rock_id:int, db:Session):
+    def assign_ilts_rocks(self, logged_user_id:int, user_ids, Ilt_id:int,rock_id:int, rockOwnerId:int, db:Session):
 
         if db.query(MdlUsers).filter(MdlUsers.id==logged_user_id).one_or_none() is None:
             raise CustomException(400,  "logged userId is not found")
-        # user_idsa
+        rockOwner_Record = db.query(MdlUsers).filter(MdlUsers.id==rockOwnerId).one_or_none()
+        if rockOwner_Record is None:
+            raise CustomException(400,  "owner userId does not exist")
         user_ids=list(set(user_ids)) 
         for user_id in user_ids:
             ilt_member_exists = db.query(
@@ -231,7 +233,6 @@ class IltMeetingResponceService:
                                 .filter(MdlIltMembers.ilt_id == Ilt_id, MdlIltMembers.member_id == user_id)
                                 .exists()
                             ).scalar()
-            # print("----------",ilt_member_exists)
             if not ilt_member_exists:
                 raise CustomException(404,  "record not found wrt user and ilt id, user is not a member of the ilt")
             else:
@@ -244,10 +245,18 @@ class IltMeetingResponceService:
                                 ).scalar()
         if not check_ilt_inside_rock:
             raise CustomException(400,  "this rock_id is not create inside ilt")
+        db_rock_Record = db.query(MdlRocks).filter(MdlRocks.id==rockOwnerId).one()
+        db_rock_Record.owner_id = rockOwnerId
+        db.add(db_rock_Record)
+        db.commit()
+        db.refresh(db_rock_Record)
         try:
             for uid in user_ids:
                 ownerStatus = False
+                if uid==rockOwnerId:
+                    ownerStatus = True
                 db_ilt_rocks = MdlIlt_rocks(ilt_id = Ilt_id, user_id=uid, ilt_rock_id=rock_id, is_rock_owner=ownerStatus) 
+                
                 db.add(db_ilt_rocks)
                 db.commit()
                 db.refresh(db_ilt_rocks)
@@ -255,7 +264,7 @@ class IltMeetingResponceService:
             return {
                     "confirmMessageID": "string",
                     "statusCode": 200,
-                    "userMessage": "rock is added to the corresponding user_id successfully"
+                    "userMessage": "rock is added to the corresponding user_id successfully with updated ownerId "
                     }
         except Exception as e:
             raise CustomException(500,  f"unable to process your request, error {e}")
