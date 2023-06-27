@@ -36,28 +36,6 @@ class SharedService:
         except Exception as e:
             raise CustomException(500, f"unable to process your requests {e}")
 
-    def get_list_of_ilt_rocks(self, iltId: int, db: Session):
-        ilt_record = db.query(MdlIlts).filter(MdlIlts.id == iltId).one_or_none()
-        if ilt_record is None:
-            raise CustomException(400,  "ilt does not exist")
-        try:
-            # re = db.query(MdlIlt_rocks).filter(MdlIlt_rocks.ilt_rock_id == iltId).all()
-            rock_records = (
-                                db.query(MdlRocks)
-                                .join(MdlIlt_rocks, MdlRocks.ilt_id == MdlIlt_rocks.ilt_id)
-                                .filter(MdlRocks.ilt_id==iltId)
-                                .all()
-                            )
-            ilt_rock_details = [{
-                                    "schoolId" :  ilt_rock_detail.id,
-                                    "schoolName" : ilt_rock_detail.name,
-                                    "schoolDistrict" : ilt_rock_detail.district
-                                 } for ilt_rock_detail in rock_records]
-
-            return ilt_rock_details
-        
-        except Exception as e:
-            raise CustomException(500, f"unable to process your requests {e}")
 
 
     def get_role_details(self,db: Session):

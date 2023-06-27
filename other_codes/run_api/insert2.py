@@ -21,8 +21,8 @@ total_num_user = num_school*num_ilt*user_per_ilt # 112
 total_ilts = num_school*num_ilt # 16
 total_meetings = total_ilts*meetings_per_ilt # 32
 
-host_url = "http://middle-ilt-app.us-east-1.elasticbeanstalk.com/" 
-# host_url = "http://127.0.0.1/"
+# host_url = "http://middle-ilt-app.us-east-1.elasticbeanstalk.com/" 
+host_url = "http://127.0.0.1/"
 
 def hit_create_user_api(host_url, user, payload={}, headers={}):
     endpoint = f"""api/v1/users/"""
@@ -72,23 +72,38 @@ def hit_create_ilt_api(host_url, ilt, school_id):
 
         # Convert members_ids to regular integers
         members_ids = [int(id) for id in members_ids]
-        # print(ilt["description"], ilt["title"])
-        # print(type(ilt["description"]), type(ilt["title"]), type(ilt["owner_id"]))
-        # params = {"user_id": 1}
-        payload = json.dumps({  "title": ilt["title"],
+    
+        payload = json.dumps({  
+                                "title": ilt["title"],
                                 "description": ilt["description"],
                                 "schoolId": school_id,
-                                "owner_id": ilt["owner_id"],
+                                "ownerId": ilt["owner_id"],
                                 "memberIds": members_ids
                             })
         headers = {
-            'Content-Type': 'application/json',
-            'UserId':str(user_id)
-        }
-        print("================")
+                        'Content-Type': 'application/json',
+                        'UserId':str(user_id)
+                    }
         response = requests.post(url, headers=headers, data=payload)
-        # response = requests.request("POST", url, headers=headers, json=payload)
         print(response.text)
+
+def run_create_ilt_api():
+    csv_file = pd.read_csv("ilt.csv")
+    for school_idx in range(num_school):
+        for i in range(num_ilt):
+            if i==num_ilt:
+                break
+            try:
+                hit_create_ilt_api( host_url=host_url,
+                                    ilt=csv_file.iloc[i+(school_idx*num_ilt)],  
+                                    school_id=(school_idx+1)
+                                    )
+            except Exception as e:
+                print(f"error{e}")
+                pass
+            
+    print("created successfully")
+
 
 def hit_create_iltMeeting_api(host_url, ilt_meeting, ilt_owner_id, ilt_id):
     date = ilt_meeting['startDate']
@@ -109,23 +124,6 @@ def hit_create_iltMeeting_api(host_url, ilt_meeting, ilt_owner_id, ilt_id):
     if '200' not in response.text:
        print(response.text)
 
-def run_create_ilt_api():
-    csv_file = pd.read_csv("ilt.csv")
-    for school_idx in range(num_school):
-        for i in range(num_ilt):
-            if i==num_ilt:
-                break
-            try:
-                hit_create_ilt_api( host_url=host_url,
-                                    ilt=csv_file.iloc[i+(school_idx*num_ilt)],  
-                                    school_id=(school_idx+1)
-                                    )
-            except Exception as e:
-                print(f"error{e}")
-                pass
-        
-            
-    print("created successfully")
 
 def run_create_iltMeeting_api():
     owner_ids = [i for i in range(1,total_ilts+1)]*2 # facilitator ids, no need to calculate

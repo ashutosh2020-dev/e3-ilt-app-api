@@ -24,6 +24,10 @@ async def create_and_update_ilt(ilt_data:Ilt, UserId: int=Header(convert_undersc
                                     school_id = ilt_data.schoolId,
                                     member_id_list = ilt_data.memberIds, 
                                     db = db)
+    
+@router.get("/api/v1/ilt/{id}/rock")
+def fn_read_list_of_rocks(id: int, db: Session = Depends(get_db)):
+    return IltService.get_list_of_ilt_rocks(iltId=id, db =db)
 
 @router.get("/api/v1/ilts/{id}")
 def read_ilts_description(id: int, UserId: int=Header(convert_underscores=False), db: Session = Depends(get_db)):

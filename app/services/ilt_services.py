@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import desc, join
-from app.models import MdlIlts, MdlIltMembers, MdlUsers, MdlSchools, MdlMeetings, MdlIltMeetings
+from app.models import MdlIlts, MdlIltMembers, MdlUsers, MdlSchools, MdlMeetings, MdlIltMeetings, MdlRocks, MdlIlt_rocks
 from app.schemas.ilt_schemas import Ilt
 from app.services.ilt_meeting_response_service import IltMeetingResponceService
 from sqlalchemy.exc import SQLAlchemyError
@@ -69,9 +69,9 @@ class IltService:
 
     def get_ilt_details(self, user_id: int, ilt_id: int, db: Session):
         try:
-
             if db.query(MdlUsers).filter(MdlUsers.id == user_id).one_or_none() is None:
-                raise CustomException(404,  "userId did not found")
+                raise CustomException(400,  "records Not found")
+                # return "not found"
             ilt_record = db.query(MdlIlts).filter(
                 MdlIlts.id == ilt_id).one_or_none()
             if ilt_record is None:
@@ -255,3 +255,26 @@ class IltService:
             }
         except Exception as e:
             raise CustomException(500,  f"unable to process your request, error: {e}")
+
+    def get_list_of_ilt_rocks(self, iltId: int, db: Session):
+        ilt_record = db.query(MdlIlts).filter(MdlIlts.id == iltId).one_or_none()
+        if ilt_record is None:
+            raise CustomException(400,  "ilt does not exist")
+        try:
+            # re = db.query(MdlIlt_rocks).filter(MdlIlt_rocks.ilt_rock_id == iltId).all()
+            rock_records = (
+                                db.query(MdlRocks)
+                                .join(MdlIlt_rocks, MdlRocks.ilt_id == MdlIlt_rocks.ilt_id)
+                                .filter(MdlRocks.ilt_id==iltId)
+                                .all()
+                            )
+            ilt_rock_details = [{
+                                    "schoolId" :  ilt_rock_detail.id,
+                                    "schoolName" : ilt_rock_detail.name,
+                                    "schoolDistrict" : ilt_rock_detail.district
+                                 } for ilt_rock_detail in rock_records]
+
+            return ilt_rock_details
+        
+        except Exception as e:
+            raise CustomException(500, f"unable to process your requests {e}")

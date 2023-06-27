@@ -14,7 +14,7 @@ class Createilt(BaseModel):
     memberIds: List[int]
 
 class Ilt(BaseModel):
-    iltId: Optional[int] = None
+    iltId: Optional[int] = 0
     title: str=""
     description: str=""
     schoolId: int=0
