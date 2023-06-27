@@ -37,7 +37,6 @@ class SharedService:
             raise CustomException(500, f"unable to process your requests {e}")
 
 
-
     def get_role_details(self,db: Session):
         try:
             roles = [{
