@@ -84,6 +84,10 @@ class UserService:
                 MdlRoles.id == role_id).one_or_none()
             if check_role_id is None:
                 raise CustomException(400,  "role_id not found")
+            check_user_detail = db.query(MdlUsers).filter(
+                MdlUsers.email == email or MdlUsers.number == number ).one_or_none()
+            if check_user_detail is not None:
+                raise CustomException(400,  "user already exists")
             db_user = MdlUsers(fname=fname, lname=lname, email=email, number=number,
                                password=password, is_active=is_active, role_id=role_id, parent_user_id=parent_user_id)
             db.add(db_user)

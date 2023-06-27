@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from app.config.database import get_db
 from app.services.ilt_services import IltService
 from typing import Annotated, Union
-from app.schemas.ilt_schemas import Ilt, Createilt
+from app.schemas.ilt_schemas import Ilt
 
 router = APIRouter()
 IltService = IltService()

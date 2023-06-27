@@ -104,10 +104,5 @@ app.include_router(other_maintenance.router, tags=["Others"])
 def home():
     return {"Request":"Success"}
 
-@app.get("/test/")
-def home(id:int):
-    return {"Request":"Success"}
-
-
 if __name__ == "__main__":
     uvicorn.run("main:app", host="0.0.0.0", port=settings.app_port, reload=True, workers=4)

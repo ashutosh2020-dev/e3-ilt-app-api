@@ -5,18 +5,10 @@ from datetime import datetime
 class member(BaseModel):
     id: int
 
-
-class Createilt(BaseModel):
-    title: str
-    description: str
-    schoolId: int
-    owner_id:int
-    memberIds: List[int]
-
 class Ilt(BaseModel):
     iltId: Optional[int] = 0
-    title: str=""
-    description: str=""
-    schoolId: int=0
-    ownerId:int
-    memberIds: list[int]
+    title: Optional[str] =""
+    description: Optional[str]=""
+    schoolId: Optional[int]=0
+    ownerId:Optional[int]=0
+    memberIds: Optional[list[int]]=[]
