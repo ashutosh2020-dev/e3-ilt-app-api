@@ -7,6 +7,8 @@ app/
 │ ├── app_settings.py
 │ └── database.py
 ├── models.py
+├── Exceptions/
+| ├── CustomException.py
 ├── routers/
 │ ├── ilt_maintenance.py
 │ ├── ilt_meeting_maintenance.py

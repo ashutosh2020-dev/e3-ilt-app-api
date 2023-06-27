@@ -164,8 +164,6 @@ class IltMeetingResponceService:
             except Exception as e:
                 return (False, str(e))
 
-
-
     def create_meeting_responses(self, meeting_id:int, is_attand:bool, checkin_personal_best:str, 
                                  checkin_professional_best:str, ratings:int, feedback:str, notes:str, db:Session):
         db_metting_response = MdlMeetingsResponse(attendance_flag = is_attand , 

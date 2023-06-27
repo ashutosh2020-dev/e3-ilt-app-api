@@ -62,7 +62,6 @@ class IltService:
         raise CustomException(400,  "records Not found")
 
     def get_ilt_details(self, user_id: int, ilt_id: int, db: Session):
-        try:
             if db.query(MdlUsers).filter(MdlUsers.id == user_id).one_or_none() is None:
                 raise CustomException(400,  "records Not found")
                 # return "not found"
@@ -123,9 +122,7 @@ class IltService:
                 "members": member_info
 
             }
-        except Exception as e:
-                raise CustomException(500,  f"unable to process your request: {e}")
-
+        
     def is_user_exist(self, user_id, db):
         user = db.query(MdlUsers).filter(MdlUsers.id == user_id).one_or_none()
         if user is not None:
@@ -188,9 +185,7 @@ class IltService:
                 "userMessage": "ilt has created successfully and added all members successfully"
             }
         
-
     def update_ilt(self, ilt_data: Ilt, user_id, ilt_id:int, db: Session):
-        try:
             loging_user_record = db.query(MdlUsers).filter(MdlUsers.id == user_id).one_or_none() 
             if loging_user_record is None or loging_user_record.role_id == 1:
                 raise CustomException(404,  "this User can not perform the operation")
@@ -201,6 +196,9 @@ class IltService:
             db_ilt = db.query(MdlIlts).filter(MdlIlts.id == ilt_id).one_or_none()
             if db_ilt is None:
                 raise CustomException(404,  "ilt did not found")
+            if (db_ilt.owner_id != user_id) and (loging_user_record.role_id!=3):
+                raise CustomException(404,  "this user can not modify the ilt")
+            
             common_msg = ""
             # need to add members, change owner_id functionality
             if ilt_data.title:
@@ -217,6 +215,7 @@ class IltService:
             db_ilt.update_by = user_id
             db.commit()
             db.refresh(db_ilt)
+            
             if len(ilt_data.memberIds)>=1 and ilt_data.memberIds[0]!=0 :
                 if 0 in ilt_data.memberIds:
                     raise CustomException(500,  f"unable to process your request: found 0 in member list")
@@ -267,9 +266,7 @@ class IltService:
                 "statusCode": 200,
                 "userMessage": "ilt has updated successfully"
             }
-        except Exception as e:
-            raise CustomException(500,  f"unable to process your request, error: {e}")
-
+       
     def get_list_of_ilt_rocks(self, iltId: int, db: Session):
         ilt_record = db.query(MdlIlts).filter(MdlIlts.id == iltId).one_or_none()
         if ilt_record is None:
