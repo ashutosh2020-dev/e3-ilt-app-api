@@ -266,7 +266,7 @@ class IltService:
             return {
                 "confirmMessageID": "string",
                 "statusCode": 200,
-                "userMessage": "ilt has updated successfully"
+                "userMessage": f"ilt has updated successfully. {common_msg}"
             }
        
     def get_list_of_ilt_rocks(self, iltId: int, db: Session):
