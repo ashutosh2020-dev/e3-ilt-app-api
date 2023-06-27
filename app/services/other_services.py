@@ -11,6 +11,11 @@ class Create_otherService:
             db.add(db_user)
             db.commit()
             db.refresh(db_user)
+            record = db.query(MdlUsers).get(db_user.id)
+            if record:
+                record.parent_user_id=db_user.id
+                db.commit()
+            db.close()
             return {
                 "confirmMessageID": "string",
                 "statusCode": 200,

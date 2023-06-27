@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from app.models import MdlUsers, MdlRoles
+from app.models import MdlUsers, MdlRoles, MdlIlts
 from sqlalchemy.orm.exc import NoResultFound
 import sys
 from app.exceptions.customException import CustomException
@@ -88,6 +88,9 @@ class UserService:
                 MdlUsers.email == email or MdlUsers.number == number ).one_or_none()
             if check_user_detail is not None:
                 raise CustomException(400,  "user already exists")
+            if role_id>=check_parent_id.role_id:
+                raise CustomException(400,  "this user can not create user, please downgrade the role id")
+            
             db_user = MdlUsers(fname=fname, lname=lname, email=email, number=number,
                                password=password, is_active=is_active, role_id=role_id, parent_user_id=parent_user_id)
             db.add(db_user)
@@ -99,9 +102,6 @@ class UserService:
                 "userMessage": "user has created successfully"
             }
         except Exception as e:
-            exc_type, exc_value, exc_traceback = sys.exc_info()
-            # Default to 404 if status_code is not present
-            status_code = getattr(exc_value, "status_code", 404)
             raise CustomException(500,  f"unable to create the record : {e}")
 
     def update_user(self, user_id: int, id: int, fname, lname, email, number, password, is_active, role_id, db: Session):
@@ -110,8 +110,26 @@ class UserService:
                 MdlUsers.id == user_id).one_or_none()
             if user_id_re is None:
                 raise CustomException(404,  "Record not found.")
+            check_role_id = db.query(MdlRoles).filter(
+                MdlRoles.id == role_id).one_or_none()
+            if check_role_id is None:
+                raise CustomException(404,  "Record not found wrt roleId.")
 
             db_user = db.query(MdlUsers).filter(MdlUsers.id == id).one()
+            if (db_user.parent_user_id != user_id) and (user_id_re.role_id != 3):
+                db.close()
+                raise CustomException(400,  "this user is not allowed to modify user's details")
+            if role_id>=user_id_re.role_id:
+                raise CustomException(400,  "this user can not modify user's details, please change/downgrade the role id")
+            if db_user.role_id>role_id : 
+                # check if he is an owner of ilt, or parent of any ilt,
+                check_parent_record = db.query(MdlUsers).filter(MdlUsers.parent_user_id == db_user.id).all()
+                check_iltOwner_record = db.query(MdlIlts).filter(MdlIlts.owner_id == db_user.id).all()
+                if check_iltOwner_record or check_parent_record:
+                    raise CustomException(400,  "can not downgrade the roleId of user. he is either owner or parent of ilts or another users")
+                else:
+                    pass
+
             db_user.fname = fname
             db_user.lname = lname
             db_user.email = email
