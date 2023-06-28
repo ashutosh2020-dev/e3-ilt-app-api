@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, Header
 from sqlalchemy.orm import Session
 from app.config.database import get_db
 from app.services.user_service import UserService
-from app.schemas.user_schemas import UserRequest
+from app.schemas.user_schemas import UserRequest, UpdateUserRequest
 router = APIRouter()
 user_service = UserService()
 
@@ -28,7 +28,7 @@ def fn_create_user(user:UserRequest, UserId: int=Header(convert_underscores=Fals
                                     db=db)
     
 @router.post("/api/v1/users/{id}")
-def fn_update_user(id:int, user:UserRequest, UserId: int=Header(convert_underscores=False), db: Session = Depends(get_db)):
+def fn_update_user(id:int, user:UpdateUserRequest, UserId: int=Header(convert_underscores=False), db: Session = Depends(get_db)):
     return user_service.update_user(user_id = UserId, 
                                     id = id,
                                     fname=user.firstName, 

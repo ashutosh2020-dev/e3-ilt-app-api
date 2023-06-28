@@ -1,7 +1,7 @@
 import requests
 import json
-# host_url = "http://middle-ilt-app.us-east-1.elasticbeanstalk.com/" 
-host_url = "http://127.0.0.1/"
+host_url = "http://middle-ilt-app.us-east-1.elasticbeanstalk.com/" 
+# host_url = "http://127.0.0.1/"
 
 def create_root_user():
     url = host_url+"api/v1/other/root_user/"

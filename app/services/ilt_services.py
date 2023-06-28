@@ -237,19 +237,17 @@ class IltService:
                         db.commit()
                         db.refresh(db_ilt_member)
 
-                current_date = datetime.now()
+                current_date = datetime.now(timezone.utc)
                 upcoming_meeting_list = db.query(MdlMeetings)\
                                 .join(MdlIltMeetings, MdlMeetings.id == MdlIltMeetings.ilt_meeting_id)\
                                 .filter(MdlIltMeetings.ilt_id == ilt_id)\
                                 .filter(MdlMeetings.schedule_start_at > current_date)\
                                 .all()
                 upcoming_meetingId_list = [record.id for record in upcoming_meeting_list]
-                # print(upcoming_meetingId_list)
                 # creating meetingResponce for new members
                 flag, msg = IltMeetingResponceService().create_meeting_responses_empty_for_newMember_for_all_meetings(
                                 meeting_ids =upcoming_meetingId_list, member_list=verified_member_ids, db=db
                             )
-                
                 
                 if flag != True:
                     raise CustomException(404,  f"unable to process your request, {msg}")

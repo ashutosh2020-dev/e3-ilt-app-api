@@ -102,33 +102,40 @@ class UserService:
             MdlUsers.id == user_id).one_or_none()
         if user_id_re is None:
             raise CustomException(404,  "Record not found.")
-        check_role_id = db.query(MdlRoles).filter(
-            MdlRoles.id == role_id).one_or_none()
-        if check_role_id is None:
-            raise CustomException(404,  "Record not found wrt roleId.")
-
         db_user = db.query(MdlUsers).filter(MdlUsers.id == id).one()
-        if (db_user.parent_user_id != user_id) and (user_id_re.role_id != 3):
-            db.close()
-            raise CustomException(400,  "this user is not allowed to modify user's details")
-        if role_id>=user_id_re.role_id:
-            raise CustomException(400,  "this user can not modify user's details, please change/downgrade the role id")
-        if db_user.role_id>role_id : 
-            # check if he is an owner of ilt, or parent of any ilt,
-            check_parent_record = db.query(MdlUsers).filter(MdlUsers.parent_user_id == db_user.id).all()
-            check_iltOwner_record = db.query(MdlIlts).filter(MdlIlts.owner_id == db_user.id).all()
-            if check_iltOwner_record or check_parent_record:
-                raise CustomException(400,  "can not downgrade the roleId of user. he is either owner or parent of ilts or another users")
-            else:
-                pass
+        if role_id:
+            check_role_id = db.query(MdlRoles).filter(
+                MdlRoles.id == role_id).one_or_none()
+            if check_role_id is None:
+                raise CustomException(404,  "Record not found wrt roleId.")
+            if (db_user.parent_user_id != user_id) and (user_id_re.role_id != 3):
+                db.close()
+                raise CustomException(400,  "this user is not allowed to modify user's details")
+            if role_id>=user_id_re.role_id:
+                raise CustomException(400,  "this logged-in user can not modify user's details, please change/downgrade the role id")
+            if role_id<db_user.role_id: 
+                # check if he is an owner of ilt, or parent of any ilt,
+                check_parent_record = db.query(MdlUsers).filter(MdlUsers.parent_user_id == db_user.id).all()
+                check_iltOwner_record = db.query(MdlIlts).filter(MdlIlts.owner_id == db_user.id).all()
+                if check_iltOwner_record or check_parent_record:
+                    raise CustomException(400,  "can not downgrade the roleId of user. he is either owner or parent of ilts or another users")
+                else:
+                    pass
+            db_user.role_id = role_id
+            
+        if fname:
+            db_user.fname = fname
+        if lname:
+            db_user.lname = lname
+        if email:
+            db_user.email = email
+        if number:
+            db_user.number = number
+        if password:
+            db_user.password = password
+        if is_active is not None :
+            db_user.is_active = is_active
 
-        db_user.fname = fname
-        db_user.lname = lname
-        db_user.email = email
-        db_user.number = number
-        db_user.password = password
-        db_user.is_active = is_active
-        db_user.role_id = role_id
         db.commit()
         db.refresh(db_user)
         return {

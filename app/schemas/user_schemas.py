@@ -1,4 +1,6 @@
 from pydantic import BaseModel
+from typing import List, Optional
+
 
 class UserRequest(BaseModel):
     # userId: int
@@ -12,13 +14,14 @@ class UserRequest(BaseModel):
 
 class UpdateUserRequest(BaseModel):
     # userId: int
-    firstName: str
-    lastName: str
-    emailId: str
-    phoneNumber: str
-    password: str
-    active: bool
-    roleId: int
+    firstName: Optional[str]=""
+    lastName: Optional[str]=""
+    emailId: Optional[str]=""
+    phoneNumber: Optional[str]=""
+    password: Optional[str]="12345"
+    active: Optional[bool]=None
+    roleId: Optional[int]=0
+    
 
 class loginCredential(BaseModel):
     userName:str
