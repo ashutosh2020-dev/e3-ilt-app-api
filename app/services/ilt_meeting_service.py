@@ -49,37 +49,39 @@ class IltMeetingService:
 
     def create_ilts_meeting(self, ilt_id: int,user_id:int,  scheduledStartDate, 
                        meetingStart, meetingEnd, db: Session, location:str):
-        try:
-            # check the user_id have relation with ilt_id
-            user_record = db.query(MdlUsers).filter(MdlUsers.id == user_id).one_or_none()
-            if user_record is None:
-                raise CustomException(404,  "User not found")
-            Ilt_record = db.query(MdlIlts).filter(MdlIlts.id == ilt_id).one_or_none()
-            if Ilt_record is None:
-                raise CustomException(404,  "ILT not found")
-            db_meeting = MdlMeetings(location = location, schedule_start_at = scheduledStartDate, 
-                                start_at = meetingStart, end_at = meetingEnd)
-            db.add(db_meeting)
-            db.commit()
-            db.refresh(db_meeting)
+       
+        # check the user_id have relation with ilt_id
+        user_record = db.query(MdlUsers).filter(MdlUsers.id == user_id).one_or_none()
+        if user_record is None:
+            raise CustomException(404,  "User not found")
+        Ilt_record = db.query(MdlIlts).filter(MdlIlts.id == ilt_id).one_or_none()
+        if Ilt_record is None:
+            raise CustomException(404,  "ILT not found")
+        current_date = datetime.now(timezone.utc)
+        if meetingStart==meetingEnd  or meetingStart>meetingEnd or \
+                    meetingStart<current_date or scheduledStartDate<current_date or meetingStart<scheduledStartDate:
+            raise CustomException(404, "please enter correct date, dates must be greater than currect data or differen with enddate")
 
-            ilt_members_list = [record.member_id for record in db.query(MdlIltMembers)
-                                .filter(MdlIltMembers.ilt_id==ilt_id).all()]
-            # create meeting response and update the map table(MdlIltMeetingResponses) for  meeting id and m_response_id
-            status, msg = (IltMeetingResponceService()
-                            .create_meeting_responses_empty_for_ILTmember(meeting_id=db_meeting.id, 
-                            member_list = ilt_members_list, iltId=ilt_id, db=db))
-            if status is not True:
-                raise CustomException(404,  f"Unable to create meeting responce : {msg}")
-            # update map table about new ilt and ilt_meeting's relationship
-            db_ilt_meeting = MdlIltMeetings(ilt_id = ilt_id, ilt_meeting_id = db_meeting.id, )
-            db.add(db_ilt_meeting)
-            db.commit()
-            db.refresh(db_ilt_meeting)
+        db_meeting = MdlMeetings(location = location, schedule_start_at = scheduledStartDate, 
+                            start_at = meetingStart, end_at = meetingEnd)
+        db.add(db_meeting)
+        db.commit()
+        db.refresh(db_meeting)
+        ilt_members_list = [record.member_id for record in db.query(MdlIltMembers)
+                            .filter(MdlIltMembers.ilt_id==ilt_id).all()]
+        # create meeting response and update the map table(MdlIltMeetingResponses) for  meeting id and m_response_id
+        status, msg = (IltMeetingResponceService()
+                        .create_meeting_responses_empty_for_ILTmember(meeting_id=db_meeting.id, 
+                        member_list = ilt_members_list, iltId=ilt_id, db=db))
+        if status is not True:
+            raise CustomException(404,  f"Unable to create meeting responce : {msg}")
+        # update map table about new ilt and ilt_meeting's relationship
+        db_ilt_meeting = MdlIltMeetings(ilt_id = ilt_id, ilt_meeting_id = db_meeting.id, )
+        db.add(db_ilt_meeting)
+        db.commit()
+        db.refresh(db_ilt_meeting)
 
-        except Exception as e:
-            raise CustomException(500,  f"Internal Server Error: {e}")
-        
+    
         return {
                 "confirmMessageID": "string",
                 "statusCode": 200,

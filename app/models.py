@@ -5,7 +5,7 @@ from app.config.database import Base
 class MdlRoles(Base):
     __tablename__ = "roles"
     id =  Column(Integer, primary_key=True, autoincrement=True)
-    name = Column(String, nullable=False)
+    name = Column(String, unique=True, nullable=False)
     description = Column(String, nullable=False)
 
 class MdlUsers(Base):
