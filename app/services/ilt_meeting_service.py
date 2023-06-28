@@ -4,7 +4,7 @@ from app.models import MdlIltMeetings, MdlMeetings, MdlUsers, MdlIlts, \
                     MdlMeeting_rocks, Mdl_updates, MdlIlt_ToDoTask, MdlIltissue, Mdl_issue
 import sys
 from app.services.ilt_meeting_response_service import IltMeetingResponceService
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from app.exceptions.customException import CustomException
 
 def calculate_meeting_status(schedule_start_at, start_at, end_at):
@@ -57,13 +57,28 @@ class IltMeetingService:
         Ilt_record = db.query(MdlIlts).filter(MdlIlts.id == ilt_id).one_or_none()
         if Ilt_record is None:
             raise CustomException(404,  "ILT not found")
+        
+        meeting_duration_in_hour = 2
+        print("------------", scheduledStartDate + timedelta(hours=meeting_duration_in_hour))
+        if meetingStart is None:
+            meetingStart = scheduledStartDate
+        if meetingEnd is None:
+            meetingEnd = (scheduledStartDate + timedelta(hours=meeting_duration_in_hour))
+        
         current_date = datetime.now(timezone.utc)
         if meetingStart==meetingEnd  or meetingStart>meetingEnd or \
                     meetingStart<current_date or scheduledStartDate<current_date or meetingStart<scheduledStartDate:
             raise CustomException(404, "please enter correct date, dates must be greater than currect data or differen with enddate")
 
-        db_meeting = MdlMeetings(location = location, schedule_start_at = scheduledStartDate, 
-                            start_at = meetingStart, end_at = meetingEnd)
+        db_meeting = MdlMeetings()
+        db_meeting.schedule_start_at = scheduledStartDate
+        db_meeting.start_at = meetingStart
+        db_meeting.end_at = meetingEnd
+
+        if location:
+             db_meeting.location=location
+
+
         db.add(db_meeting)
         db.commit()
         db.refresh(db_meeting)
@@ -75,6 +90,8 @@ class IltMeetingService:
                         member_list = ilt_members_list, iltId=ilt_id, db=db))
         if status is not True:
             raise CustomException(404,  f"Unable to create meeting responce : {msg}")
+        
+
         # update map table about new ilt and ilt_meeting's relationship
         db_ilt_meeting = MdlIltMeetings(ilt_id = ilt_id, ilt_meeting_id = db_meeting.id, )
         db.add(db_ilt_meeting)

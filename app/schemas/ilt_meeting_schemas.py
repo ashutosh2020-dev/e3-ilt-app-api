@@ -4,9 +4,9 @@ from datetime import datetime
 
 class MeetingData(BaseModel):
     scheduledStartDate: datetime
-    meetingStart: datetime
-    meetingEnd: datetime
-    location: str
+    meetingStart: Optional[datetime]=None
+    meetingEnd: Optional[datetime]=None
+    location: Optional[str]=None
 
 class rockData(BaseModel):
     iltId:int

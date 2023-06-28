@@ -27,16 +27,13 @@ def create_ilt_meeting( id:int, ilt:MeetingData, UserId: int=Header(convert_unde
                                                  db=db)
 
 
-@router.get("/api/v1/ilts/{id}/meetings/{meetingId}")
+@router.get("/api/v1/ilts/{id}/meetings/{meetingId}/meetingResponses")
 def get_meeting_info_wrt_meeting_id_and_ilt_id(id:int, meetingId:int, UserId: int=Header(convert_underscores=False), db: Session = Depends(get_db)):
     return IltMeetingService.get_meeting_info(meeting_id=meetingId, iltId = id, User_id =UserId, db = db)
 
 
 @router.post("/api/v1/ilts/{id}/meetings/{meetingId}")
 def update_ilt_meeting( meetingId:int, 
-                    #    scheduledStartDate:Annotated[Union[datetime, None], Body()], 
-                    #    meetingStart: Annotated[Union[datetime, None], Body()] , 
-                    #    meetingEnd: Annotated[Union[datetime, None], Body()], 
                        id:int,
                        iltMeeting:MeetingData,
                        UserId: int=Header(convert_underscores=False), 

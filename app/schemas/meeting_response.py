@@ -54,6 +54,7 @@ class Createdate(BaseModel):
     CreateAt:datetime
 
 class TodoData(BaseModel):
+    id:Optional[int]=0
     description: str
     duedate:datetime
     status: str
@@ -61,8 +62,8 @@ class TodoData(BaseModel):
 class TodoList(BaseModel):
     TodoItem: List[TodoData]
 
-class RockUpdate(BaseModel):
-    rock_id: int
+class meetingReasponceRock(BaseModel):
+    name: str
     onTrack: bool
 
 class updates_schema(BaseModel):
@@ -71,9 +72,17 @@ class updates_schema(BaseModel):
 class updatesData(BaseModel):
     descriptions:List[updates_schema]
 
+class checkIn(BaseModel):
+    personalBest:Optional[str]=None
+    professionalBest:Optional[str]=None
 
+class feedback(BaseModel):
+    rating:int
+    feedback:str
+    notes:str
 
 class singleIssue(BaseModel):
+    id:Optional[int]=0
     issue: str
     priorityId: Optional[int] = 0
     date: datetime= Field(default_factory=lambda: datetime.now(timezone.utc))

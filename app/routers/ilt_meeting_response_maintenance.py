@@ -1,11 +1,10 @@
-from fastapi import APIRouter, Depends, Body, Header
+from fastapi import APIRouter, Depends, Header
 from sqlalchemy.orm import Session
 from app.config.database import get_db
 from app.services.ilt_meeting_response_service import IltMeetingResponceService
-from app.schemas.meeting_response import MeetingResponse, TodoList, Createdate, RockUpdate, updatesData, IssueList
-from datetime import datetime
+from app.schemas.meeting_response import MeetingResponse, checkIn,feedback, \
+        TodoList, meetingReasponceRock, updatesData, IssueList
 from app.exceptions.customException import CustomException
-from typing import Annotated, Union
 
 
 router = APIRouter()
@@ -18,14 +17,37 @@ def read_meeting_responce_details( meetingResponseId:int, UserId: int=Header(con
 
 
 @router.post("/api/v1/ilts/meetingResponses/{meetingResponseId}/rocks")
-def assign_ilt_rocks_to_meetingResponse( meetingResponseId:int, 
-                                        rock:RockUpdate, UserId: int=Header(convert_underscores=False),
+def update_rocks_for_meetingResponse( meetingResponseId:int, 
+                                        rock:meetingReasponceRock, UserId: int=Header(convert_underscores=False),
                                         db: Session = Depends(get_db)):
-    return IltMeetingResponceService.create_ilts_meeting_rocks(user_id= UserId, 
+    return IltMeetingResponceService.update_meetingResponce_rocks(user_id= UserId, 
                                                                meetingResponseId= meetingResponseId,
-                                                               rockId= rock.rock_id, 
+                                                               name= rock.name, 
                                                                onTrack = rock.onTrack,
                                                                db = db)
+
+@router.post("/api/v1/ilts/meetingResponses/{meetingResponseId}/checkin")
+def update_checkins_for_meetingResponse( meetingResponseId:int, 
+                                        checkIn:checkIn, UserId: int=Header(convert_underscores=False),
+                                        db: Session = Depends(get_db)):
+    return IltMeetingResponceService.update_meetingResponce_checkin(user_id= UserId, 
+                                                               meetingResponseId =meetingResponseId ,    
+                                                               personalBest= checkIn.personalBest, 
+                                                               professionalBest= checkIn.professionalBest,
+                                                               db = db)
+
+@router.post("/api/v1/ilts/meetingResponses/{meetingResponseId}/feedback")
+def update_feedback_for_meetingResponse( meetingResponseId:int, 
+                                        feedback:feedback, 
+                                        UserId: int=Header(convert_underscores=False),
+                                        db: Session = Depends(get_db)):
+    return IltMeetingResponceService.update_meetingResponce_feedbacks(user_id= UserId, 
+                                                               meetingResponseId=meetingResponseId,
+                                                               rating =feedback.rating ,
+                                                                feedback= feedback.feedback, 
+                                                                notes= feedback.notes,
+                                                               db = db)
+
 
 @router.post("/api/v1/ilts/meetingResponses/{meetingResponseId}/todolist")
 def create_ilt_meeting_todolist( meetingResponseId:int, toDoData:TodoList, 
@@ -80,33 +102,33 @@ def create_ilt_meeting_issues( meetingResponseId: int,
                      ilt:IssueList,
                      UserId: int=Header(convert_underscores=False),
                      db: Session = Depends(get_db)):
-    try:
-        for i in range(len(ilt.issues)):
-            responce = IltMeetingResponceService.create_issue(user_id=UserId, 
-                     meetingResponseId=meetingResponseId, 
-                     issue=ilt.issues[i].issue, 
-                     priority=ilt.issues[i].priorityId, 
-                     created_at = ilt.issues[i].date,
-                     resolves_flag=ilt.issues[i].resolvedFlag,
-                     recognize_performance_flag=ilt.issues[i].recognizePerformanceFlag,
-                     teacher_support_flag=ilt.issues[i].teacherSupportFlag,
-                     leader_support_flag=ilt.issues[i].leaderSupportFlag,
-                     advance_equality_flag=ilt.issues[i].advanceEqualityFlag,
-                     others_flag=ilt.issues[i].othersFlag,
-                     db=db)
-            if responce['statusCode']!=200:
-                return responce
-            else:
-                pass
-        return {
-                    "confirmMessageID": "string",
-                    "statusCode": 200,
-                    "userMessage": "all issues has created successfully"
-                    }
-    except Exception as e:
-        raise CustomException(500,  f"unable to process your request: {str(e)}")
+    for i in range(len(ilt.issues)):
+        responce = IltMeetingResponceService.create_issue(user_id=UserId, 
+                    meetingResponseId=meetingResponseId, 
+                    issue=ilt.issues[i].issue, 
+                    priority=ilt.issues[i].priorityId, 
+                    created_at = ilt.issues[i].date,
+                    resolves_flag=ilt.issues[i].resolvedFlag,
+                    recognize_performance_flag=ilt.issues[i].recognizePerformanceFlag,
+                    teacher_support_flag=ilt.issues[i].teacherSupportFlag,
+                    leader_support_flag=ilt.issues[i].leaderSupportFlag,
+                    advance_equality_flag=ilt.issues[i].advanceEqualityFlag,
+                    others_flag=ilt.issues[i].othersFlag,
+                    db=db)
+        if responce['statusCode']!=200:
+            return responce
+        else:
+            pass
+    return {
+                "confirmMessageID": "string",
+                "statusCode": 200,
+                "userMessage": "all issues has created successfully"
+                }
+    
 
 
 @router.post("/api/v1/ilts/meetingResponses/{meetingResponseId}")
 async def update_meeting_response(ilt_data: MeetingResponse, db: Session= Depends(get_db)):
     return IltMeetingResponceService.update_ilt_meeting_responses(data = ilt_data, db=db)
+
+

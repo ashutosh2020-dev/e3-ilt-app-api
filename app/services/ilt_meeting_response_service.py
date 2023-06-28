@@ -11,7 +11,6 @@ from typing import Annotated, Union
 from app.exceptions.customException import CustomException
 
 
-
 class IltMeetingResponceService:
     def get_Ilts_meeting_list(self, user_id: int, meetingResponseId :int, db: Session):
         try:
@@ -34,7 +33,7 @@ class IltMeetingResponceService:
                                     "lastName":user_record.lname,
                                 }
             user_rock_record =  [{
-                                "rockId": record.id,
+                                "rockId": record.name,
                                 "onTrack": record.on_track_flag
                                 }  \
                         for record in db.query(MdlMeeting_rocks)\
@@ -115,22 +114,10 @@ class IltMeetingResponceService:
                 db.add(map_record)
                 db.commit()
                 db.refresh(map_record)
-                # if uid in MdlIlt_rocks wrt ilt then add the rock id to the meeting_rosponce
-                user_ilt_map_record= (db.query(MdlIlt_rocks)
-                                        .filter(MdlIlt_rocks.ilt_id==iltId, MdlIlt_rocks.user_id==uid)
-                                        .all())
-                # if present then add it the meetingResponce
-                if user_ilt_map_record:
-                    user_rock_ids = [record.ilt_rock_id for record in user_ilt_map_record]
-                    for rid in user_rock_ids:
-                        db_meeting_rocks = (MdlMeeting_rocks(   ilt_meeting_response_id=db_meeting_response.id,
-                                                                rock_id = rid, 
-                                                                on_track_flag=False))
-                        db.add(db_meeting_rocks)
-                        db.commit()
-                        db.refresh(db_meeting_rocks)
-                else:
-                    pass
+                db_meeting_response_rock=MdlMeeting_rocks(ilt_meeting_response_id=db_meeting_response.id)
+                db.add(db_meeting_response_rock)
+                db.commit()
+                db.refresh(db_meeting_response_rock)
                 # if issue is last ended meeting unresolve in previous meeting
                 # meeting_record = (
                 #                 db.query(MdlMeetings)
@@ -139,7 +126,23 @@ class IltMeetingResponceService:
                 #                 .order_by(desc(MdlMeetings.end_at))
                 #                 .first()
                 #             )
-                # if meeting_record.
+                # if meeting_record
+
+                # if uid in MdlIlt_rocks wrt ilt then add the rock id to the meeting_rosponce
+                # user_ilt_map_record= (db.query(MdlIlt_rocks)
+                #                         .filter(MdlIlt_rocks.ilt_id==iltId, MdlIlt_rocks.user_id==uid)
+                #                         .all())
+                # if user_ilt_map_record: # if present then add it the meetingResponce
+                #     user_rock_ids = [record.ilt_rock_id for record in user_ilt_map_record]
+                #     for rid in user_rock_ids:
+                #         db_meeting_rocks = (MdlMeeting_rocks(   ilt_meeting_response_id=db_meeting_response.id,
+                #                                                 rock_id = rid, 
+                #                                                 on_track_flag=False))
+                #         db.add(db_meeting_rocks)
+                #         db.commit()
+                #         db.refresh(db_meeting_rocks)
+
+                
             return (True, "")
         except Exception as e:
             return (False, str(e))
@@ -159,6 +162,10 @@ class IltMeetingResponceService:
                         db.add(map_record)
                         db.commit()
                         db.refresh(map_record)
+                        db_meeting_response_rock=MdlMeeting_rocks(ilt_meeting_response_id=db_meeting_response.id)
+                        db.add(db_meeting_response_rock)
+                        db.commit()
+                        db.refresh(db_meeting_response_rock)
 
                 return (True, "")
             except Exception as e:
@@ -295,6 +302,7 @@ class IltMeetingResponceService:
                 }
         except Exception as e:
             raise CustomException(500,  f"unable to process your request {e}")
+
 
     def create_to_do_list(self, user_id:int, meetingResponseId: int, description:str, 
                           dueDate:Duedate, status:bool, db:Session):
@@ -441,7 +449,6 @@ class IltMeetingResponceService:
                 if (data.attendance != None) or data.personalBest or data.professionalBest or data.rating or data.feedback or data.notes:
                     user_meetingResponse_record = db.query(MdlMeetingsResponse)\
                                                 .filter(MdlMeetingsResponse.id==meetingResponseId).one() 
-                    print("------------------------------",data.attendance)
                     if data.attendance != None:
                         user_meetingResponse_record.attendance_flag =  data.attendance
                     if data.personalBest:
@@ -538,3 +545,89 @@ class IltMeetingResponceService:
                     }
         except Exception as e:  
             raise CustomException(500,  f"Internal Server Error = {str(e)}")
+    
+    def update_meetingResponce_rocks(self, user_id:int,
+                                        meetingResponseId:int,
+                                        name:str, 
+                                        onTrack:bool,
+                                        db:Session):
+        if db.query(MdlUsers).filter(MdlUsers.id==user_id).one_or_none() is None:
+            raise CustomException(400,  f"invaild users")
+        if name:
+            user_rock = (db.query(MdlMeeting_rocks)
+                        .filter(MdlMeeting_rocks.ilt_meeting_response_id==meetingResponseId)
+                        .one())
+            user_rock.on_track_flag = onTrack
+            user_rock.name=name
+            db.commit()
+            db.refresh(user_rock)
+
+            return {
+                "confirmMessageID": "string",
+                "statusCode": 200,
+                "userMessage": "rock has updated successfully"
+                }
+        else:
+            raise CustomException(400,  f"please fill the details")
+    
+    def update_meetingResponce_checkin(self, user_id:int, 
+                                            meetingResponseId :int ,    
+                                            personalBest:str, 
+                                            professionalBest:str,
+                                            db:Session ):
+        
+        check_user_id = db.query(MdlUsers).filter(MdlUsers.id == user_id).one_or_none()
+        if check_user_id is None:
+            raise CustomException(404,  "User not found")
+        
+        user_meetingResponse_record = (db.query(MdlMeetingsResponse)
+                                        .filter(MdlMeetingsResponse.id == meetingResponseId)
+                                        .one_or_none())
+        if user_meetingResponse_record is None:
+            raise CustomException(404,  "MeetingsResponse record did not found")
+        
+        # user_meetingResponse_record = db.query(MdlMeetingsResponse)\
+        #                                         .filter(MdlMeetingsResponse.id==meetingResponseId).one() 
+        if personalBest:
+            user_meetingResponse_record.checkin_personal_best = personalBest
+        if professionalBest:
+            user_meetingResponse_record.checkin_professional_best = professionalBest
+        
+        db.commit()  
+        db.refresh(user_meetingResponse_record)
+        return {
+                "confirmMessageID": "string",
+                "statusCode": 200,
+                "userMessage": "updated successfully"
+                }
+
+    def update_meetingResponce_feedbacks(self,user_id:int, 
+                                                meetingResponseId:int,
+                                                rating:int ,
+                                                feedback:str, 
+                                                notes:str,
+                                                db:Session ):
+        check_user_id = db.query(MdlUsers).filter(MdlUsers.id == user_id).one_or_none()
+        if check_user_id is None:
+            raise CustomException(404,  "User not found")
+        
+        user_meetingResponse_record = (db.query(MdlMeetingsResponse)
+                                .filter(MdlMeetingsResponse.id == meetingResponseId)
+                            .one_or_none())
+        if user_meetingResponse_record is None:
+            raise CustomException(404,  "MeetingsResponse record did not found")
+        
+        user_meetingResponse_record.attendance_flag =  True
+        if rating:
+            user_meetingResponse_record.rating = rating
+        if feedback:
+            user_meetingResponse_record.feedback = feedback
+        if notes:
+            user_meetingResponse_record.notes = notes
+        db.commit()  
+        db.refresh(user_meetingResponse_record)
+        return {
+                "confirmMessageID": "string",
+                "statusCode": 200,
+                "userMessage": "updated successfully"
+                }

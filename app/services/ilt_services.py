@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session, joinedload
-from sqlalchemy import desc, join
+from sqlalchemy import or_, desc, join
 from app.models import MdlIlts, MdlIltMembers, MdlUsers, MdlSchools, MdlMeetings, MdlIltMeetings, MdlRocks, MdlIlt_rocks
 from app.schemas.ilt_schemas import Ilt
 from app.services.ilt_meeting_response_service import IltMeetingResponceService
@@ -26,19 +26,23 @@ class IltService:
             MdlIltMembers).filter(MdlIltMembers.member_id == user_id).all()]
         if list_ilts:
             for x in list_ilts:
+                latestMeetingId = 0
+                status = 0
                 ilt_record = db.query(MdlIlts).filter(MdlIlts.id == x).first()
                 ilt_owner_record = db.query(MdlUsers).filter(
                     MdlUsers.id == ilt_record.owner_id).first()
                 owner_name = ilt_owner_record.fname+" "+ilt_owner_record.lname
+                # owner_record = db.query(MdlUsers).filter(MdlUsers.id == ilt_record.owner_id).one()
                 # find latest meeting
                 meeting_record = (
                     db.query(MdlMeetings)
                     .join(MdlIltMeetings, MdlMeetings.id == MdlIltMeetings.ilt_meeting_id)
-                    .filter(MdlIltMeetings.ilt_id==x, MdlMeetings.end_at>=datetime.now(timezone.utc))
+                    .filter(MdlIltMeetings.ilt_id==x, MdlMeetings.start_at>=datetime.now(timezone.utc))
                     .order_by(MdlMeetings.start_at.asc())
                     .first()
                 )
-
+                # or_(MdlMeetings.schedule_start_at>=datetime.now(timezone.utc) ,bool(MdlMeetings.start_at >=datetime.now(timezone.utc)) )
+                # check if start_at is null
                 if meeting_record:
                     latestMeetingId = meeting_record.id
                     # datetime.strptime(ilt_meeting_start_time, '%Y-%m-%d %H:%M:%S.%f')
@@ -48,13 +52,11 @@ class IltService:
                         tzinfo=timezone.utc)
                     status = calculate_meeting_status(
                         start_meeting_time, start_meeting_time, end_meeting_time)
-                else:
-                    latestMeetingId = 0
-                    status = 0
+
                 val = {"iltId": ilt_record.id,
                        "title": ilt_record.title,
                        "description": ilt_record.description,
-                       "ownerName": owner_name,
+                       "owner": {"id": ilt_owner_record.id,"name": owner_name},
                        "latestMeetingId": latestMeetingId,
                        "meetingStatus": status}
                 ilt_list.append(val)
@@ -87,7 +89,7 @@ class IltService:
             meeting_record = (
                     db.query(MdlMeetings)
                     .join(MdlIltMeetings, MdlMeetings.id == MdlIltMeetings.ilt_meeting_id)
-                    .filter(MdlIltMeetings.ilt_id==ilt_id, MdlMeetings.end_at>=datetime.now(timezone.utc))
+                    .filter(MdlIltMeetings.ilt_id==ilt_id, MdlMeetings.start_at>=datetime.now(timezone.utc))
                     .order_by(MdlMeetings.start_at.asc())
                     .first()
                 )

@@ -104,11 +104,11 @@ class MdlIlt_rocks(Base):
 
 class MdlMeeting_rocks(Base):
     __tablename__ = "Ilt_meeting_rocks_maping"
-    __table_args__ = (UniqueConstraint('ilt_meeting_response_id', 'rock_id'),)
     id = Column(Integer, primary_key=True, autoincrement=True)
     ilt_meeting_response_id =  Column(Integer, ForeignKey("meeting_response.id"), nullable=False, index=True)
-    rock_id = Column(Integer, ForeignKey("Ilt_rocks.id"), nullable=False, index=True)
-    on_track_flag = Column(Boolean, nullable=False)
+    # rock_id = Column(Integer, ForeignKey("Ilt_rocks.id"), nullable=False, index=True)
+    name = Column(String, nullable=True, default=None)
+    on_track_flag = Column(Boolean, nullable=True, default=None)
 
 class MdlIlt_ToDoTask(Base):
     __tablename__ = "Ilt_to_do_task"
