@@ -108,9 +108,7 @@ def run_create_ilt_api():
 def hit_create_iltMeeting_api(host_url, ilt_meeting, ilt_owner_id, ilt_id):
     date = ilt_meeting['startDate']
     payload = json.dumps({
-                            "scheduledStartDate": f"{date}T{ilt_meeting['meetingStart']}.00",
-                            "meetingStart": f"{date}T{ilt_meeting['meetingStart']}.00",
-                            "meetingEnd": f"{date}T{ilt_meeting['meetingEnd']}.00", 
+                            "scheduledStartDate": f"{date}T04:31:28.107Z",
                             "location":ilt_meeting["location"]
                         })
     
@@ -143,6 +141,6 @@ def run_create_iltMeeting_api():
     print("created successfully")
 
 if __name__ == "__main__":
-    run_create_user_api()
-    run_create_ilt_api()
+    # run_create_user_api()
+    # run_create_ilt_api()
     run_create_iltMeeting_api()

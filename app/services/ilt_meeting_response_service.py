@@ -304,13 +304,29 @@ class IltMeetingResponceService:
             raise CustomException(500,  f"unable to process your request {e}")
 
 
-    def create_to_do_list(self, user_id:int, meetingResponseId: int, description:str, 
-                          dueDate:Duedate, status:bool, db:Session):
-        try:
+    def create_update_to_do_list(self, user_id:int,id:int, meetingResponseId: int, description:str, 
+                          dueDate:Duedate, status:str, db:Session):
+
             if db.query(MdlUsers).filter(MdlUsers.id ==user_id).one_or_none() is None:
                 raise CustomException(400,  f" userId is not valid")
             if db.query(MdlMeetingsResponse).filter(MdlMeetingsResponse.id ==meetingResponseId).one_or_none() is None:
                 raise CustomException(400,  f" meetingResponseId is not valid")
+            
+            if id:
+                user_todo_record=( db.query(MdlIlt_ToDoTask)
+                                    .filter(MdlIlt_ToDoTask.meeting_response_id==meetingResponseId,
+                                                MdlIlt_ToDoTask.id==id)
+                                    .one())
+                user_todo_record.description= description
+                user_todo_record.due_date = dueDate
+                user_todo_record.status = status
+                db.commit()
+                db.refresh(user_todo_record)
+                return {
+                    "confirmMessageID": "string",
+                    "statusCode": 200,
+                    "userMessage": "to-do list updates successfully"
+                    }
             # check if user_id is inside MdlIltMembers
             db_meeting_todo = MdlIlt_ToDoTask(meeting_response_id = meetingResponseId, 
                                                 description=description, due_date=dueDate, status=status)
@@ -322,10 +338,9 @@ class IltMeetingResponceService:
                 "statusCode": 200,
                 "userMessage": "to-do list created successfully"
                 }
-        except Exception as e:
-            raise CustomException(500,  f"unable to process your request: {str(e)} ")
+        
     
-    def create_meeting_update(self, user_id:int, meetingResponseId: int, description:str, db:Session):
+    def create_meeting_update(self, user_id:int, id:int, meetingResponseId: int, description:str, db:Session):
         try:
             # checking if user_id is inside MdlUsers
             user = db.query(MdlUsers).filter(MdlUsers.id == user_id).one_or_none()
@@ -333,7 +348,20 @@ class IltMeetingResponceService:
                 raise CustomException(404,  "User not found")
             if db.query(MdlMeetingsResponse).filter(MdlMeetingsResponse.id ==meetingResponseId).one_or_none() is None:
                 raise CustomException(400,  f" meetingResponseId is not valid")
-            
+            if id>0:
+                user_update_record= (db.query(Mdl_updates)
+                                            .filter(Mdl_updates.meeting_response_id==meetingResponseId,
+                                                        Mdl_updates.id == id)
+                                            .one())
+                user_update_record.description= description
+                db.commit()
+                db.refresh(user_update_record)
+                return {
+                        "confirmMessageID": "string",
+                        "statusCode": 200,
+                        "userMessage": "updates has been updated successfully"
+                        }
+
             db_meeting_update = Mdl_updates(meeting_response_id = meetingResponseId, 
                                                 description=description)
             db.add(db_meeting_update)
@@ -347,7 +375,7 @@ class IltMeetingResponceService:
         except Exception as e:
             raise CustomException(500,  "unable to process your request {str(e)}")
     
-    def create_issue(self, user_id:int, meetingResponseId: int, issue:str, priority:int, 
+    def create_update_issue(self, user_id:int, meetingResponseId: int, id:int, issue:str, priority:int, 
                      created_at,
                      resolves_flag:bool,
                      recognize_performance_flag:bool,
@@ -365,9 +393,33 @@ class IltMeetingResponceService:
             responce_id = db.query(MdlMeetingsResponse).filter(MdlMeetingsResponse.id == meetingResponseId).one_or_none()
             if responce_id is None:
                 raise CustomException(404,  "responce_id not found")
-            print("-------------",bool((db.query(MdlPriorities).filter(MdlPriorities.id==priority).one_or_none() is None) and (priority!=0)))
-            if (db.query(MdlPriorities).filter(MdlPriorities.id==priority).one_or_none() is None) and (priority!=0):
-                raise CustomException(404,  "priority not found")
+            # if (db.query(MdlPriorities).filter(MdlPriorities.id==priority).one_or_none() is None) and (priority!=0):
+            #     raise CustomException(404,  "priority not found")
+            
+            if id:
+                issue_map_re=(db.query(MdlIltissue)
+                                    .filter(MdlIltissue.meeting_response_id==meetingResponseId,
+                                            MdlIltissue.issue_id==id)
+                                    .one())
+                user_issue_record= (db.query(Mdl_issue)
+                                    .filter(Mdl_issue.id==issue_map_re.issue_id).one())
+                user_issue_record.issue = issue
+                user_issue_record.priority = priority
+                user_issue_record.created_at = created_at
+                user_issue_record.resolves_flag = resolves_flag
+                user_issue_record.recognize_performance_flag = recognize_performance_flag
+                user_issue_record.teacher_support_flag = teacher_support_flag
+                user_issue_record.leader_support_flag = leader_support_flag
+                user_issue_record.advance_equality_flag = advance_equality_flag
+                user_issue_record.others_flag = others_flag
+                db.commit()  
+                db.refresh(user_issue_record)
+                return {
+                    "confirmMessageID": "string",
+                    "statusCode": 200,
+                    "userMessage": "issue  updated successfully"
+                    }
+
             if priority == 0:
                 db_issue = Mdl_issue(issue=issue,
                                             created_at=created_at,
@@ -426,7 +478,7 @@ class IltMeetingResponceService:
                 notes: str
                 rocks: List[Rock]
                 updates: List[str]
-                todoList: List[TodoItem]
+                todoList: List[todoItem]
                 issues: List[Issue],
         """
         try:

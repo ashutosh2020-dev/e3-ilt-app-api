@@ -60,13 +60,14 @@ class TodoData(BaseModel):
     status: str
 
 class TodoList(BaseModel):
-    TodoItem: List[TodoData]
+    todoItem: List[TodoData]
 
 class meetingReasponceRock(BaseModel):
     name: str
     onTrack: bool
 
 class updates_schema(BaseModel):
+    id:int
     description:str
 
 class updatesData(BaseModel):

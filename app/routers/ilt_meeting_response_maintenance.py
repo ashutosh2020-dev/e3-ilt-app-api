@@ -50,15 +50,16 @@ def update_feedback_for_meetingResponse( meetingResponseId:int,
 
 
 @router.post("/api/v1/ilts/meetingResponses/{meetingResponseId}/todolist")
-def create_ilt_meeting_todolist( meetingResponseId:int, toDoData:TodoList, 
+def create_update_ilt_meeting_todolist( meetingResponseId:int, toDoData:TodoList, 
                                 UserId: int=Header(convert_underscores=False), db: Session = Depends(get_db)):
     try:
-        for i in range(len(toDoData.TodoItem)):
-            responce = IltMeetingResponceService.create_to_do_list(user_id=UserId, 
+        for i in range(len(toDoData.todoItem)):
+            responce = IltMeetingResponceService.create_update_to_do_list(user_id=UserId, 
+                                                                          id=toDoData.todoItem[i].id,
                                                         meetingResponseId=meetingResponseId, 
-                                                        description=toDoData.TodoItem[i].description,
-                                                        dueDate=toDoData.TodoItem[i].duedate,
-                                                        status=toDoData.TodoItem[i].status,
+                                                        description=toDoData.todoItem[i].description,
+                                                        dueDate=toDoData.todoItem[i].duedate,
+                                                        status=toDoData.todoItem[i].status,
                                                         db=db)
             if responce['statusCode']!=200:
                 return responce
@@ -67,7 +68,7 @@ def create_ilt_meeting_todolist( meetingResponseId:int, toDoData:TodoList,
         return {
                     "confirmMessageID": "string",
                     "statusCode": 200,
-                    "userMessage": "all to-do list created successfully"
+                    "userMessage": "all to-do list created/updated successfully"
                     }
     except Exception as e:
         raise CustomException(500,  f"unable to process your request: {str(e)}")
@@ -78,33 +79,32 @@ def create_ilt_meeting_todolist( meetingResponseId:int, toDoData:TodoList,
 def create_ilt_meeting_updates( meetingResponseId:int,ilt:updatesData,
                                UserId: int=Header(convert_underscores=False), db: Session = Depends(get_db)):
      
-    try:
-        for i in range(len(ilt.descriptions)):
-            responce = IltMeetingResponceService.create_meeting_update(user_id=UserId, 
-                                                           meetingResponseId=meetingResponseId, 
-                                                           description=ilt.descriptions[i].description, 
-                                                           db=db)
-            if responce['statusCode']!=200:
-                return responce
-            else:
-                pass
-        return {
-                    "confirmMessageID": "string",
-                    "statusCode": 200,
-                    "userMessage": "all updates has inserted successfully"
-                    }
-    except Exception as e:
-        raise CustomException(500,  f"unable to process your request: {str(e)} ")
+    for i in range(len(ilt.descriptions)):
+        responce = IltMeetingResponceService.create_meeting_update(user_id=UserId, 
+                                                        meetingResponseId=meetingResponseId, 
+                                                        id=ilt.descriptions[i].id,
+                                                        description=ilt.descriptions[i].description, 
+                                                        db=db)
+        if responce['statusCode']!=200:
+            return responce
+        else:
+            pass
+    return {
+                "confirmMessageID": "string",
+                "statusCode": 200,
+                "userMessage": "all updates has inserted/updated successfully"
+                }
 
 
 @router.post("/api/v1/ilts/meetingResponses/{meetingResponseId}/issues")
-def create_ilt_meeting_issues( meetingResponseId: int,
+def create_update_ilt_meeting_issues( meetingResponseId: int,
                      ilt:IssueList,
                      UserId: int=Header(convert_underscores=False),
                      db: Session = Depends(get_db)):
     for i in range(len(ilt.issues)):
-        responce = IltMeetingResponceService.create_issue(user_id=UserId, 
+        responce = IltMeetingResponceService.create_update_issue(user_id=UserId, 
                     meetingResponseId=meetingResponseId, 
+                    id= ilt.issues[i].id,
                     issue=ilt.issues[i].issue, 
                     priority=ilt.issues[i].priorityId, 
                     created_at = ilt.issues[i].date,
@@ -122,7 +122,7 @@ def create_ilt_meeting_issues( meetingResponseId: int,
     return {
                 "confirmMessageID": "string",
                 "statusCode": 200,
-                "userMessage": "all issues has created successfully"
+                "userMessage": "all issues has created/updated successfully"
                 }
     
 

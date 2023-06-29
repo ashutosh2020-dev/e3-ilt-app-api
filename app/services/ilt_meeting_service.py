@@ -68,7 +68,7 @@ class IltMeetingService:
         current_date = datetime.now(timezone.utc)
         if meetingStart==meetingEnd  or meetingStart>meetingEnd or \
                     meetingStart<current_date or scheduledStartDate<current_date or meetingStart<scheduledStartDate:
-            raise CustomException(404, "please enter correct date, dates must be greater than currect data or differen with enddate")
+            raise CustomException(404, "please enter correct date, dates must be greater than currect data")
 
         db_meeting = MdlMeetings()
         db_meeting.schedule_start_at = scheduledStartDate
