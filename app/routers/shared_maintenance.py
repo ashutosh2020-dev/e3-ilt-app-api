@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, Header
 from sqlalchemy.orm import Session
 from app.config.database import get_db
-from app.services.shared_service import SharedService
+from app.services.Shared_service import SharedService
 
 router = APIRouter()
 shared_service = SharedService()
