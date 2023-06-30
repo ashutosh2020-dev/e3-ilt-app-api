@@ -22,7 +22,7 @@ def update_rocks_for_meetingResponse( meetingResponseId:int,
                                         db: Session = Depends(get_db)):
     return IltMeetingResponceService.update_meetingResponce_rocks(user_id= UserId, 
                                                                meetingResponseId= meetingResponseId,
-                                                               name= rock.name, 
+                                                               name= rock.rockName, 
                                                                onTrack = rock.onTrack,
                                                                db = db)
 
@@ -58,7 +58,7 @@ def create_update_ilt_meeting_todolist( meetingResponseId:int, toDoData:TodoList
                                                                           id=toDoData.todoItem[i].id,
                                                         meetingResponseId=meetingResponseId, 
                                                         description=toDoData.todoItem[i].description,
-                                                        dueDate=toDoData.todoItem[i].duedate,
+                                                        dueDate=toDoData.todoItem[i].dueDate,
                                                         status=toDoData.todoItem[i].status,
                                                         db=db)
             if responce['statusCode']!=200:
@@ -66,9 +66,9 @@ def create_update_ilt_meeting_todolist( meetingResponseId:int, toDoData:TodoList
             else:
                 pass
         return {
-                    "confirmMessageID": "string",
+                   
                     "statusCode": 200,
-                    "userMessage": "all to-do list created/updated successfully"
+                    "userMessage": "all to-do list created/Updated successfully"
                     }
     except Exception as e:
         raise CustomException(500,  f"unable to process your request: {str(e)}")
@@ -82,7 +82,7 @@ def create_ilt_meeting_updates( meetingResponseId:int,ilt:updatesData,
     for i in range(len(ilt.descriptions)):
         responce = IltMeetingResponceService.create_meeting_update(user_id=UserId, 
                                                         meetingResponseId=meetingResponseId, 
-                                                        id=ilt.descriptions[i].id,
+                                                        id=ilt.descriptions[i].updateId,
                                                         description=ilt.descriptions[i].description, 
                                                         db=db)
         if responce['statusCode']!=200:
@@ -90,9 +90,9 @@ def create_ilt_meeting_updates( meetingResponseId:int,ilt:updatesData,
         else:
             pass
     return {
-                "confirmMessageID": "string",
+               
                 "statusCode": 200,
-                "userMessage": "all updates has inserted/updated successfully"
+                "userMessage": "all updates has inserted/Updated successfully"
                 }
 
 
@@ -120,9 +120,9 @@ def create_update_ilt_meeting_issues( meetingResponseId: int,
         else:
             pass
     return {
-                "confirmMessageID": "string",
+               
                 "statusCode": 200,
-                "userMessage": "all issues has created/updated successfully"
+                "userMessage": "all issues has created/Updated successfully"
                 }
     
 

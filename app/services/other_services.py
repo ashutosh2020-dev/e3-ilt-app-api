@@ -17,7 +17,7 @@ class Create_otherService:
                 db.commit()
             db.close()
             return {
-                "confirmMessageID": "string",
+               
                 "statusCode": 200,
                 "userMessage": "root user has created successfully"
                 }
@@ -30,7 +30,7 @@ class Create_otherService:
             db.commit()
             db.refresh(db_school) 
             return {
-                    "confirmMessageID": "string",
+                   
                     "statusCode": 200,
                     "userMessage": "school has created successfully."
                     }
@@ -43,7 +43,7 @@ class Create_otherService:
         db.commit()
         db.refresh(db_role) 
         return {
-                "confirmMessageID": "string",
+               
                 "statusCode": 200,
                 "userMessage": "role has created successfully."
                 }
@@ -56,7 +56,7 @@ class Create_otherService:
             db.refresh(db_priority)
 
             return {
-                    "confirmMessageID": "string",
+                   
                     "statusCode": 200,
                     "userMessage": "priority has created."
                     }

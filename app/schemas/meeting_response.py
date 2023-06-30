@@ -56,18 +56,18 @@ class Createdate(BaseModel):
 class TodoData(BaseModel):
     id:Optional[int]=0
     description: str
-    duedate:datetime
+    dueDate:datetime
     status: str
 
 class TodoList(BaseModel):
     todoItem: List[TodoData]
 
 class meetingReasponceRock(BaseModel):
-    name: str
+    rockName: str
     onTrack: bool
 
 class updates_schema(BaseModel):
-    id:int
+    updateId:int
     description:str
 
 class updatesData(BaseModel):

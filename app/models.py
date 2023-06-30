@@ -74,6 +74,8 @@ class MdlMeetingsResponse(Base):
     rating = Column(Integer,  nullable=True, default=None)
     feedback = Column(String, nullable=True, default="")
     notes =  Column(String, nullable=True, default="")
+    rockName = Column(String, nullable=True, default="")
+    onTrack =  Column(Boolean, nullable=True, default="")
 
 class MdlIltMeetingResponses(Base):
     __tablename__ = "ilt_meeting_response_mapping"
