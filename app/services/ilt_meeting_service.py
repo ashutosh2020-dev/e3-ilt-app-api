@@ -17,6 +17,7 @@ def calculate_meeting_status(schedule_start_at, start_at, end_at):
     else:
         return 2  # completed
 
+
 class IltMeetingService:
     def get_Ilts_meeting_list(self, user_id: int, ilt_id: int, db: Session):
         user = db.query(MdlUsers).filter(MdlUsers.id == user_id).first()
@@ -165,10 +166,8 @@ class IltMeetingService:
                 raise CustomException(
                     404,  "Meeting ID is not associated with ILT id")
             if ilt_record.owner_id == User_id:
-                ilt_members_ids = [x.member_id for x in db.query(MdlIltMembers)
-                                   .filter(MdlIltMembers.ilt_id == iltId)
-                                    .all()
-                                   ]
+                ilt_members_ids = [x.member_id for x in db.query(
+                    MdlIltMembers).filter(MdlIltMembers.ilt_id == iltId).all()]
             else:
                 check_ilt_user_map_record = (db.query(MdlIltMembers)
                                              .filter(MdlIltMembers.ilt_id == iltId, MdlIltMembers.member_id == User_id)
@@ -180,12 +179,19 @@ class IltMeetingService:
 
             members_Info_dict = []
             meeting_response_id = 0
+
             for uid in ilt_members_ids:
                 user_record = db.query(MdlUsers).filter(
                     MdlUsers.id == uid).one()
-                meeting_response_id = db.query(MdlIltMeetingResponses)\
-                                        .filter(MdlIltMeetingResponses.meeting_id == meeting_id,
-                                                MdlIltMeetingResponses.meeting_user_id == uid).one().meeting_response_id
+                meeting_response_row = db.query(MdlIltMeetingResponses)\
+                    .filter(MdlIltMeetingResponses.meeting_id == meeting_id,
+                            MdlIltMeetingResponses.meeting_user_id == uid).one_or_none()
+
+                if meeting_response_row is None:
+                    continue
+                else:
+                    meeting_response_id = meeting_response_row.meeting_response_id
+
                 meeting_response_record = db.query(MdlMeetingsResponse)\
                     .filter(MdlMeetingsResponse.id == meeting_response_id).one()
 
