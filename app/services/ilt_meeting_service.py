@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
 from app.models import MdlIltMeetings, MdlMeetings, MdlUsers, MdlIlts, \
     MdlIltMembers, MdlIltMeetingResponses, MdlMeetingsResponse,  \
-    MdlMeeting_rocks, Mdl_updates, MdlIlt_ToDoTask, MdlIltissue, Mdl_issue
+    Mdl_updates, MdlIlt_ToDoTask, MdlIltissue, Mdl_issue
 import sys
 from app.services.ilt_meeting_response_service import IltMeetingResponceService
 from datetime import datetime, timezone, timedelta
@@ -17,7 +17,6 @@ def calculate_meeting_status(schedule_start_at, start_at, end_at):
     else:
         return 2  # completed
 
-
 class IltMeetingService:
     def get_Ilts_meeting_list(self, user_id: int, ilt_id: int, db: Session):
         user = db.query(MdlUsers).filter(MdlUsers.id == user_id).first()
@@ -30,6 +29,7 @@ class IltMeetingService:
         list_meetings = [record.ilt_meeting_id
                          for record in db.query(MdlIltMeetings)
                          .filter(MdlIltMeetings.ilt_id == ilt_id)
+                         .order_by(MdlIltMeetings.id.desc())
                          .all()]
         if len(list_meetings) > 0:
             ilt_list = []
@@ -44,11 +44,15 @@ class IltMeetingService:
                 status = calculate_meeting_status(
                     start_meeting_time, start_meeting_time, end_meeting_time)
 
-                val = {"iltId": ilt_id, "iltMeetingId": mid, "scheduledStartDate": meeting_record.schedule_start_at,
-                       "meetingStart": meeting_record.start_at,
-                       "meetingEnd": meeting_record.end_at, "location": meeting_record.location,
-                       "meetingStatus": status
-                       }
+                val = {
+                    "iltId": ilt_id,
+                    "iltMeetingId": mid,
+                    "scheduledStartDate": meeting_record.schedule_start_at,
+                    "meetingStart": meeting_record.start_at,
+                    "meetingEnd": meeting_record.end_at,
+                    "location": meeting_record.location,
+                    "meetingStatus": status
+                }
                 ilt_list.append(val)
 
             return ilt_list
@@ -112,7 +116,6 @@ class IltMeetingService:
         db.refresh(db_ilt_meeting)
 
         return {
-           
             "statusCode": 200,
             "userMessage": "meeting and corresponding meeting_response have successfully created"
         }
@@ -132,7 +135,6 @@ class IltMeetingService:
                 db.commit()
                 db.refresh(db_meeting)
                 return {
-                   
                     "statusCode": 200,
                     "userMessage": "meeting have successfully updated"
                 }
@@ -274,7 +276,6 @@ class IltMeetingService:
                 db.commit()
                 db.refresh(db_meeting)
                 return {
-                   
                     "statusCode": 200,
                     "userMessage": "meeting have successfully updated"
                 }
@@ -302,7 +303,6 @@ class IltMeetingService:
                 db.commit()
                 db.refresh(db_meeting)
                 return {
-                   
                     "statusCode": 200,
                     "userMessage": "meeting have successfully ended"
                 }

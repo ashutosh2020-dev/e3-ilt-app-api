@@ -107,9 +107,9 @@ class IltMeetingResponceService:
     def create_meeting_responses_empty_for_ILTmember(self, meeting_id: int, member_list: list, iltId: int, db: Session):
         try:
             for uid in member_list:
-                db_meeting_response = MdlMeetingsResponse(attendance_flag=None,
-                                                          checkin_personal_best=None, checkin_professional_best=None,
-                                                          rating=None, feedback=None, notes=None)
+                db_meeting_response = MdlMeetingsResponse(attendance_flag=False, checkin_personal_best=None,
+                                                          checkin_professional_best=None, rating=None,
+                                                          feedback=None, notes=None, rockName=None, onTrack=False)
                 db.add(db_meeting_response)
                 db.commit()
                 db.refresh(db_meeting_response)

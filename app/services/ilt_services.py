@@ -85,7 +85,8 @@ class IltService:
                 MdlUsers.id == uid).one()
             member_info.append({"userId": user_record.id,
                                 "firstName": user_record.fname,
-                                "lastName": user_record.lname})
+                                "lastName": user_record.lname,
+                                "emailId": user_record.email})
 
         meeting_record = (
             db.query(MdlMeetings)
@@ -111,7 +112,8 @@ class IltService:
             "owner": {
                 "userId": owner_record.id,
                 "firstName": owner_record.fname,
-                "lastName": owner_record.lname
+                "lastName": owner_record.lname,
+                "emailId": owner_record.email
             },
             "title": ilt_record.title,
             "description": ilt_record.description,
