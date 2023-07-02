@@ -29,8 +29,9 @@ class loginCredential(BaseModel):
 
 
 class UserAccount():
-    def __init__(self, userId: int, firstName: str, lastName: str, roleId: int):
+    def __init__(self, userId: int, firstName: str, lastName: str, roleId: int, emailId: str):
         self.userId = userId
         self.firstName = firstName
         self.lastName = lastName
         self.roleId = roleId
+        self.emailId = emailId

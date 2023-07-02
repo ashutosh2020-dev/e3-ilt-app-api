@@ -1,7 +1,7 @@
 # middle-ILT-app-api-code
 
 # structure
-
+<pre>
 app/
 ├── config/
 │ ├── app_settings.py
@@ -22,6 +22,7 @@ app/
 |main.py
 |Dockerfile
 
+</pre>
 ## Run these two commands docker cmd in root dir/path
 
 - docker build -t middle_ilt_app1 -f DockerFile .

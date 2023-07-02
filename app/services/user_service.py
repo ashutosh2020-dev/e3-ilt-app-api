@@ -15,14 +15,14 @@ class UserService:
 
         elif u_record.role_id == 1:
             return [{"userId": u_record.id,
-                        "firstName": u_record.fname,
-                        "lastName": u_record.lname,
-                        "emailId": u_record.email,
-                        "phoneNumber": u_record.number,
-                        "password": u_record.password,
-                        "active": u_record.is_active,
-                        "roleId": u_record.role_id,
-                        "parentUserId": u_record.parent_user_id}]
+                     "firstName": u_record.fname,
+                     "lastName": u_record.lname,
+                     "emailId": u_record.email,
+                     "phoneNumber": u_record.number,
+                     "password": u_record.password,
+                     "active": u_record.is_active,
+                     "roleId": u_record.role_id,
+                     "parentUserId": u_record.parent_user_id}]
 
         elif u_record.role_id == 2:
             users_list = []
@@ -31,14 +31,14 @@ class UserService:
             associated_users_record = user_query.all()
             for user_record in associated_users_record:
                 users_list.append({"userId": user_record.id,
-                                    "firstName": user_record.fname,
-                                    "lastName": user_record.lname,
-                                    "emailId": user_record.email,
-                                    "phoneNumber": user_record.number,
-                                    "password": user_record.password,
-                                    "active": user_record.is_active,
-                                    "roleId": user_record.role_id,
-                                    "parentUserId": user_record.parent_user_id})
+                                   "firstName": user_record.fname,
+                                   "lastName": user_record.lname,
+                                   "emailId": user_record.email,
+                                   "phoneNumber": user_record.number,
+                                   "password": user_record.password,
+                                   "active": user_record.is_active,
+                                   "roleId": user_record.role_id,
+                                   "parentUserId": user_record.parent_user_id})
             return users_list
         elif u_record.role_id == 3:
             users_list = []
@@ -66,7 +66,7 @@ class UserService:
             if keyword:
                 user_query = user_query.filter(MdlUsers.fname.like(f"%{keyword}%")
                                                | MdlUsers.lname.like(f"%{keyword}%"))
-            associated_users_record = [UserAccount(record.id, record.fname, record.lname, record.role_id)
+            associated_users_record = [UserAccount(record.id, record.fname, record.lname, record.role_id, record.email)
                                        for record in user_query.order_by(MdlUsers.id).all()]
             return associated_users_record
 
@@ -80,19 +80,20 @@ class UserService:
         if check_role_id is None:
             raise CustomException(400,  "role_id not found")
         check_user_detail = db.query(MdlUsers).filter(
-            MdlUsers.email == email or MdlUsers.number == number ).one_or_none()
+            MdlUsers.email == email or MdlUsers.number == number).one_or_none()
         if check_user_detail is not None:
             raise CustomException(400,  "user already exists")
-        if role_id>=check_parent_id.role_id:
-            raise CustomException(400,  "this user can not create user, please downgrade the role id")
-        
+        if role_id >= check_parent_id.role_id:
+            raise CustomException(
+                400,  "this user can not create user, please downgrade the role id")
+
         db_user = MdlUsers(fname=fname, lname=lname, email=email, number=number,
-                            password=password, is_active=is_active, role_id=role_id, parent_user_id=parent_user_id)
+                           password=password, is_active=is_active, role_id=role_id, parent_user_id=parent_user_id)
         db.add(db_user)
         db.commit()
         db.refresh(db_user)
         return {
-            "confirmMessageID": "string",
+
             "statusCode": 200,
             "userMessage": "user has created successfully"
         }
@@ -110,19 +111,24 @@ class UserService:
                 raise CustomException(404,  "Record not found wrt roleId.")
             if (db_user.parent_user_id != user_id) and (user_id_re.role_id != 3):
                 db.close()
-                raise CustomException(400,  "this user is not allowed to modify user's details")
-            if role_id>=user_id_re.role_id:
-                raise CustomException(400,  "this logged-in user can not modify user's details, please change/downgrade the role id")
-            if role_id<db_user.role_id: 
+                raise CustomException(
+                    400,  "this user is not allowed to modify user's details")
+            if role_id >= user_id_re.role_id:
+                raise CustomException(
+                    400,  "this logged-in user can not modify user's details, please change/downgrade the role id")
+            if role_id < db_user.role_id:
                 # check if he is an owner of ilt, or parent of any ilt,
-                check_parent_record = db.query(MdlUsers).filter(MdlUsers.parent_user_id == db_user.id).all()
-                check_iltOwner_record = db.query(MdlIlts).filter(MdlIlts.owner_id == db_user.id).all()
+                check_parent_record = db.query(MdlUsers).filter(
+                    MdlUsers.parent_user_id == db_user.id).all()
+                check_iltOwner_record = db.query(MdlIlts).filter(
+                    MdlIlts.owner_id == db_user.id).all()
                 if check_iltOwner_record or check_parent_record:
-                    raise CustomException(400,  "can not downgrade the roleId of user. he is either owner or parent of ilts or another users")
+                    raise CustomException(
+                        400,  "can not downgrade the roleId of user. he is either owner or parent of ilts or another users")
                 else:
                     pass
             db_user.role_id = role_id
-            
+
         if fname:
             db_user.fname = fname
         if lname:
@@ -133,25 +139,25 @@ class UserService:
             db_user.number = number
         if password:
             db_user.password = password
-        if is_active is not None :
+        if is_active is not None:
             db_user.is_active = is_active
 
         db.commit()
         db.refresh(db_user)
         return {
-            "confirmMessageID": "string",
+
             "statusCode": 200,
-            "userMessage": "User updated successfully."
+            "userMessage": "User Updated successfully."
         }
-    
+
     def delete_user(self, user_id: int, db: Session):
-       
+
         db_user = db.query(MdlUsers).filter(MdlUsers.id == user_id).one()
         db.delete(db_user)
         db.commit()
         # delete from ilt, meetings, meeting responce
         return {
-            "confirmMessageID": "string",
+
             "statusCode": 200,
             "userMessage": "User deleted successfully."
         }

@@ -54,7 +54,7 @@ class Createdate(BaseModel):
     CreateAt:datetime
 
 class TodoData(BaseModel):
-    id:Optional[int]=0
+    todoListId:Optional[int]=0
     description: str
     duedate:datetime
     status: str
@@ -63,11 +63,11 @@ class TodoList(BaseModel):
     todoItem: List[TodoData]
 
 class meetingReasponceRock(BaseModel):
-    name: str
+    rockName: str
     onTrack: bool
 
 class updates_schema(BaseModel):
-    id:int
+    updateId:int
     description:str
 
 class updatesData(BaseModel):
@@ -83,7 +83,7 @@ class feedback(BaseModel):
     notes:str
 
 class singleIssue(BaseModel):
-    id:Optional[int]=0
+    issueId:Optional[int]=0
     issue: str
     priorityId: Optional[int] = 0
     date: datetime= Field(default_factory=lambda: datetime.now(timezone.utc))

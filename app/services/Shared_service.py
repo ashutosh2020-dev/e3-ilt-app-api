@@ -1,9 +1,6 @@
 from sqlalchemy.orm import Session
-from app.models import MdlIlts, MdlIltMembers, MdlUsers, MdlSchools
-from app.models import MdlIltMeetingResponses, MdlMeeting_rocks, MdlRocks,\
-                MdlRoles, MdlIltPriorities, MdlUsers, MdlPriorities, MdlIltissue, Mdl_issue, MdlIlt_rocks
-from sqlalchemy.exc import SQLAlchemyError
-from fastapi import HTTPException
+from app.models import MdlSchools
+from app.models import MdlRocks, MdlRoles, MdlPriorities
 from app.exceptions.customException import CustomException
 
 class SharedService:
@@ -136,4 +133,3 @@ class SharedService:
             # return [{"roles":rock_details_list, "schools":ilt_schools_list}]
         except Exception as e:
             raise CustomException(500,  f"Internal Error, unable to process your request {e}")
-        
