@@ -17,6 +17,36 @@ def calculate_meeting_status(schedule_start_at, start_at, end_at):
         return 2  # completed
     
 class IltMeetingService:
+    def get_upcomming_Ilts_meeting_list(self, user_id: int, ilt_id:int, db: Session):
+        user = db.query(MdlUsers).filter(MdlUsers.id == user_id).first()
+        if not user:
+            raise CustomException(400,  "User not found")
+        check_ilt = db.query(MdlIlts).filter(MdlIlts.id == ilt_id).one_or_none()
+        if check_ilt is None:
+            raise CustomException(400,  "Ilt not found")
+        list_meetings = [record.ilt_meeting_id 
+                            for record in db.query(MdlIltMeetings)
+                                .filter(MdlIltMeetings.ilt_id == ilt_id)
+                                .all()]
+        if len(list_meetings)>0:
+            ilt_list = []
+            for mid in list_meetings:
+                meeting_record = db.query(MdlMeetings).filter(MdlMeetings.id == mid).first()
+                start_meeting_time =  meeting_record.schedule_start_at.replace(tzinfo=timezone.utc) #datetime.strptime(ilt_meeting_start_time, '%Y-%m-%d %H:%M:%S.%f')
+                end_meeting_time = meeting_record.end_at.replace(tzinfo=timezone.utc)
+                status = calculate_meeting_status(start_meeting_time, start_meeting_time, end_meeting_time)
+
+                val = {"iltId":ilt_id, "iltMeetingId":mid, "scheduledStartDate":meeting_record.schedule_start_at,
+                        "meetingStart": meeting_record.start_at,
+                        "meetingEnd": meeting_record.end_at, "location":meeting_record.location,
+                        "meetingStatus": status
+                        }
+                ilt_list.append(val)
+
+            return ilt_list
+        else:
+            raise CustomException(400,  "No meeting available for this Ilt id")
+
     def get_Ilts_meeting_list(self, user_id: int, ilt_id:int, db: Session):
         user = db.query(MdlUsers).filter(MdlUsers.id == user_id).first()
         if not user:
