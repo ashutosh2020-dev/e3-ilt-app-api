@@ -1,11 +1,12 @@
 from sqlalchemy.orm import Session
 from app.models import MdlIltMeetings, MdlMeetings, MdlUsers, MdlIlts, \
-                    MdlIltMembers, MdlIltMeetingResponses, MdlMeetingsResponse,  \
-                    MdlMeeting_rocks, Mdl_updates, MdlIlt_ToDoTask, MdlIltissue, Mdl_issue
+    MdlIltMembers, MdlIltMeetingResponses, MdlMeetingsResponse,  \
+    Mdl_updates, MdlIlt_ToDoTask, MdlIltissue, Mdl_issue
 import sys
 from app.services.ilt_meeting_response_service import IltMeetingResponceService
 from datetime import datetime, timezone, timedelta
 from app.exceptions.customException import CustomException
+
 
 def calculate_meeting_status(schedule_start_at, start_at, end_at):
     current_datetime = datetime.now(timezone.utc)
@@ -15,7 +16,8 @@ def calculate_meeting_status(schedule_start_at, start_at, end_at):
         return 1  # inProgress
     else:
         return 2  # completed
-    
+
+
 class IltMeetingService:
     def get_upcomming_Ilts_meeting_list(self, user_id: int, ilt_id:int, db: Session):
         user = db.query(MdlUsers).filter(MdlUsers.id == user_id).first()
@@ -54,7 +56,8 @@ class IltMeetingService:
         user = db.query(MdlUsers).filter(MdlUsers.id == user_id).first()
         if not user:
             raise CustomException(400,  "User not found")
-        check_ilt = db.query(MdlIlts).filter(MdlIlts.id == ilt_id).one_or_none()
+        check_ilt = db.query(MdlIlts).filter(
+            MdlIlts.id == ilt_id).one_or_none()
         if check_ilt is None:
             raise CustomException(400,  "Ilt not found")
         list_meetings = [record.ilt_meeting_id 
@@ -64,16 +67,25 @@ class IltMeetingService:
         if list_meetings:
             ilt_list = []
             for mid in list_meetings:
-                meeting_record = db.query(MdlMeetings).filter(MdlMeetings.id == mid).first()
-                start_meeting_time =  meeting_record.schedule_start_at.replace(tzinfo=timezone.utc) #datetime.strptime(ilt_meeting_start_time, '%Y-%m-%d %H:%M:%S.%f')
-                end_meeting_time = meeting_record.end_at.replace(tzinfo=timezone.utc)
-                status = calculate_meeting_status(start_meeting_time, start_meeting_time, end_meeting_time)
+                meeting_record = db.query(MdlMeetings).filter(
+                    MdlMeetings.id == mid).first()
+                # datetime.strptime(ilt_meeting_start_time, '%Y-%m-%d %H:%M:%S.%f')
+                start_meeting_time = meeting_record.schedule_start_at.replace(
+                    tzinfo=timezone.utc)
+                end_meeting_time = meeting_record.end_at.replace(
+                    tzinfo=timezone.utc)
+                status = calculate_meeting_status(
+                    start_meeting_time, start_meeting_time, end_meeting_time)
 
-                val = {"iltId":ilt_id, "iltMeetingId":mid, "scheduledStartDate":meeting_record.schedule_start_at,
-                        "meetingStart": meeting_record.start_at,
-                        "meetingEnd": meeting_record.end_at, "location":meeting_record.location,
-                        "meetingStatus": status
-                        }
+                val = {
+                    "iltId": ilt_id,
+                    "iltMeetingId": mid,
+                    "scheduledStartDate": meeting_record.schedule_start_at,
+                    "meetingStart": meeting_record.start_at,
+                    "meetingEnd": meeting_record.end_at,
+                    "location": meeting_record.location,
+                    "meetingStatus": status
+                }
                 ilt_list.append(val)
 
             return ilt_list
@@ -86,7 +98,8 @@ class IltMeetingService:
         user_record = db.query(MdlUsers).filter(MdlUsers.id == user_id).one_or_none()
         if user_record is None:
             raise CustomException(404,  "User not found")
-        Ilt_record = db.query(MdlIlts).filter(MdlIlts.id == ilt_id).one_or_none()
+        Ilt_record = db.query(MdlIlts).filter(
+            MdlIlts.id == ilt_id).one_or_none()
         if Ilt_record is None:
             raise CustomException(404,  "ILT not found")
         
@@ -101,34 +114,33 @@ class IltMeetingService:
         if meetingEnd:
             db_meeting.end_at = meetingEnd
         if location:
-             db_meeting.location=location
-
+            db_meeting.location = location
 
         db.add(db_meeting)
         db.commit()
         db.refresh(db_meeting)
         ilt_members_list = [record.member_id for record in db.query(MdlIltMembers)
-                            .filter(MdlIltMembers.ilt_id==ilt_id).all()]
+                            .filter(MdlIltMembers.ilt_id == ilt_id).all()]
         # create meeting response and update the map table(MdlIltMeetingResponses) for  meeting id and m_response_id
         status, msg = (IltMeetingResponceService()
-                        .create_meeting_responses_empty_for_ILTmember(meeting_id=db_meeting.id, 
-                        member_list = ilt_members_list, iltId=ilt_id, db=db))
+                       .create_meeting_responses_empty_for_ILTmember(meeting_id=db_meeting.id,
+                                                                     member_list=ilt_members_list, iltId=ilt_id, db=db))
         if status is not True:
-            raise CustomException(404,  f"Unable to create meeting responce : {msg}")
-        
+            raise CustomException(
+                404,  f"Unable to create meeting responce : {msg}")
 
         # update map table about new ilt and ilt_meeting's relationship
-        db_ilt_meeting = MdlIltMeetings(ilt_id = ilt_id, ilt_meeting_id = db_meeting.id, )
+        db_ilt_meeting = MdlIltMeetings(
+            ilt_id=ilt_id, ilt_meeting_id=db_meeting.id, )
         db.add(db_ilt_meeting)
         db.commit()
         db.refresh(db_ilt_meeting)
         return {
-                "confirmMessageID": "string",
-                "statusCode": 200,
-                "userMessage": "meeting and corresponding meeting_response have successfully created"
-            }
-    
-    def update_ilt_meeting(self, UserId:int, meeting_id: int, ilt_id: int,location, scheduledStartDate, meetingStart, 
+            "statusCode": 200,
+            "userMessage": "meeting and corresponding meeting_response have successfully created"
+        }
+
+    def update_ilt_meeting(self, UserId: int, meeting_id: int, ilt_id: int, location, scheduledStartDate, meetingStart,
                            meetingEnd,  db: Session):
             if db.query(MdlUsers).filter(MdlUsers.id == UserId).one_or_none() is None:
                 raise CustomException(404,  "userId did not found ")
@@ -152,10 +164,9 @@ class IltMeetingService:
                 db.commit()
                 db.refresh(db_meeting)
                 return {
-                        "confirmMessageID": "string",
-                        "statusCode": 200,
-                        "userMessage": "meeting have successfully updated"
-                        }
+                    "statusCode": 200,
+                    "userMessage": "meeting have successfully updated"
+                }
             else:
                 raise CustomException(404,  "meeting records not found")
         
