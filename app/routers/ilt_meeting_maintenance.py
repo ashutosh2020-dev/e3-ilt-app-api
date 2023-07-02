@@ -12,17 +12,17 @@ IltMeetingService = IltMeetingService()
 IltMeetingResponceService = IltMeetingResponceService()
 
 
-@router.get("/api/v1/ilts/{id}/meetings")
+@router.get("/api/v1/ilts/{id}/meetings/scheduled")
 def get_ilt_meetings(id: int, UserId: int = Header(convert_underscores=False), db: Session = Depends(get_db)):
     return IltMeetingService.get_Ilts_meeting_list(user_id=UserId, ilt_id=id, db=db)
 
 
-@router.get("/api/v1/ilts/{id}/calendar")
+@router.get("/api/v1/ilts/{id}/meetings")
 def get_ilt_meetings(id: int, UserId: int = Header(convert_underscores=False), db: Session = Depends(get_db)):
     return IltMeetingService.get_Ilts_meeting_list(user_id=UserId, ilt_id=id,  db=db)
 
 
-@router.post("/api/v1/ilts/{id}/calendar")
+@router.post("/api/v1/ilts/{id}/meetings")
 def create_ilt_meeting(id: int, ilt: MeetingData, UserId: int = Header(convert_underscores=False), db: Session = Depends(get_db)):
     return IltMeetingService.create_ilts_meeting(ilt_id=id,
                                                  user_id=UserId,
