@@ -45,7 +45,6 @@ class IltService:
                 # check if start_at is null
                 if meeting_record:
                     latestMeetingId = meeting_record.id
-                    # datetime.strptime(ilt_meeting_start_time, '%Y-%m-%d %H:%M:%S.%f')
                     start_meeting_time = meeting_record.start_at.replace(
                         tzinfo=timezone.utc)
                     end_meeting_time = meeting_record.end_at.replace(
