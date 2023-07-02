@@ -5,11 +5,11 @@ WORKDIR /dockerworkdir
 COPY ./app /dockerworkdir/app
 COPY requirements.txt /dockerworkdir/
 COPY main.py /dockerworkdir/
+COPY ilt_db.db /dockerworkdir/
 COPY README.md  /dockerworkdir/
 
 RUN  pip install --no-cache-dir --upgrade pip && \
      pip install --no-cache-dir -r requirements.txt
 
 EXPOSE 80
-
 CMD ["python", "main.py"]

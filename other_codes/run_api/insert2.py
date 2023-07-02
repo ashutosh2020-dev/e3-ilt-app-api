@@ -21,8 +21,8 @@ total_num_user = num_school*num_ilt*user_per_ilt # 112
 total_ilts = num_school*num_ilt # 16
 total_meetings = total_ilts*meetings_per_ilt # 32
 
-# host_url = "http://middle-ilt-app.us-east-1.elasticbeanstalk.com/" 
-host_url = "http://127.0.0.1/"
+host_url = "http://middle-ilt-app.us-east-1.elasticbeanstalk.com/" 
+# host_url = "http://127.0.0.1/"
 
 def hit_create_user_api(host_url, user, payload={}, headers={}):
     endpoint = f"""api/v1/users/"""
@@ -141,6 +141,6 @@ def run_create_iltMeeting_api():
     print("created successfully")
 
 if __name__ == "__main__":
-    # run_create_user_api()
-    # run_create_ilt_api()
+    run_create_user_api()
+    run_create_ilt_api()
     run_create_iltMeeting_api()
