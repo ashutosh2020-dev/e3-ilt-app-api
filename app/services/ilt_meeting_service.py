@@ -229,9 +229,10 @@ class IltMeetingService:
                         "iltMeetingResponseId": meeting_response_id,
                         "iltMeetingId": meeting_id,
                         "member": {
-                            "id": user_record.id,
+                            "userId": user_record.id,
                             "firstName": user_record.fname,
-                            "lastName": user_record.lname
+                            "lastName": user_record.lname,
+                            "emailId": user_record.email
                         },
                         "attandance": meeting_response_record.attendance_flag,
                         "personalBest": meeting_response_record.checkin_personal_best,
