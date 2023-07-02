@@ -54,9 +54,9 @@ class Createdate(BaseModel):
     CreateAt:datetime
 
 class TodoData(BaseModel):
-    id:Optional[int]=0
+    todoListId:Optional[int]=0
     description: str
-    dueDate:datetime
+    duedate:datetime
     status: str
 
 class TodoList(BaseModel):
@@ -83,7 +83,7 @@ class feedback(BaseModel):
     notes:str
 
 class singleIssue(BaseModel):
-    id:Optional[int]=0
+    issueId:Optional[int]=0
     issue: str
     priorityId: Optional[int] = 0
     date: datetime= Field(default_factory=lambda: datetime.now(timezone.utc))

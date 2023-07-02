@@ -19,7 +19,7 @@ def calculate_meeting_status(schedule_start_at, start_at, end_at):
 
 
 class IltMeetingService:
-    def get_Ilts_meeting_list(self, user_id: int, ilt_id: int, db: Session):
+    def get_Ilts_meeting_list(self, user_id: int, ilt_id: int,  db: Session):
         user = db.query(MdlUsers).filter(MdlUsers.id == user_id).first()
         if not user:
             raise CustomException(400,  "User not found")
