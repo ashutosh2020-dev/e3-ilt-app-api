@@ -10,9 +10,9 @@ from app.exceptions.customException import CustomException
 
 def calculate_meeting_status(schedule_start_at, start_at, end_at):
     current_datetime = datetime.now(timezone.utc)
-    if current_datetime < schedule_start_at:
+    if current_datetime < schedule_start_at and start_at==0 :
         return 0  # notStarted
-    elif current_datetime >= start_at and current_datetime <= end_at:
+    elif current_datetime >= start_at and  end_at == 0:
         return 1  # inProgress
     else:
         return 2  # completed
@@ -35,19 +35,21 @@ class IltMeetingService:
         if list_meeting_records:
             ilt_list = []
             for meeting_record in list_meeting_records:
-                start_meeting_time =  meeting_record.schedule_start_at.replace(tzinfo=timezone.utc) 
-                end_meeting_time = meeting_record.end_at.replace(tzinfo=timezone.utc)
-                status = calculate_meeting_status(start_meeting_time, start_meeting_time, end_meeting_time)
+                schedule_start_at =  meeting_record.schedule_start_at.replace(tzinfo=timezone.utc)
+                start_meeting_time =  meeting_record.start_at.replace(tzinfo=timezone.utc) if meeting_record.start_at else 0
+                end_meeting_time = meeting_record.end_at.replace(tzinfo=timezone.utc) if meeting_record.end_at else 0
+                print(start_meeting_time, end_meeting_time )
+                status = calculate_meeting_status(schedule_start_at, start_meeting_time, end_meeting_time)
                 if status<2:
                     ilt_list.append({
-                                    "iltId":ilt_id, "iltMeetingId":meeting_record.id, 
+                                    "iltId":ilt_id, 
+                                    "iltMeetingId":meeting_record.id, 
                                     "scheduledStartDate":meeting_record.schedule_start_at,
                                     "meetingStart": meeting_record.start_at,
-                                    "meetingEnd": meeting_record.end_at, 
+                                    "meetingEnd": meeting_record.end_at,
                                     "location":meeting_record.location,
                                     "meetingStatus": status
                                     })
-
             return ilt_list
         else:
             raise CustomException(400,  "No meeting available for this Ilt id")
@@ -68,14 +70,11 @@ class IltMeetingService:
             ilt_list = []
             for mid in list_meetings:
                 meeting_record = db.query(MdlMeetings).filter(
-                    MdlMeetings.id == mid).first()
-                # datetime.strptime(ilt_meeting_start_time, '%Y-%m-%d %H:%M:%S.%f')
-                start_meeting_time = meeting_record.schedule_start_at.replace(
-                    tzinfo=timezone.utc)
-                end_meeting_time = meeting_record.end_at.replace(
-                    tzinfo=timezone.utc)
-                status = calculate_meeting_status(
-                    start_meeting_time, start_meeting_time, end_meeting_time)
+                    MdlMeetings.id == mid).one()
+                schedule_start_at =  meeting_record.schedule_start_at.replace(tzinfo=timezone.utc)
+                start_meeting_time =  meeting_record.start_at.replace(tzinfo=timezone.utc) if meeting_record.start_at else 0
+                end_meeting_time = meeting_record.end_at.replace(tzinfo=timezone.utc) if meeting_record.end_at else 0
+                status = calculate_meeting_status(schedule_start_at, start_meeting_time, end_meeting_time)
 
                 val = {
                     "iltId": ilt_id,
@@ -300,7 +299,7 @@ class IltMeetingService:
             return {
                     "confirmMessageID": "string",
                     "statusCode": 200,
-                    "userMessage": "meeting have successfully updated"
+                    "userMessage": "meeting have started successfully"
                     }
         else:
             raise CustomException(404,  "meeting records not found")

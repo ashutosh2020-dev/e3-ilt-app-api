@@ -141,6 +141,6 @@ def run_create_iltMeeting_api():
     print("created successfully")
 
 if __name__ == "__main__":
-    # run_create_user_api()
-    # run_create_ilt_api()
+    run_create_user_api()
+    run_create_ilt_api()
     run_create_iltMeeting_api()

@@ -64,9 +64,9 @@ class MdlMeetings(Base):
     __tablename__ = "Ilt_meetings"
     id = Column(Integer, primary_key=True, autoincrement=True)
     location = Column(String, nullable=True, default=None)
-    schedule_start_at = Column(DateTime, nullable=False)
-    start_at = Column(DateTime, nullable=False)
-    end_at = Column(DateTime, nullable=False)
+    schedule_start_at = Column(DateTime, nullable=False, default=None)
+    start_at = Column(DateTime, nullable=True, default=None)
+    end_at = Column(DateTime, nullable=True, default=None)
 
 
 class MdlIltMeetings(Base):
@@ -91,8 +91,7 @@ class MdlMeetingsResponse(Base):
     onTrack = Column(Boolean, nullable=True, default="")
 
 
-class \
-        MdlIltMeetingResponses(Base):
+class MdlIltMeetingResponses(Base):
     __tablename__ = "ilt_meeting_response_mapping"
     __table_args__ = (UniqueConstraint(
         'meeting_user_id', 'meeting_response_id'),)

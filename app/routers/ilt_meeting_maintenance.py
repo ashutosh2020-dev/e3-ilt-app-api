@@ -27,8 +27,8 @@ def create_ilt_meeting(id: int, ilt: MeetingData, UserId: int = Header(convert_u
     return IltMeetingService.create_ilts_meeting(ilt_id=id,
                                                  user_id=UserId,
                                                  scheduledStartDate=ilt.scheduledStartDate,
-                                                 meetingStart=ilt.meetingStart,
-                                                 meetingEnd=ilt.meetingEnd,
+                                                 meetingStart=0,
+                                                 meetingEnd=0,
                                                  location=ilt.location,
                                                  db=db)
 
