@@ -69,6 +69,7 @@ class MdlMeetings(Base):
     end_at = Column(DateTime, nullable=True, default=None)
 
 
+
 class MdlIltMeetings(Base):
     __tablename__ = "Ilt_meeting_maping"
     __table_args__ = (UniqueConstraint('ilt_id', 'ilt_meeting_id'),)
@@ -91,7 +92,8 @@ class MdlMeetingsResponse(Base):
     onTrack = Column(Boolean, nullable=True, default="")
 
 
-class MdlIltMeetingResponses(Base):
+class \
+        MdlIltMeetingResponses(Base):
     __tablename__ = "ilt_meeting_response_mapping"
     __table_args__ = (UniqueConstraint(
         'meeting_user_id', 'meeting_response_id'),)
