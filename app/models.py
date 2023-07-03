@@ -147,7 +147,7 @@ class MdlIlt_ToDoTask(Base):
         "meeting_response.id"), nullable=False, index=True)
     description = Column(String, nullable=False)
     due_date = Column(DateTime, nullable=False)
-    status = Column(String, nullable=False)
+    status = Column(Boolean, nullable=False, default=False)
 
 
 class Mdl_updates(Base):

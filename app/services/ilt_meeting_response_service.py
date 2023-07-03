@@ -63,7 +63,7 @@ class IltMeetingResponceService:
                                   for record in issue_record]
 
             iltMeetingResponse_issues = ({
-                "issueid": user_issues_single_record.id,
+                "issueId": user_issues_single_record.id,
                 "issue": user_issues_single_record.issue,
                 "priorityId": user_issues_single_record.priority,
                 "created_at": user_issues_single_record.created_at,
@@ -319,7 +319,7 @@ class IltMeetingResponceService:
             raise CustomException(500,  f"unable to process your request {e}")
 
     def create_update_to_do_list(self, user_id: int, id: int, meetingResponseId: int, description: str,
-                                 dueDate: Duedate, status: str, db: Session):
+                                 dueDate: Duedate, status: bool, db: Session):
 
         if db.query(MdlUsers).filter(MdlUsers.id == user_id).one_or_none() is None:
             raise CustomException(400,  f" userId is not valid")

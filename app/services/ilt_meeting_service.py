@@ -285,7 +285,7 @@ class IltMeetingService:
                         "todoList": user_todolist_record,
                         "issues":
                         [{
-                            "issueid": user_issues_single_record.id,
+                            "issueId": user_issues_single_record.id,
                             "issue": user_issues_single_record.issue,
                             "priorityId": user_issues_single_record.priority,
                             "date": user_issues_single_record.created_at,

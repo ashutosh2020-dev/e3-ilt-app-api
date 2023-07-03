@@ -56,8 +56,8 @@ class Createdate(BaseModel):
 class TodoData(BaseModel):
     todoListId:Optional[int]=0
     description: str
-    duedate:datetime
-    status: str
+    dueDate:datetime
+    status: bool
 
 class TodoList(BaseModel):
     todoItem: List[TodoData]
