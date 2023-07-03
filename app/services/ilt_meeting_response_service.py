@@ -3,6 +3,8 @@ from app.models import MdlMeeting_rocks, MdlIlt_ToDoTask, Mdl_updates, \
     MdlMeetingsResponse, MdlIltMeetingResponses, MdlRocks, \
     Mdl_issue, MdlUsers, MdlIltissue, MdlMeetings, MdlIlts, \
     MdlIlt_rocks, MdlIltMembers, MdlIltMeetings, MdlPriorities
+from sqlalchemy import desc, join
+from typing import List, Optional
 from app.schemas.meeting_response import MeetingResponse, Duedate
 from datetime import datetime, timezone
 from typing import Annotated, Union
@@ -33,19 +35,11 @@ class IltMeetingResponceService:
                 "userId": user_record.id,
                 "firstName": user_record.fname,
                 "lastName": user_record.lname,
+                "emailId": user_record.email
             }
-            user_rock_record = [{
-                "rockId": record.name,
-                                "onTrack": record.on_track_flag
-                                }
-                                for record in db.query(MdlMeeting_rocks)
-                                .filter(MdlMeeting_rocks.ilt_meeting_response_id == meetingResponseId)
-                                .all()
-                                ]
-
             user_update_record = [
                 {
-                    "id": record.id,
+                    "updateId": record.id,
                     "description": record.description
                 }
                 for record in db.query(Mdl_updates)
@@ -54,7 +48,7 @@ class IltMeetingResponceService:
             ]
             user_todolist_record = [
                 {
-                    "id": record.id,
+                    "todoListId": record.id,
                     "description": record.description,
                     "dueDate": record.due_date,
                     "status": record.status
@@ -94,7 +88,8 @@ class IltMeetingResponceService:
                 "rating": user_meetingResponse_record.rating if user_meetingResponse_record.rating else 0,
                 "feedback": user_meetingResponse_record.feedback,
                 "notes": user_meetingResponse_record.notes,
-                "rocks": user_rock_record,
+                "rockName": user_meetingResponse_record.rockName,
+                "onTrack": user_meetingResponse_record.onTrack,
                 "updates": user_update_record,
                 "todoList": user_todolist_record,
                 "issues": iltMeetingResponse_issues
@@ -155,7 +150,7 @@ class IltMeetingResponceService:
                 for uid in member_list:
                     db_meeting_response = MdlMeetingsResponse(attendance_flag=None,
                                                               checkin_personal_best=None, checkin_professional_best=None,
-                                                              rating=None, feedback=None, notes=None, rockName=None, onTrack=False)
+                                                              rating=None, feedback=None, notes=None)
                     db.add(db_meeting_response)
                     db.commit()
                     db.refresh(db_meeting_response)
@@ -178,7 +173,7 @@ class IltMeetingResponceService:
                                  checkin_professional_best: str, ratings: int, feedback: str, notes: str, db: Session):
         db_metting_response = MdlMeetingsResponse(attendance_flag=is_attand,
                                                   checkin_personal_best=checkin_personal_best, checkin_professional_best=checkin_professional_best,
-                                                  rating=ratings, feedback=feedback, notes=notes, rockName=None, onTrack=False)
+                                                  rating=ratings, feedback=feedback, notes=notes)
         db.add(db_metting_response)
         db.commit()
         db.refresh(db_metting_response)
