@@ -3,8 +3,6 @@ from app.models import MdlMeeting_rocks, MdlIlt_ToDoTask, Mdl_updates, \
     MdlMeetingsResponse, MdlIltMeetingResponses, MdlRocks, \
     Mdl_issue, MdlUsers, MdlIltissue, MdlMeetings, MdlIlts, \
     MdlIlt_rocks, MdlIltMembers, MdlIltMeetings, MdlPriorities
-from sqlalchemy import desc, join
-from typing import List, Optional
 from app.schemas.meeting_response import MeetingResponse, Duedate
 from datetime import datetime, timezone
 from typing import Annotated, Union
@@ -157,7 +155,7 @@ class IltMeetingResponceService:
                 for uid in member_list:
                     db_meeting_response = MdlMeetingsResponse(attendance_flag=None,
                                                               checkin_personal_best=None, checkin_professional_best=None,
-                                                              rating=None, feedback=None, notes=None)
+                                                              rating=None, feedback=None, notes=None, rockName=None, onTrack=False)
                     db.add(db_meeting_response)
                     db.commit()
                     db.refresh(db_meeting_response)
@@ -180,7 +178,7 @@ class IltMeetingResponceService:
                                  checkin_professional_best: str, ratings: int, feedback: str, notes: str, db: Session):
         db_metting_response = MdlMeetingsResponse(attendance_flag=is_attand,
                                                   checkin_personal_best=checkin_personal_best, checkin_professional_best=checkin_professional_best,
-                                                  rating=ratings, feedback=feedback, notes=notes)
+                                                  rating=ratings, feedback=feedback, notes=notes, rockName=None, onTrack=False)
         db.add(db_metting_response)
         db.commit()
         db.refresh(db_metting_response)

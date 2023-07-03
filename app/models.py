@@ -64,9 +64,10 @@ class MdlMeetings(Base):
     __tablename__ = "Ilt_meetings"
     id = Column(Integer, primary_key=True, autoincrement=True)
     location = Column(String, nullable=True, default=None)
-    schedule_start_at = Column(DateTime, nullable=False)
-    start_at = Column(DateTime, nullable=False)
-    end_at = Column(DateTime, nullable=False)
+    schedule_start_at = Column(DateTime, nullable=False, default=None)
+    start_at = Column(DateTime, nullable=True, default=None)
+    end_at = Column(DateTime, nullable=True, default=None)
+
 
 
 class MdlIltMeetings(Base):

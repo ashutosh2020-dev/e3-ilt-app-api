@@ -13,8 +13,8 @@ IltMeetingResponceService = IltMeetingResponceService()
 
 
 @router.get("/api/v1/ilts/{id}/meetings/scheduled")
-def get_ilt_meetings(id: int, UserId: int = Header(convert_underscores=False), db: Session = Depends(get_db)):
-    return IltMeetingService.get_Ilts_meeting_list(user_id=UserId, ilt_id=id, db=db)
+def get_upcomming_Ilts_meeting_list(id: int, UserId: int = Header(convert_underscores=False), db: Session = Depends(get_db)):
+    return IltMeetingService.get_upcomming_Ilts_meeting_list(user_id=UserId, ilt_id=id, db=db)
 
 
 @router.get("/api/v1/ilts/{id}/meetings")
@@ -27,11 +27,10 @@ def create_ilt_meeting(id: int, ilt: MeetingData, UserId: int = Header(convert_u
     return IltMeetingService.create_ilts_meeting(ilt_id=id,
                                                  user_id=UserId,
                                                  scheduledStartDate=ilt.scheduledStartDate,
-                                                 meetingStart=ilt.meetingStart,
-                                                 meetingEnd=ilt.meetingEnd,
+                                                 meetingStart=0,
+                                                 meetingEnd=0,
                                                  location=ilt.location,
                                                  db=db)
-
 
 @router.get("/api/v1/ilts/{id}/meetings/{meetingId}/meetingResponses")
 def get_meeting_info_wrt_meeting_id_and_ilt_id(id: int, meetingId: int, UserId: int = Header(convert_underscores=False), db: Session = Depends(get_db)):
@@ -49,8 +48,8 @@ def update_ilt_meeting(meetingId: int,
                                                 UserId=UserId,
                                                 location=iltMeeting.location,
                                                 scheduledStartDate=iltMeeting.scheduledStartDate,
-                                                meetingStart=iltMeeting.meetingStart,
-                                                meetingEnd=iltMeeting.meetingEnd,
+                                                meetingStart=0,
+                                                meetingEnd=0,
                                                 db=db)
 
 
@@ -61,11 +60,6 @@ def start_ilt_meeting(id: int, meetingId: int, UserId: int = Header(convert_unde
     return IltMeetingService.start_ilt_meeting(meeting_id=meetingId,
                                                ilt_id=id,
                                                UserId=UserId,
-                                               scheduledStartDate=datetime.now(
-                                                   timezone.utc),
-                                               meetingStart=datetime.now(
-                                                   timezone.utc),
-                                               # meetingEnd=datetime.now(timezone.utc),
                                                db=db)
 
 

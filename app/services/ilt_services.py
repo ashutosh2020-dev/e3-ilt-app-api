@@ -1,12 +1,9 @@
-from sqlalchemy.orm import Session, joinedload
-from sqlalchemy import or_, desc, join
+from sqlalchemy.orm import Session
 from app.models import MdlIlts, MdlIltMembers, MdlUsers, MdlSchools, MdlMeetings, MdlIltMeetings, MdlRocks, MdlIlt_rocks
 from app.schemas.ilt_schemas import Ilt
 from app.services.ilt_meeting_response_service import IltMeetingResponceService
-from sqlalchemy.exc import SQLAlchemyError
 from datetime import datetime, timezone
 from app.exceptions.customException import CustomException
-# from pytz import utc
 
 
 def calculate_meeting_status(schedule_start_at, start_at, end_at):
@@ -32,26 +29,23 @@ class IltService:
                 ilt_owner_record = db.query(MdlUsers).filter(
                     MdlUsers.id == ilt_record.owner_id).first()
                 owner_name = ilt_owner_record.fname+" "+ilt_owner_record.lname
-                # owner_record = db.query(MdlUsers).filter(MdlUsers.id == ilt_record.owner_id).one()
                 # find latest meeting
-                meeting_record = (
-                    db.query(MdlMeetings)
-                    .join(MdlIltMeetings, MdlMeetings.id == MdlIltMeetings.ilt_meeting_id)
-                    .filter(MdlIltMeetings.ilt_id == x, MdlMeetings.start_at >= datetime.now(timezone.utc))
-                    .order_by(MdlMeetings.start_at.asc())
-                    .first()
-                )
-                # or_(MdlMeetings.schedule_start_at>=datetime.now(timezone.utc) ,bool(MdlMeetings.start_at >=datetime.now(timezone.utc)) )
+                # meeting_record = (
+                #     db.query(MdlMeetings)
+                #     .join(MdlIltMeetings, MdlMeetings.id == MdlIltMeetings.ilt_meeting_id)
+                #     .filter(MdlIltMeetings.ilt_id == x)
+                #     .order_by(MdlMeetings.schedule_start_at.asc())
+                #     .first()
+                # )
                 # check if start_at is null
-                if meeting_record:
-                    latestMeetingId = meeting_record.id
-                    # datetime.strptime(ilt_meeting_start_time, '%Y-%m-%d %H:%M:%S.%f')
-                    start_meeting_time = meeting_record.start_at.replace(
-                        tzinfo=timezone.utc)
-                    end_meeting_time = meeting_record.end_at.replace(
-                        tzinfo=timezone.utc)
-                    status = calculate_meeting_status(
-                        start_meeting_time, start_meeting_time, end_meeting_time)
+                # if meeting_record:
+                #     latestMeetingId = meeting_record.id
+                #     start_meeting_time = meeting_record.start_at.replace(
+                #         tzinfo=timezone.utc)
+                #     end_meeting_time = meeting_record.end_at.replace(
+                #         tzinfo=timezone.utc)
+                #     status = calculate_meeting_status(
+                #         start_meeting_time, start_meeting_time, end_meeting_time)
 
                 val = {"iltId": ilt_record.id,
                        "title": ilt_record.title,
@@ -67,7 +61,6 @@ class IltService:
     def get_ilt_details(self, user_id: int, ilt_id: int, db: Session):
         if db.query(MdlUsers).filter(MdlUsers.id == user_id).one_or_none() is None:
             raise CustomException(400,  "records Not found")
-            # return "not found"
         ilt_record = db.query(MdlIlts).filter(
             MdlIlts.id == ilt_id).one_or_none()
         if ilt_record is None:
@@ -87,26 +80,8 @@ class IltService:
                                 "firstName": user_record.fname,
                                 "lastName": user_record.lname,
                                 "emailId": user_record.email})
-
-        meeting_record = (
-            db.query(MdlMeetings)
-            .join(MdlIltMeetings, MdlMeetings.id == MdlIltMeetings.ilt_meeting_id)
-            .filter(MdlIltMeetings.ilt_id == ilt_id, MdlMeetings.start_at >= datetime.now(timezone.utc))
-            .order_by(MdlMeetings.start_at.asc())
-            .first()
-        )
         latestMeetingId = 0
         status = 0
-        if meeting_record:
-            latestMeetingId = meeting_record.id
-            # datetime.strptime(ilt_meeting_start_time, '%Y-%m-%d %H:%M:%S.%f')
-            start_meeting_time = meeting_record.start_at.replace(
-                tzinfo=timezone.utc)
-            end_meeting_time = meeting_record.end_at.replace(
-                tzinfo=timezone.utc)
-            status = calculate_meeting_status(
-                start_meeting_time, start_meeting_time, end_meeting_time)
-
         return {
             "iltId": ilt_record.id,
             "owner": {
@@ -251,7 +226,7 @@ class IltService:
             upcoming_meeting_list = db.query(MdlMeetings)\
                 .join(MdlIltMeetings, MdlMeetings.id == MdlIltMeetings.ilt_meeting_id)\
                 .filter(MdlIltMeetings.ilt_id == ilt_id)\
-                .filter(MdlMeetings.start_at > current_date)\
+                .filter(MdlMeetings.schedule_start_at > current_date)\
                 .all()
             upcoming_meetingId_list = [
                 record.id for record in upcoming_meeting_list]
