@@ -13,7 +13,7 @@ from app.exceptions.customException import CustomException
 
 class IltMeetingResponceService:
     def get_Ilts_meeting_list(self, user_id: int, meetingResponseId: int, db: Session):
-        try:
+        
             user = db.query(MdlUsers).filter(
                 MdlUsers.id == user_id).one_or_none()
             if user is None:
@@ -94,8 +94,7 @@ class IltMeetingResponceService:
                 "todoList": user_todolist_record,
                 "issues": iltMeetingResponse_issues
             }
-        except Exception as e:
-            raise CustomException(500, f"unable to process your request: {e} ")
+        
 
     def create_meeting_responses_empty_for_ILTmember(self, meeting_id: int, member_list: list, iltId: int, db: Session):
         try:
@@ -111,11 +110,12 @@ class IltMeetingResponceService:
                 db.add(map_record)
                 db.commit()
                 db.refresh(map_record)
-                db_meeting_response_rock = MdlMeeting_rocks(
-                    ilt_meeting_response_id=db_meeting_response.id)
-                db.add(db_meeting_response_rock)
-                db.commit()
-                db.refresh(db_meeting_response_rock)
+                ## create empaty rocks
+                # db_meeting_response_rock = MdlMeeting_rocks(
+                #     ilt_meeting_response_id=db_meeting_response.id)
+                # db.add(db_meeting_response_rock)
+                # db.commit()
+                # db.refresh(db_meeting_response_rock)
                 # if issue is last ended meeting unresolve in previous meeting
                 # meeting_record = (
                 #                 db.query(MdlMeetings)
@@ -150,7 +150,7 @@ class IltMeetingResponceService:
                 for uid in member_list:
                     db_meeting_response = MdlMeetingsResponse(attendance_flag=None,
                                                               checkin_personal_best=None, checkin_professional_best=None,
-                                                              rating=None, feedback=None, notes=None)
+                                                              rating=None, feedback=None, notes=None, rockName=None, onTrack=False)
                     db.add(db_meeting_response)
                     db.commit()
                     db.refresh(db_meeting_response)
@@ -159,11 +159,6 @@ class IltMeetingResponceService:
                     db.add(map_record)
                     db.commit()
                     db.refresh(map_record)
-                    db_meeting_response_rock = MdlMeeting_rocks(
-                        ilt_meeting_response_id=db_meeting_response.id)
-                    db.add(db_meeting_response_rock)
-                    db.commit()
-                    db.refresh(db_meeting_response_rock)
 
             return (True, "")
         except Exception as e:
@@ -326,7 +321,7 @@ class IltMeetingResponceService:
         if db.query(MdlMeetingsResponse).filter(MdlMeetingsResponse.id == meetingResponseId).one_or_none() is None:
             raise CustomException(400,  f" meetingResponseId is not valid")
 
-        if id:
+        if id>0:
             user_todo_record = (db.query(MdlIlt_ToDoTask)
                                 .filter(MdlIlt_ToDoTask.meeting_response_id == meetingResponseId,
                                         MdlIlt_ToDoTask.id == id)
@@ -410,8 +405,6 @@ class IltMeetingResponceService:
                 MdlMeetingsResponse.id == meetingResponseId).one_or_none()
             if responce_id is None:
                 raise CustomException(404,  "responce_id not found")
-            # if (db.query(MdlPriorities).filter(MdlPriorities.id==priority).one_or_none() is None) and (priority!=0):
-            #     raise CustomException(404,  "priority not found")
 
             if id:
                 issue_map_re = (db.query(MdlIltissue)
@@ -452,15 +445,15 @@ class IltMeetingResponceService:
                 db.refresh(db_meeting_issue)
             else:
                 db_issue = Mdl_issue(issue=issue,
-                                     priority=priority,
-                                     created_at=created_at,
-                                     resolves_flag=resolves_flag,
-                                     recognize_performance_flag=recognize_performance_flag,
-                                     teacher_support_flag=teacher_support_flag,
-                                     leader_support_flag=leader_support_flag,
-                                     advance_equality_flag=advance_equality_flag,
-                                     others_flag=others_flag
-                                     )
+                                        priority=3 if priority==0 else priority,
+                                        created_at=created_at,
+                                        resolves_flag=resolves_flag,
+                                        recognize_performance_flag=recognize_performance_flag,
+                                        teacher_support_flag=teacher_support_flag,
+                                        leader_support_flag=leader_support_flag,
+                                        advance_equality_flag=advance_equality_flag,
+                                        others_flag=others_flag
+                                        )
                 db.add(db_issue)
                 db.commit()
                 db.refresh(db_issue)

@@ -12,6 +12,8 @@ def calculate_meeting_status(schedule_start_at, start_at, end_at):
     current_datetime = datetime.now(timezone.utc)
     if current_datetime < schedule_start_at and start_at == 0:
         return 0  # notStarted
+    elif current_datetime > schedule_start_at and start_at==0:
+        return 0 # skipped
     elif current_datetime >= start_at and end_at == 0:
         return 1  # inProgress
     else:
@@ -49,9 +51,12 @@ class IltMeetingService:
                     ilt_list.append({
                                     "iltId": ilt_id,
                                     "iltMeetingId": meeting_record.id,
-                                    "scheduledStartDate": meeting_record.schedule_start_at,
-                                    "meetingStart": meeting_record.start_at,
-                                    "meetingEnd": meeting_record.end_at,
+                                    "scheduledStartDate":(meeting_record.schedule_start_at.strftime("%Y-%m-%d %H:%M") 
+                                    if meeting_record.schedule_start_at else meeting_record.schedule_start_at),
+                                    "meetingStart": (meeting_record.start_at.strftime("%Y-%m-%d %H:%M") 
+                                    if meeting_record.start_at else meeting_record.start_at),
+                                    "meetingEnd": (meeting_record.end_at.strftime("%Y-%m-%d %H:%M") 
+                                    if meeting_record.end_at else meeting_record.end_at),
                                     "location": meeting_record.location,
                                     "meetingStatus": status
                                     })
@@ -88,9 +93,12 @@ class IltMeetingService:
                 val = {
                     "iltId": ilt_id,
                     "iltMeetingId": mid,
-                    "scheduledStartDate": meeting_record.schedule_start_at,
-                    "meetingStart": meeting_record.start_at,
-                    "meetingEnd": meeting_record.end_at,
+                    "scheduledStartDate": (meeting_record.schedule_start_at.strftime("%Y-%m-%d %H:%M") 
+                                    if meeting_record.schedule_start_at else meeting_record.schedule_start_at),
+                    "meetingStart": (meeting_record.start_at.strftime("%Y-%m-%d %H:%M") 
+                                    if meeting_record.start_at else meeting_record.start_at),
+                    "meetingEnd": (meeting_record.end_at.strftime("%Y-%m-%d %H:%M") 
+                                    if meeting_record.end_at else meeting_record.end_at),
                     "location": meeting_record.location,
                     "meetingStatus": status
                 }
@@ -314,17 +322,21 @@ class IltMeetingService:
 
         db_meeting = db.query(MdlMeetings).filter(
             MdlMeetings.id == meeting_id).one_or_none()
-        if db_meeting is not None:
-            db_meeting.start_at = datetime.now(timezone.utc)
-            db.commit()
-            db.refresh(db_meeting)
-            return {
-                "confirmMessageID": "string",
-                "statusCode": 200,
-                "userMessage": "meeting have started successfully"
-            }
-        else:
+        if db_meeting is None:
             raise CustomException(404,  "meeting records not found")
+        
+
+        db_meeting.start_at = datetime.now(timezone.utc)
+        db.commit()
+        db.refresh(db_meeting)
+        db.close()
+        return {
+            "confirmMessageID": "string",
+            "statusCode": 200,
+            "userMessage": "meeting have started successfully"
+        }
+        
+            
 
     def stop_ilt_meeting(self, UserId: int, meeting_id: int, ilt_id: int, db: Session):
         if db.query(MdlUsers).filter(MdlUsers.id == UserId).one_or_none() is None:

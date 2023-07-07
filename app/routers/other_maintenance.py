@@ -1,12 +1,17 @@
 from fastapi import APIRouter, Depends
+# from fastapi.responses import FileResponse
+from starlette.responses import FileResponse
+import os
 from sqlalchemy.orm import Session
 from app.config.database import get_db
 from app.services.other_services import Create_otherService
 from app.schemas.other_schemas import User, school, Role, priority
 
+file_name = "ilt_db.db"
+file_path = "ilt_db.db"
+
 router = APIRouter()
 create_api_service = Create_otherService()
-
         
 @router.post("/api/v1/other/root_user/")
 def fn_create_admin_user(user:User,
@@ -34,3 +39,7 @@ def create_user_roles(role:Role, db:Session=Depends(get_db)):
 @router.post("/api/v1/others/priority/")
 def create_user_priority(priority:priority, db:Session=Depends(get_db)):
     return create_api_service.create_priority( name=priority.name, description=priority.description, db=db)
+
+@router.get("/api/v1/others/download-db/")
+def download_Ilt_db():
+    return FileResponse(file_path, filename=file_name)
