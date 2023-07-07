@@ -24,7 +24,7 @@ class DashboardService:
             """
                 avg_last_ilts_meeting_in_district
                 avg_num_ilt_meeting_in_district
-                avg_attandance_in_district
+                avg_attendance_in_district
                 avg_rock_on_track_in_district
                 avg_rating
                 avg_issue
@@ -37,7 +37,7 @@ class DashboardService:
             all_meeting_id_list = [m_record.ilt_meeting_id for m_record in db.query(MdlIltMeetings).filter(MdlIltMeetings.ilt_id==ilt_id).all()]
             members_list = [map_record.member_id for map_record in db.query(MdlIltMembers).filter(MdlIltMembers.ilt_id==ilt_id).all()]
             num_of_member_in_ilt = len(members_list) 
-            avg_attandance_list =[]
+            avg_attendance_list =[]
             avg_rating_list =[]
             avg_rock_list =[]
             avg_issueResolve_list =[]
@@ -65,7 +65,7 @@ class DashboardService:
                     attandence_denominator = num_of_member_in_ilt
                     avg_attendence = attandence_nominator/attandence_denominator
                     
-                    avg_attandance_list.append(avg_attendence)
+                    avg_attendance_list.append(avg_attendence)
                     
                 ## rating : 
                     rating_nominator = sum([record.rating
@@ -103,7 +103,7 @@ class DashboardService:
                     issue_denominator = len(meetings_issue_resolve_list)
                     avg_issueResolve_list.append(issue_nominator/issue_denominator)
 
-            aggregate_attandence = sum(avg_attandance_list)/len(avg_attandance_list) if avg_attandance_list  else 0
+            aggregate_attandence = sum(avg_attendance_list)/len(avg_attendance_list) if avg_attendance_list  else 0
             aggregate_rock = sum(avg_rock_list)/len(avg_rock_list) if avg_rock_list else 0
             avg_rating = sum(avg_rating_list)/len(avg_rating_list) if avg_rating_list else 0 
             avg_issueResolve = sum(avg_issueResolve_list)/len(avg_issueResolve_list) if avg_issueResolve_list else 0

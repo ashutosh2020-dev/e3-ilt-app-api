@@ -64,7 +64,7 @@ class TodoList(BaseModel):
 
 class meetingReasponceRock(BaseModel):
     rockName: str
-    onTrack: bool
+    onTrack: Optional[bool]=None
 
 class updates_schema(BaseModel):
     updateId:int
@@ -76,6 +76,7 @@ class updatesData(BaseModel):
 class checkIn(BaseModel):
     personalBest:Optional[str]=None
     professionalBest:Optional[str]=None
+    attendance:Optional[bool]=None
 
 class feedback(BaseModel):
     rating:int

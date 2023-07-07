@@ -431,13 +431,8 @@ class IltMeetingResponceService:
                 user_issue_record.others_flag = others_flag
                 db.commit()
                 db.refresh(user_issue_record)
-                return {
 
-                    "statusCode": 200,
-                    "userMessage": "issue  Updated successfully"
-                }
-
-            if priority == 0:
+            elif priority == 0:
                 db_issue = Mdl_issue(issue=issue,
                                      created_at=created_at,
                                      resolves_flag=resolves_flag,
@@ -474,14 +469,35 @@ class IltMeetingResponceService:
                 db.add(db_meeting_issue)
                 db.commit()
                 db.refresh(db_meeting_issue)
-            return {
 
+            issue_records = db.query(MdlIltissue)\
+                .filter(MdlIltissue.meeting_response_id == responce_id.id).order_by(MdlIltissue.id.desc()).all()
+
+            user_issue_records = [db.query(Mdl_issue)
+                                .filter(Mdl_issue.id == record.id).one_or_none() for record in issue_records]  \
+                    if issue_records else []
+            
+            issues_records = [{
+                "issueId": user_issues_single_record.id,
+                "issue": user_issues_single_record.issue,
+                "priorityId": user_issues_single_record.priority,
+                "date": user_issues_single_record.created_at,
+                "resolvedFlag": user_issues_single_record.resolves_flag,
+                "recognizePerformanceFlag": user_issues_single_record.recognize_performance_flag,
+                "teacherSupportFlag": user_issues_single_record.teacher_support_flag,
+                "leaderSupportFlag": user_issues_single_record.leader_support_flag,
+                "advanceEqualityFlag": user_issues_single_record.advance_equality_flag,
+                "othersFlag": user_issues_single_record.others_flag
+            } for user_issues_single_record in user_issue_records] if user_issue_records else []
+
+            return {
                 "statusCode": 200,
-                "userMessage": "issue have been created successfully"
+                "userMessage": "Issue have been created/modified successfully",
+                "data": issues_records
             }
         except Exception as e:
             raise CustomException(
-                500,  f"unable to process your request {str(e)}")
+                500,  f"Unable to process your request {str(e)}")
 
     def update_ilt_meeting_responses(self, data: MeetingResponse, db: Session
                                      ):
@@ -658,6 +674,7 @@ class IltMeetingResponceService:
                                        meetingResponseId: int,
                                        personalBest: str,
                                        professionalBest: str,
+                                       attendance: bool,
                                        db: Session):
 
         check_user_id = db.query(MdlUsers).filter(
@@ -678,6 +695,8 @@ class IltMeetingResponceService:
             user_meetingResponse_record.checkin_personal_best = personalBest
         if professionalBest:
             user_meetingResponse_record.checkin_professional_best = professionalBest
+
+        user_meetingResponse_record.attendance_flag = attendance
 
         db.commit()
         db.refresh(user_meetingResponse_record)
