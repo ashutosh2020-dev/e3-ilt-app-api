@@ -11,7 +11,6 @@ site
 .coverage
 coverage.xml
 .netlify
-ilt_db.db
 log.txt
 Pipfile.lock
 env3.*
