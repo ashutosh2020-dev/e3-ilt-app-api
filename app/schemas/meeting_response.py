@@ -56,15 +56,15 @@ class Createdate(BaseModel):
 class TodoData(BaseModel):
     todoListId:Optional[int]=0
     description: str
-    duedate:datetime
-    status: str
+    dueDate:datetime
+    status: bool
 
 class TodoList(BaseModel):
     todoItem: List[TodoData]
 
 class meetingReasponceRock(BaseModel):
     rockName: str
-    onTrack: bool
+    onTrack: Optional[bool]=None
 
 class updates_schema(BaseModel):
     updateId:int
@@ -76,6 +76,7 @@ class updatesData(BaseModel):
 class checkIn(BaseModel):
     personalBest:Optional[str]=None
     professionalBest:Optional[str]=None
+    attendance:Optional[bool]=None
 
 class feedback(BaseModel):
     rating:int

@@ -63,7 +63,7 @@ class IltMeetingResponceService:
                                   for record in issue_record]
 
             iltMeetingResponse_issues = ({
-                "issueid": user_issues_single_record.id,
+                "issueId": user_issues_single_record.id,
                 "issue": user_issues_single_record.issue,
                 "priorityId": user_issues_single_record.priority,
                 "created_at": user_issues_single_record.created_at,
@@ -314,7 +314,7 @@ class IltMeetingResponceService:
             raise CustomException(500,  f"unable to process your request {e}")
 
     def create_update_to_do_list(self, user_id: int, id: int, meetingResponseId: int, description: str,
-                                 dueDate: Duedate, status: str, db: Session):
+                                 dueDate: Duedate, status: bool, db: Session):
 
         if db.query(MdlUsers).filter(MdlUsers.id == user_id).one_or_none() is None:
             raise CustomException(400,  f" userId is not valid")
@@ -393,41 +393,57 @@ class IltMeetingResponceService:
                             leader_support_flag: bool,
                             advance_equality_flag: bool,
                             others_flag: bool,
-                            db: Session):    
-        # check if user_id is inside MdlIltMembers
-        user = db.query(MdlUsers).filter(
-            MdlUsers.id == user_id).one_or_none()
-        if user is None:
-            raise CustomException(404,  "User not found")
-        responce_id = db.query(MdlMeetingsResponse).filter(
-            MdlMeetingsResponse.id == meetingResponseId).one_or_none()
-        if responce_id is None:
-            raise CustomException(404,  "responce_id not found")
+                            db: Session):
 
-        if id>0:
-            issue_map_re = (db.query(MdlIltissue)
-                            .filter(MdlIltissue.meeting_response_id == meetingResponseId,
-                                    MdlIltissue.issue_id == id)
-                            .one())
-            user_issue_record = (db.query(Mdl_issue)
-                                    .filter(Mdl_issue.id == issue_map_re.issue_id).one())
-            user_issue_record.issue = issue
-            user_issue_record.priority = priority
-            user_issue_record.created_at = created_at
-            user_issue_record.resolves_flag = resolves_flag
-            user_issue_record.recognize_performance_flag = recognize_performance_flag
-            user_issue_record.teacher_support_flag = teacher_support_flag
-            user_issue_record.leader_support_flag = leader_support_flag
-            user_issue_record.advance_equality_flag = advance_equality_flag
-            user_issue_record.others_flag = others_flag
-            db.commit()
-            db.refresh(user_issue_record)
-            return {
+        try:
+            # check if user_id is inside MdlIltMembers
+            user = db.query(MdlUsers).filter(
+                MdlUsers.id == user_id).one_or_none()
+            if user is None:
+                raise CustomException(404,  "User not found")
+            responce_id = db.query(MdlMeetingsResponse).filter(
+                MdlMeetingsResponse.id == meetingResponseId).one_or_none()
+            if responce_id is None:
+                raise CustomException(404,  "responce_id not found")
 
-                "statusCode": 200,
-                "userMessage": "issue  Updated successfully"
-            }
-        elif id==0:
+            if id:
+                issue_map_re = (db.query(MdlIltissue)
+                                .filter(MdlIltissue.meeting_response_id == meetingResponseId,
+                                        MdlIltissue.issue_id == id)
+                                .one())
+                user_issue_record = (db.query(Mdl_issue)
+                                     .filter(Mdl_issue.id == issue_map_re.issue_id).one())
+                user_issue_record.issue = issue
+                user_issue_record.priority = priority
+                user_issue_record.created_at = created_at
+                user_issue_record.resolves_flag = resolves_flag
+                user_issue_record.recognize_performance_flag = recognize_performance_flag
+                user_issue_record.teacher_support_flag = teacher_support_flag
+                user_issue_record.leader_support_flag = leader_support_flag
+                user_issue_record.advance_equality_flag = advance_equality_flag
+                user_issue_record.others_flag = others_flag
+                db.commit()
+                db.refresh(user_issue_record)
+
+            elif priority == 0:
+                db_issue = Mdl_issue(issue=issue,
+                                     created_at=created_at,
+                                     resolves_flag=resolves_flag,
+                                     recognize_performance_flag=recognize_performance_flag,
+                                     teacher_support_flag=teacher_support_flag,
+                                     leader_support_flag=leader_support_flag,
+                                     advance_equality_flag=advance_equality_flag,
+                                     others_flag=others_flag
+                                     )
+                db.add(db_issue)
+                db.commit()
+                db.refresh(db_issue)
+                db_meeting_issue = MdlIltissue(
+                    meeting_response_id=meetingResponseId, issue_id=db_issue.id)
+                db.add(db_meeting_issue)
+                db.commit()
+                db.refresh(db_meeting_issue)
+            else:
                 db_issue = Mdl_issue(issue=issue,
                                         priority=3 if priority==0 else priority,
                                         created_at=created_at,
@@ -446,13 +462,36 @@ class IltMeetingResponceService:
                 db.add(db_meeting_issue)
                 db.commit()
                 db.refresh(db_meeting_issue)
-                return {
-                    "statusCode": 200,
-                    "userMessage": "issue has created successfully"
-                }
-        else:
-            raise CustomException(400,  "Unable to process your request, please try again")
-        
+
+            issue_records = db.query(MdlIltissue)\
+                .filter(MdlIltissue.meeting_response_id == responce_id.id).order_by(MdlIltissue.id.desc()).all()
+
+            user_issue_records = [db.query(Mdl_issue)
+                                .filter(Mdl_issue.id == record.id).one_or_none() for record in issue_records]  \
+                    if issue_records else []
+            
+            issues_records = [{
+                "issueId": user_issues_single_record.id,
+                "issue": user_issues_single_record.issue,
+                "priorityId": user_issues_single_record.priority,
+                "date": user_issues_single_record.created_at,
+                "resolvedFlag": user_issues_single_record.resolves_flag,
+                "recognizePerformanceFlag": user_issues_single_record.recognize_performance_flag,
+                "teacherSupportFlag": user_issues_single_record.teacher_support_flag,
+                "leaderSupportFlag": user_issues_single_record.leader_support_flag,
+                "advanceEqualityFlag": user_issues_single_record.advance_equality_flag,
+                "othersFlag": user_issues_single_record.others_flag
+            } for user_issues_single_record in user_issue_records] if user_issue_records else []
+
+            return {
+                "statusCode": 200,
+                "userMessage": "Issue have been created/modified successfully",
+                "data": issues_records
+            }
+        except Exception as e:
+            raise CustomException(
+                500,  f"Unable to process your request {str(e)}")
+
     def update_ilt_meeting_responses(self, data: MeetingResponse, db: Session
                                      ):
         """
@@ -628,6 +667,7 @@ class IltMeetingResponceService:
                                        meetingResponseId: int,
                                        personalBest: str,
                                        professionalBest: str,
+                                       attendance: bool,
                                        db: Session):
 
         check_user_id = db.query(MdlUsers).filter(
@@ -648,6 +688,8 @@ class IltMeetingResponceService:
             user_meetingResponse_record.checkin_personal_best = personalBest
         if professionalBest:
             user_meetingResponse_record.checkin_professional_best = professionalBest
+
+        user_meetingResponse_record.attendance_flag = attendance
 
         db.commit()
         db.refresh(user_meetingResponse_record)

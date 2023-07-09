@@ -35,6 +35,7 @@ def update_checkins_for_meetingResponse(meetingResponseId: int,
                                                                     meetingResponseId=meetingResponseId,
                                                                     personalBest=checkIn.personalBest,
                                                                     professionalBest=checkIn.professionalBest,
+                                                                    attendance=checkIn.attendance,
                                                                     db=db)
 
 
@@ -120,15 +121,8 @@ def create_update_ilt_meeting_issues(meetingResponseId: int,
                                                                  advance_equality_flag=ilt.issues[i].advanceEqualityFlag,
                                                                  others_flag=ilt.issues[i].othersFlag,
                                                                  db=db)
-        if responce['statusCode'] != 200:
-            return responce
-        else:
-            pass
-    return {
 
-        "statusCode": 200,
-        "userMessage": "all issues has created/Updated successfully"
-    }
+    return responce
 
 
 @router.post("/api/v1/ilts/meetingResponses/{meetingResponseId}")

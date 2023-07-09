@@ -266,7 +266,8 @@ class IltMeetingService:
                 ] if todo_task_records else []
 
                 issue_record = db.query(MdlIltissue)\
-                    .filter(MdlIltissue.meeting_response_id == meeting_response_id).all()
+                    .filter(MdlIltissue.meeting_response_id == meeting_response_id).order_by(MdlIltissue.id.desc()).all()
+
                 user_issues_record = [db.query(Mdl_issue)
                                       .filter(Mdl_issue.id == record.id).one_or_none() for record in issue_record]  \
                     if issue_record else []
@@ -281,7 +282,7 @@ class IltMeetingService:
                             "lastName": user_record.lname,
                             "emailId": user_record.email
                         },
-                        "attandance": meeting_response_record.attendance_flag,
+                        "attendance": meeting_response_record.attendance_flag,
                         "personalBest": meeting_response_record.checkin_personal_best,
                         "professionalBest": meeting_response_record.checkin_professional_best,
                         "rating": meeting_response_record.rating,
@@ -293,7 +294,7 @@ class IltMeetingService:
                         "todoList": user_todolist_record,
                         "issues":
                         [{
-                            "issueid": user_issues_single_record.id,
+                            "issueId": user_issues_single_record.id,
                             "issue": user_issues_single_record.issue,
                             "priorityId": user_issues_single_record.priority,
                             "date": user_issues_single_record.created_at,
