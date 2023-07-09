@@ -51,18 +51,18 @@ class IltMeetingService:
                     ilt_list.append({
                                     "iltId": ilt_id,
                                     "iltMeetingId": meeting_record.id,
-                                    "scheduledStartDate":(meeting_record.schedule_start_at.strftime("%Y-%m-%d %H:%M") 
+                                    "scheduledStartDate":(meeting_record.schedule_start_at.strftime("%Y-%m-%d %I:%M%p") 
                                     if meeting_record.schedule_start_at else meeting_record.schedule_start_at),
-                                    "meetingStart": (meeting_record.start_at.strftime("%Y-%m-%d %H:%M") 
+                                    "meetingStart": (meeting_record.start_at.strftime("%Y-%m-%d %I:%M%p") 
                                     if meeting_record.start_at else meeting_record.start_at),
-                                    "meetingEnd": (meeting_record.end_at.strftime("%Y-%m-%d %H:%M") 
+                                    "meetingEnd": (meeting_record.end_at.strftime("%Y-%m-%d %I:%M%p") 
                                     if meeting_record.end_at else meeting_record.end_at),
                                     "location": meeting_record.location,
                                     "meetingStatus": status
                                     })
             return ilt_list
         else:
-            raise CustomException(400,  "No meeting available for this Ilt id")
+            raise CustomException(400,  "No meeting available for this Ilt")
 
     def get_Ilts_meeting_list(self, user_id: int, ilt_id: int, db: Session):
         user = db.query(MdlUsers).filter(MdlUsers.id == user_id).first()
@@ -75,6 +75,7 @@ class IltMeetingService:
         list_meetings = [record.ilt_meeting_id
                          for record in db.query(MdlIltMeetings)
                          .filter(MdlIltMeetings.ilt_id == ilt_id)
+                         .order_by(MdlIltMeetings.id.asc())
                          .all()]
         if list_meetings:
             ilt_list = []
@@ -93,11 +94,11 @@ class IltMeetingService:
                 val = {
                     "iltId": ilt_id,
                     "iltMeetingId": mid,
-                    "scheduledStartDate": (meeting_record.schedule_start_at.strftime("%Y-%m-%d %H:%M") 
+                    "scheduledStartDate": (meeting_record.schedule_start_at.strftime("%Y-%m-%d  %I:%M%p") 
                                     if meeting_record.schedule_start_at else meeting_record.schedule_start_at),
-                    "meetingStart": (meeting_record.start_at.strftime("%Y-%m-%d %H:%M") 
+                    "meetingStart": (meeting_record.start_at.strftime("%Y-%m-%d %I:%M%p") 
                                     if meeting_record.start_at else meeting_record.start_at),
-                    "meetingEnd": (meeting_record.end_at.strftime("%Y-%m-%d %H:%M") 
+                    "meetingEnd": (meeting_record.end_at.strftime("%Y-%m-%d %I:%M%p") 
                                     if meeting_record.end_at else meeting_record.end_at),
                     "location": meeting_record.location,
                     "meetingStatus": status
@@ -123,7 +124,7 @@ class IltMeetingService:
         current_date = datetime.now(timezone.utc)
         if scheduledStartDate < current_date:
             raise CustomException(
-                404, "please enter correct date, dates must be greater than currect data")
+                404, "Please enter correct date, Date must be greater than currect date")
 
         db_meeting = MdlMeetings()
         db_meeting.schedule_start_at = scheduledStartDate
@@ -259,7 +260,7 @@ class IltMeetingService:
                     {
                         "todoListId": record.id,
                         "description": record.description,
-                        "dueDate": record.due_date,
+                        "dueDate": record.due_date.strftime("%Y-%m-%d %I:%M%p"),
                         "status": record.status
                     }
                     for record in todo_task_records
@@ -297,7 +298,7 @@ class IltMeetingService:
                             "issueId": user_issues_single_record.id,
                             "issue": user_issues_single_record.issue,
                             "priorityId": user_issues_single_record.priority,
-                            "date": user_issues_single_record.created_at,
+                            "date": user_issues_single_record.created_at.strftime("%Y-%m-%d %I:%M%p"),
                             "resolvedFlag": user_issues_single_record.resolves_flag,
                             "recognizePerformanceFlag": user_issues_single_record.recognize_performance_flag,
                             "teacherSupportFlag": user_issues_single_record.teacher_support_flag,
