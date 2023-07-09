@@ -1,6 +1,7 @@
 # middle-ILT-app-api-code
 
-# structure
+### structure
+
 <pre>
 app/
 ├── config/
@@ -23,24 +24,23 @@ app/
 |Dockerfile
 
 </pre>
-## Run these two commands docker cmd in root dir/path
+
+### Run these two commands docker cmd in root dir/path
 
 - docker build -t middle_ilt_app1 -f DockerFile .
+- docker run -p 8000:8000 middle_ilt_app2
 
-# docker run -p 8000:8000 middle_ilt_app2
+### for migration
 
-## for migration
+- alembic revision -m "add crete_by_me column in mdlilts"
+- alembic upgrade head
 
-# alembic revision -m "add crete_by_me column in mdlilts"
+### creating dummy user guide
 
-# alembic upgrade head
+- first create role for admin
 
-## creating dummy user guide
+- create admin user
 
-# first create role for admin
+- create schools
 
-# create admin user
-
-# create schools
-
-# create roles for facilitator and member
+- create roles for facilitator and member
