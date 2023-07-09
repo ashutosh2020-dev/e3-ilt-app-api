@@ -50,7 +50,7 @@ def create_to_do_list():
             "user_id": fake.random_int(min=1, max=100),
             "meeting_response_id": fake.random_int(min=1, max=total_meetingResponse),
             "description": fake.sentence(),
-            "due_date": fake.date_between(start_date="+1d", end_date="+30d").strftime('%Y-%m-%d'),
+            "due_date": fake.date_between(start_date="+1d", end_date="+30d"),
             "status": random.choice(["Not Started", "On Going", "Completed"]),
         }
         data.append(row)

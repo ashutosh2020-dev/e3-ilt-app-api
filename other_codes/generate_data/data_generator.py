@@ -73,7 +73,7 @@ def crete_ilt_meeting():
     fake = Faker()
     data = []
     for _ in range(n):
-        date = fake.date_between(start_date="-30d", end_date="+90d").strftime('%Y-%m-%d')
+        date = fake.date_between(start_date="-30d", end_date="+90d")
         row = {
             "ilt_id": random.sample(range(1, total_ilts), 1)[0],
             "location": fake.city(),

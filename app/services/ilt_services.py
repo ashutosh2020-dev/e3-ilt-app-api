@@ -7,7 +7,7 @@ from app.exceptions.customException import CustomException
 
 
 def calculate_meeting_status(schedule_start_at, start_at, end_at):
-    current_datetime = datetime.now(timezone.utc)
+    current_datetime = datetime.now()
     if current_datetime < start_at:
         return 0  # notStarted
     elif current_datetime >= start_at and current_datetime <= end_at:
@@ -40,10 +40,8 @@ class IltService:
                 # check if start_at is null
                 # if meeting_record:
                 #     latestMeetingId = meeting_record.id
-                #     start_meeting_time = meeting_record.start_at.replace(
-                #         tzinfo=timezone.utc)
-                #     end_meeting_time = meeting_record.end_at.replace(
-                #         tzinfo=timezone.utc)
+                #     start_meeting_time = meeting_record.start_at
+                #     end_meeting_time = meeting_record.end_at
                 #     status = calculate_meeting_status(
                 #         start_meeting_time, start_meeting_time, end_meeting_time)
 
@@ -196,7 +194,7 @@ class IltService:
             common_msg = "unable to update ownerId for now!"
             # update tables - ilt, iltMember, upcoming_meetings_responce, for all rocks, and all user_maping
             pass
-        db_ilt.updated_at = datetime.now(timezone.utc)
+        db_ilt.updated_at = datetime.now()
         db_ilt.update_by = user_id
         db.commit()
         db.refresh(db_ilt)
@@ -222,7 +220,7 @@ class IltService:
                     db.commit()
                     db.refresh(db_ilt_member)
 
-            current_date = datetime.now(timezone.utc)
+            current_date = datetime.now()
             upcoming_meeting_list = db.query(MdlMeetings)\
                 .join(MdlIltMeetings, MdlMeetings.id == MdlIltMeetings.ilt_meeting_id)\
                 .filter(MdlIltMeetings.ilt_id == ilt_id)\

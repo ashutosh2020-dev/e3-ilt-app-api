@@ -87,7 +87,7 @@ class singleIssue(BaseModel):
     issueId:Optional[int]=0
     issue: str
     priorityId: Optional[int] = 0
-    date: datetime= Field(default_factory=lambda: datetime.now(timezone.utc))
+    date: datetime= Field(default_factory=lambda: datetime.now())
     resolvedFlag: bool
     recognizePerformanceFlag: bool
     teacherSupportFlag: bool

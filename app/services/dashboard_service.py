@@ -33,7 +33,7 @@ class DashboardService:
             raise CustomException(404,  "Functionality is under-construction")
 
         try:
-            current_time = datetime.now(timezone.utc)
+            current_time = datetime.now()
             all_meeting_id_list = [m_record.ilt_meeting_id for m_record in db.query(MdlIltMeetings).filter(MdlIltMeetings.ilt_id==ilt_id).all()]
             members_list = [map_record.member_id for map_record in db.query(MdlIltMembers).filter(MdlIltMembers.ilt_id==ilt_id).all()]
             num_of_member_in_ilt = len(members_list) 

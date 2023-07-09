@@ -523,11 +523,9 @@ class IltMeetingResponceService:
                 if ilt_meeting_record is None:
                     raise CustomException(404,  "meeting record did not found")
                 # datetime.strptime(ilt_meeting_start_time, '%Y-%m-%d %H:%M:%S.%f')
-                start_meeting_time = ilt_meeting_record.schedule_start_at.replace(
-                    tzinfo=timezone.utc)
-                end_meeting_time = ilt_meeting_record.end_at.replace(
-                    tzinfo=timezone.utc)
-                current_time = datetime.now(timezone.utc)
+                start_meeting_time = ilt_meeting_record.schedule_start_at
+                end_meeting_time = ilt_meeting_record.end_at
+                current_time = datetime.now()
                 if current_time >= start_meeting_time and current_time <= end_meeting_time:
                     raise CustomException(
                         400,  "meeting has started, unable to process your requests")
