@@ -116,7 +116,7 @@ class IltMeetingResponceService:
                 # db.add(db_meeting_response_rock)
                 # db.commit()
                 # db.refresh(db_meeting_response_rock)
-                # if issue is last ended meeting unresolve in previous meeting
+                ## if issue is last ended meeting unresolve in previous meeting
                 # meeting_record = (
                 #                 db.query(MdlMeetings)
                 #                 .join(MdlIltMeetings, MdlMeetings.id == MdlIltMeetings.ilt_meeting_id)
@@ -168,7 +168,7 @@ class IltMeetingResponceService:
                                  checkin_professional_best: str, ratings: int, feedback: str, notes: str, db: Session):
         db_metting_response = MdlMeetingsResponse(attendance_flag=is_attand,
                                                   checkin_personal_best=checkin_personal_best, checkin_professional_best=checkin_professional_best,
-                                                  rating=ratings, feedback=feedback, notes=notes)
+                                                  rating=ratings, feedback=feedback, notes=notes, rockName=None, onTrack=False)
         db.add(db_metting_response)
         db.commit()
         db.refresh(db_metting_response)
