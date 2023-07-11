@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 from app.models import MdlUsers, MdlIltMeetings, MdlMeetings, MdlMeeting_rocks,\
-                    MdlIltMembers, MdlIltMeetingResponses, MdlMeetingsResponse, MdlIltissue, Mdl_issue
+                    MdlIltMembers, MdlIltMeetingResponses, MdlMeetingsResponse, MdlIltissue, Mdl_issue, MdlIlt_ToDoTask
 from datetime import datetime, timezone
 from app.exceptions.customException import CustomException
 """
@@ -132,14 +132,31 @@ class DashboardService:
                 issue_denominator = len(meetings_issue_resolve_list)
                 
                 avg_issueResolve = issue_nominator/issue_denominator
-
+            
+            ## To-Do 
+            list_list_of_toDo_records = (db.query(MdlIlt_ToDoTask)
+                                        .filter(MdlIlt_ToDoTask.meeting_response_id==m_r_id)
+                                        .all()
+                                        for m_r_id in member_meeting_response_id_list)
+            meeting_todo_record_list =[]
+            avg_ToDo = 0
+            if list_list_of_toDo_records:
+                for list_todo_record in list_list_of_toDo_records:
+                        for todo_record in list_todo_record:
+                            meeting_todo_record_list.append(todo_record.status)
+            
+            if meeting_todo_record_list:
+                ToDo_nominator = sum(meeting_todo_record_list)
+                ToDo_denominator = len(meeting_todo_record_list)
+                avg_ToDo = ToDo_nominator/ToDo_denominator
 
             list_of_meeting_obj.append({
                                         "meetingId":mid,
                                         "avg_attendence":avg_attendence,
                                         "avg_rock":avg_rock,
                                         "avg_rating":avg_rating,
-                                        "avg_issueResolve":avg_issueResolve
+                                        "avg_issueResolve":avg_issueResolve,
+                                        "avg_ToDo":avg_ToDo
                                         })
 
         return {
