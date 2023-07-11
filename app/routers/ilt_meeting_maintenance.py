@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from app.config.database import get_db
 from app.services.ilt_meeting_service import IltMeetingService
 from app.services.ilt_meeting_response_service import IltMeetingResponceService
-from app.schemas.ilt_meeting_schemas import MeetingData, rockData, rockData_map
+from app.schemas.ilt_meeting_schemas import MeetingData, rockData, rockData_map, Status
 from datetime import datetime, timezone
 from typing import Annotated, Union
 
@@ -13,9 +13,8 @@ IltMeetingResponceService = IltMeetingResponceService()
 
 
 @router.get("/api/v1/ilts/{id}/meetings/scheduled")
-def get_upcomming_Ilts_meeting_list(id: int, UserId: int = Header(convert_underscores=False), db: Session = Depends(get_db)):
-    return IltMeetingService.get_upcomming_Ilts_meeting_list(user_id=UserId, ilt_id=id, db=db)
-
+def get_upcomming_Ilts_meeting_list(id: int, status:int=3, UserId: int = Header(convert_underscores=False), db: Session = Depends(get_db)):
+    return IltMeetingService.get_upcomming_Ilts_meeting_list(user_id=UserId, statusId=status, ilt_id=id, db=db)
 
 @router.get("/api/v1/ilts/{id}/meetings")
 def get_ilt_meetings(id: int, UserId: int = Header(convert_underscores=False), db: Session = Depends(get_db)):

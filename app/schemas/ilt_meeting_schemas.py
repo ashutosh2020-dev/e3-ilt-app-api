@@ -19,4 +19,6 @@ class rockData_map(BaseModel):
     iltId :int
     rockId :int
     rockOwnerId:int
-    
+
+class Status(BaseModel):
+    status:Optional[int]=3

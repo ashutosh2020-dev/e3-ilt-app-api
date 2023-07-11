@@ -3,6 +3,7 @@ from app.models import MdlIltMeetings, MdlMeetings, MdlUsers, MdlIlts, \
     MdlIltMembers, MdlIltMeetingResponses, MdlMeetingsResponse,  \
     Mdl_updates, MdlIlt_ToDoTask, MdlIltissue, Mdl_issue
 import sys
+from app.schemas.ilt_meeting_schemas import Status
 from app.services.ilt_meeting_response_service import IltMeetingResponceService
 from datetime import datetime, timezone, timedelta
 from app.exceptions.customException import CustomException
@@ -21,7 +22,7 @@ def calculate_meeting_status(schedule_start_at, start_at, end_at):
 
 
 class IltMeetingService:
-    def get_upcomming_Ilts_meeting_list(self, user_id: int, ilt_id: int, db: Session):
+    def get_upcomming_Ilts_meeting_list(self, user_id: int, statusId, ilt_id: int, db: Session):
         user = db.query(MdlUsers).filter(MdlUsers.id == user_id).first()
         if not user:
             raise CustomException(400,  "User not found")
@@ -41,10 +42,9 @@ class IltMeetingService:
                 schedule_start_at = meeting_record.schedule_start_at
                 start_meeting_time = meeting_record.start_at if meeting_record.start_at else 0
                 end_meeting_time = meeting_record.end_at if meeting_record.end_at else 0
-                print(start_meeting_time, end_meeting_time)
                 status = calculate_meeting_status(
                     schedule_start_at, start_meeting_time, end_meeting_time)
-                if status < 2:
+                if status == statusId or statusId==3 :
                     ilt_list.append({
                                     "iltId": ilt_id,
                                     "iltMeetingId": meeting_record.id,
@@ -331,24 +331,91 @@ class IltMeetingService:
             "userMessage": "meeting have started successfully"
         }
         
-            
 
     def stop_ilt_meeting(self, UserId: int, meeting_id: int, ilt_id: int, db: Session):
         if db.query(MdlUsers).filter(MdlUsers.id == UserId).one_or_none() is None:
-            raise CustomException(400,  "userId did not found ")
+            raise CustomException(400,  "No users available ")
         if db.query(MdlIlts).filter(MdlIlts.id == ilt_id).one_or_none() is None:
-            raise CustomException(400,  "ilt_id did not found ")
+            raise CustomException(400,  "No Ilt present")
 
         db_meeting = db.query(MdlMeetings).filter(
             MdlMeetings.id == meeting_id).one_or_none()
-        if db_meeting is not None:
+        if db_meeting is None:
+            raise CustomException(400,  "Meeting records is not available")
+        print(db_meeting.start_at)
+        if db_meeting.start_at is None:
+            raise CustomException(400,  "Meeting has not started")
+        if db_meeting.start_at:
             db_meeting.end_at = datetime.now()
             db.commit()
             db.refresh(db_meeting)
-            return {
-                "confirmMessageID": "string",
-                "statusCode": 200,
-                "userMessage": "meeting have successfully ended"
+        ## check pending- issue, todo, 
+        member_meeting_response_id_list = [map_record.meeting_response_id 
+                                            for map_record in db.query(MdlIltMeetingResponses)
+                                            .filter(MdlIltMeetingResponses.meeting_id==meeting_id)
+                                            .all()
+                                            ]
+        member_meeting_responce_records = [db.query(MdlMeetingsResponse)
+                                                .filter(MdlMeetingsResponse.id==m_r_id).one() 
+                                                for m_r_id in member_meeting_response_id_list]
+        meetingResponcesList = []
+        for responceRecord in member_meeting_responce_records:
+            meeting_response_id = responceRecord.id
+            pending_issue_record_list = []
+            pending_to_do_record_list = []
+
+            ##issue
+            list_of_issue_records = (db.query(MdlIltissue)
+                                        .filter(MdlIltissue.meeting_response_id==meeting_response_id)
+                                        .all())
+                                                
+            issue_id_list = [record.issue_id for record in list_of_issue_records] if  list_of_issue_records else []
+            
+            if issue_id_list:
+                for issue_id in issue_id_list:
+                        issue_record = db.query(Mdl_issue).get(issue_id)
+                        if issue_record.resolves_flag == False:
+                            pending_issue_record_list.append({
+                                "issueId": issue_record.id,
+                                "issue": issue_record.issue,
+                                "priorityId": issue_record.priority,
+                                "date": issue_record.created_at,
+                                "resolvedFlag": issue_record.resolves_flag,
+                                "recognizePerformanceFlag": issue_record.recognize_performance_flag,
+                                "teacherSupportFlag": issue_record.teacher_support_flag,
+                                "leaderSupportFlag": issue_record.leader_support_flag,
+                                "advanceEqualityFlag": issue_record.advance_equality_flag,
+                                "othersFlag": issue_record.others_flag
+                            })
+
+            ##ToDo
+            list_of_toDo_records = (db.query(MdlIlt_ToDoTask)
+                                        .filter(MdlIlt_ToDoTask.meeting_response_id==meeting_response_id)
+                                        .all())
+            if list_of_toDo_records:
+                for todo_record in list_of_toDo_records:
+                        if todo_record.status == False:
+                            pending_to_do_record_list.append({
+                                "todoListId": todo_record.id,
+                                "description": todo_record.description,
+                                "dueDate": todo_record.due_date,
+                                "status": todo_record.status
+                            })
+            if pending_issue_record_list or pending_to_do_record_list:
+                meetingResponcesList.append({
+                                "meetingResponceId":meeting_response_id,
+                                "pendingIssues":pending_issue_record_list, 
+                                "pendingToDo":pending_to_do_record_list
+                            })
+            
+
+        return {
+            "confirmMessageID": "string",
+            "statusCode": 200,
+            "userMessage": "Meeting have successfully ended",
+            "data":{
+                "meetingId":meeting_id,
+                "MeetingResponces":meetingResponcesList
             }
-        else:
-            raise CustomException(400,  "meeting records not found")
+        }
+        
