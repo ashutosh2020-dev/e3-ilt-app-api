@@ -213,6 +213,7 @@ class IltMeetingService:
             else:
                 check_ilt_user_map_record = (db.query(MdlIltMembers)
                                              .filter(MdlIltMembers.ilt_id == iltId, MdlIltMembers.member_id == User_id)
+                                             .order_by(MdlIltMembers.id.asc())
                                              .one_or_none())
                 if check_ilt_user_map_record is None:
                     raise CustomException(
@@ -311,16 +312,21 @@ class IltMeetingService:
     def start_ilt_meeting(self, UserId: int, meeting_id: int, ilt_id: int, db: Session):
 
         if db.query(MdlUsers).filter(MdlUsers.id == UserId).one_or_none() is None:
-            raise CustomException(400,  "userId did not found ")
+            raise CustomException(400,  "User did not found ")
         if db.query(MdlIlts).filter(MdlIlts.id == ilt_id).one_or_none() is None:
-            raise CustomException(400,  "ilt_id did not found ")
+            raise CustomException(400,  "Ilt did not found ")
 
         db_meeting = db.query(MdlMeetings).filter(
             MdlMeetings.id == meeting_id).one_or_none()
-        if db_meeting is None:
-            raise CustomException(404,  "meeting records not found")
         
-
+        difference = (db_meeting.schedule_start_at - datetime.now()).total_seconds()
+        hour_diff = difference/3600
+        print(hour_diff)
+        if hour_diff>24:
+            raise CustomException(400,  "Meeting can be started before 24 hour only, Please change the meeting schedule start time to start this meeting")
+        if db_meeting is None:
+            raise CustomException(404,  "Meeting records not found")
+        
         db_meeting.start_at = datetime.now()
         db.commit()
         db.refresh(db_meeting)
@@ -328,7 +334,7 @@ class IltMeetingService:
         return {
             "confirmMessageID": "string",
             "statusCode": 200,
-            "userMessage": "meeting have started successfully"
+            "userMessage": "Meeting have started successfully"
         }
         
 
