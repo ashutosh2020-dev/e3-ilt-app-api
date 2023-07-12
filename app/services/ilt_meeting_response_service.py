@@ -95,7 +95,6 @@ class IltMeetingResponceService:
                 "issues": iltMeetingResponse_issues
             }
         
-
     def create_meeting_responses_empty_for_ILTmember(self, meeting_id: int, member_list: list, iltId: int, db: Session):
         try:
             for uid in member_list:
