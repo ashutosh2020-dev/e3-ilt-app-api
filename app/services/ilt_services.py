@@ -4,7 +4,7 @@ from app.schemas.ilt_schemas import Ilt
 from app.services.ilt_meeting_response_service import IltMeetingResponceService
 from datetime import datetime, timezone
 from app.exceptions.customException import CustomException
-
+from sqlalchemy import and_, func
 
 def calculate_meeting_status(schedule_start_at, start_at, end_at):
     current_datetime = datetime.now()
@@ -135,6 +135,15 @@ class IltService:
             raise CustomException(404,  "school not found")
         if bool(title and description) != True:
             raise CustomException(400,  "please enter title/description")
+        title = title.strip()
+        if title:
+            #check if title is unique
+            title1 = title.lower()
+            ilt_record= (db.query(MdlIlts)
+                .filter(and_(MdlIlts.school_id==school_id , func.lower(MdlIlts.title)==title1))
+                .all())
+            if ilt_record:
+                raise CustomException(400,  "This Ilt already exists in the school, Please change the Ilt title")
         # verify all member id
         valid_member_id_list = []
         if len(member_id_list) > 0:
@@ -152,8 +161,10 @@ class IltService:
         db.commit()
         db.refresh(db_ilt)
         # mapping all user's id with ilt in the map table also check uid existance
-        valid_member_id_list.append(
-            owner_id) if owner_id not in valid_member_id_list else valid_member_id_list
+        if owner_id in valid_member_id_list:
+            valid_member_id_list.remove(owner_id)
+        valid_member_id_list.insert(0,owner_id) 
+        
         for m_id in valid_member_id_list:
             # flag = self.is_user_exist(user_id = m_id, db=db)
             db_ilt_member = MdlIltMembers(ilt_id=db_ilt.id, member_id=m_id)
