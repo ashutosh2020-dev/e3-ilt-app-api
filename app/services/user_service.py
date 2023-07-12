@@ -100,7 +100,7 @@ class UserService:
         if check_user_detail is not None:
             raise CustomException(400,  "This phone number already exists, Please share your another number.")
         
-        if role_id >= check_parent_id.role_id:
+        if role_id >= check_parent_id.role_id and (check_parent_id.role_id !=4):
             raise CustomException(
                 400,  "Please downgrade the role to create user")
 
@@ -123,13 +123,14 @@ class UserService:
         db_user = db.query(MdlUsers).filter(MdlUsers.id == id).one()
         check_parent_record = db.query(MdlUsers).filter(MdlUsers.parent_user_id == id).all()
         check_iltOwner_record = db.query(MdlIlts).filter(MdlIlts.owner_id == id).all()
-        if db_user.email != email.strip():
+        if db_user.email != email:
+            print("enter", db_user.email, " ", email)
             check_user_detail = (db.query(MdlUsers)
-                            .filter(MdlUsers.email == email.strip())
+                            .filter(MdlUsers.email == email)
                             .one_or_none())
             if check_user_detail is not None:
                 raise CustomException(400,  "This email id already exists, Please change your email id.")
-        if db_user.number != number.strip():
+        if str(db_user.number) != number.strip():
             check_user_detail = (db.query(MdlUsers)
                         .filter(MdlUsers.number == number.strip())
                         .one_or_none())
@@ -141,11 +142,11 @@ class UserService:
                 MdlRoles.id == role_id).one_or_none()
             if check_role_id is None:
                 raise CustomException(404,  "Record not found wrt roleId.")
-            if (db_user.parent_user_id != user_id) and (user_id_re.role_id != 3):
+            if (db_user.parent_user_id != user_id) and (user_id_re.role_id < 3):
                 db.close()
                 raise CustomException(
                     400,  "This user is not allowed to modify user's details")
-            if role_id >= user_id_re.role_id:
+            if role_id >= user_id_re.role_id and user_id_re.role_id != 4:
                 raise CustomException(
                     400,  "This logged-in user can not modify user's details, please change/downgrade the role id")
             if role_id < db_user.role_id:
