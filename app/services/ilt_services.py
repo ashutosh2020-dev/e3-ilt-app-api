@@ -12,53 +12,54 @@ class IltService:
         ilt_list = []
         list_ilts = []
         user_id_list = []
-        logged_user_record = db.query(MdlUsers).filter(MdlUsers.id == user_id).one_or_none()
-        if logged_user_record is None: 
-            raise CustomException(400,  "User invalid") 
-        
+        logged_user_record = db.query(MdlUsers).filter(
+            MdlUsers.id == user_id).one_or_none()
+        if logged_user_record is None:
+            raise CustomException(400,  "User invalid")
+
         # role<=2, append all ilt wrt userid
-        if logged_user_record.role_id<=2:
+        if logged_user_record.role_id <= 2:
             user_id_list.append(user_id)
-            
-        elif logged_user_record.role_id==3:
+
+        elif logged_user_record.role_id == 3:
             user_id_list.append(user_id)
-            #extend child facilitator
-            user_id_list.extend([u_re.id 
-                                 for u_re in db.query(MdlUsers).filter(MdlUsers.parent_user_id==user_id).all()])
-        elif logged_user_record.role_id==4:
+            # extend child facilitator
+            user_id_list.extend([u_re.id
+                                 for u_re in db.query(MdlUsers).filter(MdlUsers.parent_user_id == user_id).all()])
+        elif logged_user_record.role_id == 4:
             user_id_list.append(user_id)
-            #extract child project manager id
-            child_p_list = [u_re.id 
-                                 for u_re in db.query(MdlUsers).filter(MdlUsers.parent_user_id==user_id).all()]
+            # extract child project manager id
+            child_p_list = [u_re.id
+                            for u_re in db.query(MdlUsers).filter(MdlUsers.parent_user_id == user_id).all()]
             user_id_list.extend(child_p_list)
             for id in child_p_list:
                 # extract child facilitator id for each
-                child_f_list = [u_re.id 
-                                 for u_re in db.query(MdlUsers).filter(MdlUsers.parent_user_id==id).all()]
+                child_f_list = [u_re.id
+                                for u_re in db.query(MdlUsers).filter(MdlUsers.parent_user_id == id).all()]
                 user_id_list.extend(child_f_list)
 
-        elif logged_user_record.role_id>4:
+        elif logged_user_record.role_id > 4:
             user_id_list.append(user_id)
-            #extract child director id
-            child_p_list = [u_re.id 
-                                 for u_re in db.query(MdlUsers).filter(MdlUsers.parent_user_id==user_id).all()]
+            # extract child director id
+            child_p_list = [u_re.id
+                            for u_re in db.query(MdlUsers).filter(MdlUsers.parent_user_id == user_id).all()]
             user_id_list.extend(child_p_list)
             for id in child_p_list:
                 # extract child project manager id for each
-                child_f_list = [u_re.id 
-                                 for u_re in db.query(MdlUsers).filter(MdlUsers.parent_user_id==id).all()]
+                child_f_list = [u_re.id
+                                for u_re in db.query(MdlUsers).filter(MdlUsers.parent_user_id == id).all()]
                 user_id_list.extend(child_f_list)
 
-        if logged_user_record.role_id<=2:
+        if logged_user_record.role_id <= 2:
             list_ilts.extend([record.ilt_id for record in db.query(
-                                            MdlIltMembers).filter(MdlIltMembers.member_id == uid).all()])
-        elif logged_user_record.role_id>=3:
-            for  uid in user_id_list:
+                MdlIltMembers).filter(MdlIltMembers.member_id == uid).all()])
+        elif logged_user_record.role_id >= 3:
+            for uid in user_id_list:
                 list_ilts.extend([record.id for record in db.query(
                     MdlIlts).filter(MdlIlts.owner_id == uid).all()])
-        
+
         if list_ilts:
-            list_ilts  = list(set(list_ilts))
+            list_ilts = list(set(list_ilts))
             for x in list_ilts:
                 latestMeetingId = 0
                 status = 0
@@ -160,13 +161,14 @@ class IltService:
             raise CustomException(400,  "please enter title/description")
         title = title.strip()
         if title:
-            #check if title is unique
+            # check if title is unique
             title1 = title.lower()
-            ilt_record= (db.query(MdlIlts)
-                .filter(and_(MdlIlts.school_id==school_id , func.lower(MdlIlts.title)==title1))
-                .all())
+            ilt_record = (db.query(MdlIlts)
+                          .filter(and_(MdlIlts.school_id == school_id, func.lower(MdlIlts.title) == title1))
+                          .all())
             if ilt_record:
-                raise CustomException(400,  "This Ilt already exists in the school, Please change the Ilt title")
+                raise CustomException(
+                    400,  "This Ilt already exists in the school, Please change the Ilt title")
         # verify all member id
         valid_member_id_list = []
         if len(member_id_list) > 0:
@@ -186,8 +188,8 @@ class IltService:
         # mapping all user's id with ilt in the map table also check uid existance
         if owner_id in valid_member_id_list:
             valid_member_id_list.remove(owner_id)
-        valid_member_id_list.insert(0,owner_id) 
-        
+        valid_member_id_list.insert(0, owner_id)
+
         for m_id in valid_member_id_list:
             # flag = self.is_user_exist(user_id = m_id, db=db)
             db_ilt_member = MdlIltMembers(ilt_id=db_ilt.id, member_id=m_id)
@@ -195,9 +197,8 @@ class IltService:
             db.commit()
             db.refresh(db_ilt_member)
         return {
-
             "statusCode": 200,
-            "userMessage": "ilt has created successfully and added all members successfully"
+            "userMessage": "ILT has created successfully and added all members"
         }
 
     def update_ilt(self, ilt_data: Ilt, user_id, ilt_id: int, db: Session):
@@ -205,16 +206,16 @@ class IltService:
             MdlUsers.id == user_id).one_or_none()
         if loging_user_record is None or loging_user_record.role_id == 1:
             raise CustomException(
-                404,  "this User can not perform the operation")
+                404,  "This User can not perform the operation")
         if ilt_data.schoolId != 0:
             if db.query(MdlSchools).filter(MdlSchools.id == ilt_data.schoolId).one_or_none() is None:
-                raise CustomException(400,  "school did not found")
+                raise CustomException(400,  "School did not found")
 
         db_ilt = db.query(MdlIlts).filter(MdlIlts.id == ilt_id).one_or_none()
         if db_ilt is None:
-            raise CustomException(404,  "ilt did not found")
-        if (db_ilt.owner_id != user_id) and (loging_user_record.role_id != 3):
-            raise CustomException(404,  "this user can not modify the ilt")
+            raise CustomException(404,  "ILT did not found")
+        if (db_ilt.owner_id != user_id) and (loging_user_record.role_id != 4):
+            raise CustomException(404,  "This user can not modify the ilt")
 
         common_msg = ""
         # need to add members, change owner_id functionality
