@@ -214,7 +214,7 @@ class UserService:
         else:
             raise CustomException(400,  "Please enter district")
 
-    def update_user(self, user_id: int, id: int, fname, lname, email, number, password, is_active, role_id, db: Session):
+    def update_user(self, user_id: int, id: int, fname, lname, email, number, password, is_active, districts, role_id, db: Session):
         user_id_re = db.query(MdlUsers).filter(
             MdlUsers.id == user_id).one_or_none()
         if user_id_re is None:
@@ -271,6 +271,7 @@ class UserService:
                         400,  "This user is Owner in Ilt{}, Can not to deactivate this user")
             else:
                 pass
+        
         if fname:
             db_user.fname = fname
         if lname:
@@ -285,9 +286,12 @@ class UserService:
             db_user.is_active = is_active
 
         db_user.parent_user_id = user_id
-
         db.commit()
         db.refresh(db_user)
+
+        # update district
+        
+        
         return {
             "statusCode": 200,
             "userMessage": "User Updated successfully."
