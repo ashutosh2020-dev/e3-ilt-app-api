@@ -65,15 +65,7 @@ def create_update_ilt_meeting_todolist(meetingResponseId: int, toDoData: TodoLis
                                                                           dueDate=toDoData.todoItem[i].dueDate,
                                                                           status=toDoData.todoItem[i].status,
                                                                           db=db)
-            if responce['statusCode'] != 200:
-                return responce
-            else:
-                pass
-        return {
-
-            "statusCode": 200,
-            "userMessage": "all to-do list created/Updated successfully"
-        }
+        return responce
     except Exception as e:
         raise CustomException(
             500,  f"unable to process your request: {str(e)}")
@@ -89,15 +81,7 @@ def create_ilt_meeting_updates(meetingResponseId: int, ilt: updatesData,
                                                                    id=ilt.descriptions[i].updateId,
                                                                    description=ilt.descriptions[i].description,
                                                                    db=db)
-        if responce['statusCode'] != 200:
-            return responce
-        else:
-            pass
-    return {
-
-        "statusCode": 200,
-        "userMessage": "all updates has inserted/Updated successfully"
-    }
+    return responce
 
 
 @router.post("/api/v1/ilts/meetingResponses/{meetingResponseId}/issues")

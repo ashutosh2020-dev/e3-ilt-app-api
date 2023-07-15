@@ -13,88 +13,88 @@ from app.exceptions.customException import CustomException
 
 class IltMeetingResponceService:
     def get_Ilts_meeting_list(self, user_id: int, meetingResponseId: int, db: Session):
-        
-            user = db.query(MdlUsers).filter(
-                MdlUsers.id == user_id).one_or_none()
-            if user is None:
-                raise CustomException(404,  "User not found")
-            MeetingsResponse = db.query(MdlMeetingsResponse).filter(
-                MdlMeetingsResponse.id == meetingResponseId).one_or_none()
-            if MeetingsResponse is None:
-                raise CustomException(
-                    404,  "MeetingsResponse record not found")
-            ilt_meet_re = db.query(MdlIltMeetingResponses)\
-                .filter(MdlIltMeetingResponses.meeting_response_id == meetingResponseId).one()
-            ilt_meet_id = ilt_meet_re.meeting_id
-            user_meetingResponse_record = db.query(MdlMeetingsResponse)\
-                .filter(MdlMeetingsResponse.id == meetingResponseId).first()
-            user_record = db.query(MdlUsers).filter(
-                MdlUsers.id == ilt_meet_re.meeting_user_id).one()
 
-            members_Info_dict = {
-                "userId": user_record.id,
-                "firstName": user_record.fname,
-                "lastName": user_record.lname,
-                "emailId": user_record.email
+        user = db.query(MdlUsers).filter(
+            MdlUsers.id == user_id).one_or_none()
+        if user is None:
+            raise CustomException(404,  "User not found")
+        MeetingsResponse = db.query(MdlMeetingsResponse).filter(
+            MdlMeetingsResponse.id == meetingResponseId).one_or_none()
+        if MeetingsResponse is None:
+            raise CustomException(
+                404,  "MeetingsResponse record not found")
+        ilt_meet_re = db.query(MdlIltMeetingResponses)\
+            .filter(MdlIltMeetingResponses.meeting_response_id == meetingResponseId).one()
+        ilt_meet_id = ilt_meet_re.meeting_id
+        user_meetingResponse_record = db.query(MdlMeetingsResponse)\
+            .filter(MdlMeetingsResponse.id == meetingResponseId).first()
+        user_record = db.query(MdlUsers).filter(
+            MdlUsers.id == ilt_meet_re.meeting_user_id).one()
+
+        members_Info_dict = {
+            "userId": user_record.id,
+            "firstName": user_record.fname,
+            "lastName": user_record.lname,
+            "emailId": user_record.email
+        }
+        user_update_record = [
+            {
+                "updateId": record.id,
+                "description": record.description
             }
-            user_update_record = [
-                {
-                    "updateId": record.id,
-                    "description": record.description
-                }
-                for record in db.query(Mdl_updates)
-                                .filter(Mdl_updates.meeting_response_id == meetingResponseId)
-                .all()
-            ]
-            user_todolist_record = [
-                {
-                    "todoListId": record.id,
-                    "description": record.description,
-                    "dueDate": record.due_date,
-                    "status": record.status
-                } for record in db.query(MdlIlt_ToDoTask)
-                .filter(MdlIlt_ToDoTask.meeting_response_id == meetingResponseId).all()]
+            for record in db.query(Mdl_updates)
+                            .filter(Mdl_updates.meeting_response_id == meetingResponseId)
+            .all()
+        ]
+        user_todolist_record = [
+            {
+                "todoListId": record.id,
+                "description": record.description,
+                "dueDate": record.due_date,
+                "status": record.status
+            } for record in db.query(MdlIlt_ToDoTask)
+            .filter(MdlIlt_ToDoTask.meeting_response_id == meetingResponseId).all()]
 
-            issue_record = db.query(MdlIltissue)\
-                .filter(MdlIltissue.meeting_response_id == meetingResponseId).all()
+        issue_record = db.query(MdlIltissue)\
+            .filter(MdlIltissue.meeting_response_id == meetingResponseId).all()
 
-            user_issues_record = [db.query(Mdl_issue)
-                                  .filter(Mdl_issue.id == record.id).one_or_none()
-                                  for record in issue_record]
+        user_issues_record = [db.query(Mdl_issue)
+                              .filter(Mdl_issue.id == record.id).one_or_none()
+                              for record in issue_record]
 
-            iltMeetingResponse_issues = ({
-                "issueId": user_issues_single_record.id,
-                "issue": user_issues_single_record.issue,
-                "priorityId": user_issues_single_record.priority,
-                "created_at": user_issues_single_record.created_at,
-                "resolvedFlag": user_issues_single_record.resolves_flag,
-                "recognizePerformanceFlag": user_issues_single_record.recognize_performance_flag,
-                "teacherSupportFlag": user_issues_single_record.teacher_support_flag,
-                "leaderSupportFlag": user_issues_single_record.leader_support_flag,
-                "advanceEqualityFlag": user_issues_single_record.advance_equality_flag,
-                "othersFlag": user_issues_single_record.others_flag
-            } for user_issues_single_record in user_issues_record)
+        iltMeetingResponse_issues = ({
+            "issueId": user_issues_single_record.id,
+            "issue": user_issues_single_record.issue,
+            "priorityId": user_issues_single_record.priority,
+            "created_at": user_issues_single_record.created_at,
+            "resolvedFlag": user_issues_single_record.resolves_flag,
+            "recognizePerformanceFlag": user_issues_single_record.recognize_performance_flag,
+            "teacherSupportFlag": user_issues_single_record.teacher_support_flag,
+            "leaderSupportFlag": user_issues_single_record.leader_support_flag,
+            "advanceEqualityFlag": user_issues_single_record.advance_equality_flag,
+            "othersFlag": user_issues_single_record.others_flag
+        } for user_issues_single_record in user_issues_record)
 
-            return {
-                "iltMeetingResponseId": meetingResponseId,
-                "iltMeetingId": ilt_meet_id,
-                "member": members_Info_dict,
-                "attendance": user_meetingResponse_record.attendance_flag
-                if user_meetingResponse_record.attendance_flag else None,
-                "personalBest": user_meetingResponse_record.checkin_personal_best
-                if user_meetingResponse_record.checkin_personal_best else "",
-                "professionalBest": user_meetingResponse_record.checkin_professional_best
-                if user_meetingResponse_record.checkin_professional_best else "",
-                "rating": user_meetingResponse_record.rating if user_meetingResponse_record.rating else 0,
-                "feedback": user_meetingResponse_record.feedback,
-                "notes": user_meetingResponse_record.notes,
-                "rockName": user_meetingResponse_record.rockName,
-                "onTrack": user_meetingResponse_record.onTrack,
-                "updates": user_update_record,
-                "todoList": user_todolist_record,
-                "issues": iltMeetingResponse_issues
-            }
-        
+        return {
+            "iltMeetingResponseId": meetingResponseId,
+            "iltMeetingId": ilt_meet_id,
+            "member": members_Info_dict,
+            "attendance": user_meetingResponse_record.attendance_flag
+            if user_meetingResponse_record.attendance_flag else None,
+            "personalBest": user_meetingResponse_record.checkin_personal_best
+            if user_meetingResponse_record.checkin_personal_best else "",
+            "professionalBest": user_meetingResponse_record.checkin_professional_best
+            if user_meetingResponse_record.checkin_professional_best else "",
+            "rating": user_meetingResponse_record.rating if user_meetingResponse_record.rating else 0,
+            "feedback": user_meetingResponse_record.feedback,
+            "notes": user_meetingResponse_record.notes,
+            "rockName": user_meetingResponse_record.rockName,
+            "onTrack": user_meetingResponse_record.onTrack,
+            "updates": user_update_record,
+            "todoList": user_todolist_record,
+            "issues": iltMeetingResponse_issues
+        }
+
     def create_meeting_responses_empty_for_ILTmember(self, meeting_id: int, member_list: list, iltId: int, db: Session):
         try:
             for uid in member_list:
@@ -109,13 +109,13 @@ class IltMeetingResponceService:
                 db.add(map_record)
                 db.commit()
                 db.refresh(map_record)
-                ## create empaty rocks
+                # create empaty rocks
                 # db_meeting_response_rock = MdlMeeting_rocks(
                 #     ilt_meeting_response_id=db_meeting_response.id)
                 # db.add(db_meeting_response_rock)
                 # db.commit()
                 # db.refresh(db_meeting_response_rock)
-                ## if issue is last ended meeting unresolve in previous meeting
+                # if issue is last ended meeting unresolve in previous meeting
                 # meeting_record = (
                 #                 db.query(MdlMeetings)
                 #                 .join(MdlIltMeetings, MdlMeetings.id == MdlIltMeetings.ilt_meeting_id)
@@ -320,7 +320,7 @@ class IltMeetingResponceService:
         if db.query(MdlMeetingsResponse).filter(MdlMeetingsResponse.id == meetingResponseId).one_or_none() is None:
             raise CustomException(400,  f" meetingResponseId is not valid")
 
-        if id>0:
+        if id > 0:
             user_todo_record = (db.query(MdlIlt_ToDoTask)
                                 .filter(MdlIlt_ToDoTask.meeting_response_id == meetingResponseId,
                                         MdlIlt_ToDoTask.id == id)
@@ -330,21 +330,28 @@ class IltMeetingResponceService:
             user_todo_record.status = status
             db.commit()
             db.refresh(user_todo_record)
-            return {
+        else:
+            # check if user_id is inside MdlIltMembers
+            db_meeting_todo = MdlIlt_ToDoTask(
+                meeting_response_id=meetingResponseId, description=description, due_date=dueDate, status=status)
+            db.add(db_meeting_todo)
+            db.commit()
+            db.refresh(db_meeting_todo)
 
-                "statusCode": 200,
-                "userMessage": "to-do list updates successfully"
-            }
-        # check if user_id is inside MdlIltMembers
-        db_meeting_todo = MdlIlt_ToDoTask(meeting_response_id=meetingResponseId,
-                                          description=description, due_date=dueDate, status=status)
-        db.add(db_meeting_todo)
-        db.commit()
-        db.refresh(db_meeting_todo)
+        user_todolist_record = [
+            {
+                "todoListId": record.id,
+                "description": record.description,
+                "dueDate": record.due_date,
+                "status": record.status
+            } for record in db.query(MdlIlt_ToDoTask)
+            .filter(MdlIlt_ToDoTask.meeting_response_id == meetingResponseId).all()]
+
         return {
 
             "statusCode": 200,
-            "userMessage": "to-do list created successfully"
+            "userMessage": "to-do list created successfully",
+            "data": user_todolist_record
         }
 
     def create_meeting_update(self, user_id: int, id: int, meetingResponseId: int, description: str, db: Session):
@@ -364,21 +371,26 @@ class IltMeetingResponceService:
                 user_update_record.description = description
                 db.commit()
                 db.refresh(user_update_record)
-                return {
+            else:
+                db_meeting_update = Mdl_updates(meeting_response_id=meetingResponseId,
+                                                description=description)
+                db.add(db_meeting_update)
+                db.commit()
+                db.refresh(db_meeting_update)
 
-                    "statusCode": 200,
-                    "userMessage": "updates has been Updated successfully"
+            user_update_record = [
+                {
+                    "updateId": record.id,
+                    "description": record.description
                 }
+                for record in db.query(Mdl_updates)
+                                .filter(Mdl_updates.meeting_response_id == meetingResponseId).all()
+            ]
 
-            db_meeting_update = Mdl_updates(meeting_response_id=meetingResponseId,
-                                            description=description)
-            db.add(db_meeting_update)
-            db.commit()
-            db.refresh(db_meeting_update)
             return {
-
                 "statusCode": 200,
-                "userMessage": "updates has beem submited successfully"
+                "userMessage": "updates has beem submited successfully",
+                "data": user_update_record
             }
         except Exception as e:
             raise CustomException(

@@ -10,15 +10,15 @@ user_service = UserService()
 def fn_read_users(UserId: int=Header(convert_underscores=False),  db: Session = Depends(get_db)):
     return user_service.get_user(UserId, db =db)
 
-@router.get("/api/v1/users/{userId}/")
-def fn_read_users(UserId: int,  db: Session = Depends(get_db)):
-    return user_service.get_single_user(UserId, db =db)
+@router.get("/api/v1/users/{userId}")
+def fn_read_users(userId: int,  db: Session = Depends(get_db)):
+    return user_service.get_single_user(userId, db =db)
 
-@router.get("/api/v1/users/{userId}/districts/")
-def fn_read_users_districts(UserId: int,  db: Session = Depends(get_db)):
-    return user_service.get_districts(UserId, db =db)
+@router.get("/api/v1/users/{userId}/districts")
+def fn_read_users_districts(userId: int,  db: Session = Depends(get_db)):
+    return user_service.get_districts(userId, db =db)
 
-@router.get("/api/v1/users/district/{districtId}/schools/")
+@router.get("/api/v1/users/districts/{districtId}/schools")
 def fn_read_users_schools(districtId: int,  db: Session = Depends(get_db)):
     return user_service.get_schools(districtId, db =db)
 
