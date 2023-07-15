@@ -16,23 +16,33 @@ class MdlUsers(Base):
     fname = Column(String, nullable=False)
     lname = Column(String, nullable=False)
     email = Column(String, unique=True, nullable=False)
-    number = Column(Integer, unique=True, nullable=False)
+    number = Column(Integer, nullable=True)
     password = Column(String, nullable=False)
     is_active = Column(Boolean, default=False, nullable=False)
     role_id = Column(Integer, ForeignKey("roles.id"),
                      nullable=False, index=True)
-    parent_user_id = Column(Integer, nullable=False)
+    parent_user_id = Column(Integer, nullable=True)
 
     def verify_password(self, password):
         return self.password == password
-
+    
+class MdlDistrict(Base):
+    __tablename__ = "districts"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    name = Column(String, unique=True, nullable=False)
 
 class MdlSchools(Base):
     __tablename__ = "schools"
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String, unique=True, nullable=False)
     location = Column(String, nullable=False)
-    district = Column(String, nullable=False)
+    district = Column(Integer, ForeignKey("districts.id"), nullable=False, index=True)
+
+class MdlDistrictMember(Base):
+    __tablename__ = "districts_member_mapping"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    district_id = Column(Integer, ForeignKey("districts.id"), nullable=False, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True )
 
 
 class MdlIlts(Base):
@@ -188,6 +198,8 @@ class MdlIltissue(Base):
         "meeting_response.id"), nullable=False, index=True)
     issue_id = Column(Integer, ForeignKey("issue.id"),
                       nullable=False, index=True)
+    parent_meeting_responce_id = Column(Integer, ForeignKey(
+            "meeting_response.id"), nullable=False, index=True)
 
 
 class MdlIltPriorities(Base):

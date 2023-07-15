@@ -48,6 +48,15 @@ class Create_otherService:
                 "userMessage": "role has created successfully."
                 }
 
+    def update_roles(self, role_name:str, roleDescription:str, db:Session):
+        member = ["ILT Member", "ILT Facilitator", "Project Leader"]
+        for i in range(1,4):
+            db_record = db.query(MdlRoles).get(i)
+            db_record.name =member[i-1] 
+            db.commit()
+            db.refresh(db_record)
+            print(db_record.name)
+
     def create_priority(self, name, description, db:Session):
         try:
             db_priority = MdlPriorities(name=name, description=description)

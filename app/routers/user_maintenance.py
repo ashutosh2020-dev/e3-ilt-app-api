@@ -25,6 +25,7 @@ def fn_create_user(user:UserRequest, UserId: int=Header(convert_underscores=Fals
                                     password=user.password, 
                                     is_active=user.active,
                                     role_id=user.roleId,
+                                    districts=user.districts,
                                     db=db)
     
 @router.post("/api/v1/users/{id}")

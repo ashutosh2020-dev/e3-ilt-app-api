@@ -124,7 +124,7 @@ class UserService:
         check_parent_record = db.query(MdlUsers).filter(MdlUsers.parent_user_id == id).all()
         check_iltOwner_record = db.query(MdlIlts).filter(MdlIlts.owner_id == id).all()
         if db_user.email != email:
-            print("enter", db_user.email, " ", email)
+        
             check_user_detail = (db.query(MdlUsers)
                             .filter(MdlUsers.email == email)
                             .one_or_none())
