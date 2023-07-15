@@ -1,18 +1,23 @@
 from pydantic import BaseModel
+from typing import List, Optional
+
 
 class User(BaseModel):
-    fname: str
-    lname: str
-    email: str
-    number: str
+    # userId: int
+    firstName: str
+    lastName: str
+    emailId: str
+    phoneNumber: Optional[str]=""
     password: str
-    is_active: bool
-    role_id: int
+    active: bool
+    roleId: int
+    districts:Optional[List[int]]=[]
+
 
 class school(BaseModel):
     name: str
     location: str
-    district: str
+    districtId: int
 
 class Role(BaseModel):
     role_name: str
@@ -21,3 +26,6 @@ class Role(BaseModel):
 class priority(BaseModel):
     name: str
     description: str
+
+class district(BaseModel):
+    name:str

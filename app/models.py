@@ -53,12 +53,11 @@ class MdlIlts(Base):
                         default=datetime.datetime.utcnow)
     created_by = Column(String, nullable=False)
     updated_at = Column(DateTime, nullable=True)
-    update_by = Column(String, nullable=True)
-    owner_id = Column(Integer,  nullable=False)
+    update_by = Column(Integer, ForeignKey("users.id"), nullable=True, index=True )
+    owner_id =  Column(Integer, ForeignKey("users.id"), nullable=False, index=True )
     title = Column(String, nullable=False)
     description = Column(String, nullable=False)
-    school_id = Column(Integer, ForeignKey(
-        "schools.id"), nullable=False, index=True)
+    school_id = Column(Integer, ForeignKey("schools.id"), nullable=False, index=True)
 
 
 class MdlIltMembers(Base):
