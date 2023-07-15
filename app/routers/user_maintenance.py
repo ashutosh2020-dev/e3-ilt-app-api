@@ -10,7 +10,19 @@ user_service = UserService()
 def fn_read_users(UserId: int=Header(convert_underscores=False),  db: Session = Depends(get_db)):
     return user_service.get_user(UserId, db =db)
 
-@router.get("/api/v1/users/search")
+@router.get("/api/v1/users/{userId}/")
+def fn_read_users(UserId: int,  db: Session = Depends(get_db)):
+    return user_service.get_single_user(UserId, db =db)
+
+@router.get("/api/v1/users/{userId}/districts/")
+def fn_read_users_districts(UserId: int,  db: Session = Depends(get_db)):
+    return user_service.get_districts(UserId, db =db)
+
+@router.get("/api/v1/users/district/{districtId}/schools/")
+def fn_read_users_schools(districtId: int,  db: Session = Depends(get_db)):
+    return user_service.get_schools(districtId, db =db)
+
+@router.get("/api/v1/users/search/")
 def fn_read_users(keyword:str, UserId: int=Header(convert_underscores=False),  db: Session = Depends(get_db)):
     return user_service.search_user(UserId, keyword, db =db)
 
@@ -25,6 +37,7 @@ def fn_create_user(user:UserRequest, UserId: int=Header(convert_underscores=Fals
                                     password=user.password, 
                                     is_active=user.active,
                                     role_id=user.roleId,
+                                    districts=user.districts,
                                     db=db)
     
 @router.post("/api/v1/users/{id}")
@@ -38,6 +51,7 @@ def fn_update_user(id:int, user:UpdateUserRequest, UserId: int=Header(convert_un
                                     password=user.password, 
                                     is_active=user.active,
                                     role_id=user.roleId,
+                                    districts=user.districts,
                                     db=db)
 
 

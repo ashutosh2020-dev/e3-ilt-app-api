@@ -1,23 +1,20 @@
 from sqlalchemy.orm import Session
 from app.models import MdlSchools
-from app.models import MdlRocks, MdlRoles, MdlPriorities
+from app.models import MdlRocks, MdlRoles, MdlPriorities, MdlDistrict
 from app.exceptions.customException import CustomException
 
 class SharedService:
     def get_list_of_schools(self,  db: Session):
-        
-        try:
-            
-            ilt_school_detail = [{
-                                    "schoolId" :  ilt_school_detail.id,
-                                    "schoolName" : ilt_school_detail.name,
-                                    "schoolDistrict" : ilt_school_detail.district
-                                 } for ilt_school_detail in db.query(MdlSchools).all()]
 
-            return ilt_school_detail
+        ilt_school_detail = [{
+                                "schoolId" :  ilt_school_detail.id,
+                                "schoolName" : ilt_school_detail.name,
+                                "schoolDistrict" : ilt_school_detail.district
+                                } for ilt_school_detail in db.query(MdlSchools).all()]
+
+        return ilt_school_detail
         
-        except Exception as e:
-            raise CustomException(500, f"unable to process your requests {e}")
+        
         
 
     def get_list_of_rocks(self, db: Session):
@@ -33,6 +30,13 @@ class SharedService:
         except Exception as e:
             raise CustomException(500, f"unable to process your requests {e}")
 
+    def get_list_of_districts(self, db:Session):
+        ilt_district_detail = [{
+                                "distictId" :  ilt_school_detail.id,
+                                "distictName" : ilt_school_detail.name
+                                } for ilt_school_detail in db.query(MdlDistrict).all()]
+
+        return ilt_district_detail
 
     def get_role_details(self,db: Session):
         try:
