@@ -7,10 +7,11 @@ class UserRequest(BaseModel):
     firstName: str
     lastName: str
     emailId: str
-    phoneNumber: str
+    phoneNumber: Optional[str]=""
     password: str
     active: bool
     roleId: int
+    districts:Optional[List[int]]=[]
 
 class UpdateUserRequest(BaseModel):
     # userId: int
@@ -18,9 +19,10 @@ class UpdateUserRequest(BaseModel):
     lastName: Optional[str]=""
     emailId: Optional[str]=""
     phoneNumber: Optional[str]=""
-    password: Optional[str]="12345"
+    password: Optional[str]=""
     active: Optional[bool]=None
     roleId: Optional[int]=0
+    districts:Optional[List[int]]=[]
     
 
 class loginCredential(BaseModel):

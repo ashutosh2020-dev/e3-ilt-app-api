@@ -6,22 +6,59 @@ from datetime import datetime, timezone
 from app.exceptions.customException import CustomException
 from sqlalchemy import and_, func
 
-def calculate_meeting_status(schedule_start_at, start_at, end_at):
-    current_datetime = datetime.now()
-    if current_datetime < start_at:
-        return 0  # notStarted
-    elif current_datetime >= start_at and current_datetime <= end_at:
-        return 1  # inProgress
-    else:
-        return 2  # completed
-
 
 class IltService:
     def get_Ilts_list(self, user_id: int, db: Session):
         ilt_list = []
-        list_ilts = [record.ilt_id for record in db.query(
-            MdlIltMembers).filter(MdlIltMembers.member_id == user_id).all()]
+        list_ilts = []
+        user_id_list = []
+        logged_user_record = db.query(MdlUsers).filter(MdlUsers.id == user_id).one_or_none()
+        if logged_user_record is None: 
+            raise CustomException(400,  "User invalid") 
+        
+        # role<=2, append all ilt wrt userid
+        if logged_user_record.role_id<=2:
+            user_id_list.append(user_id)
+            
+        elif logged_user_record.role_id==3:
+            user_id_list.append(user_id)
+            #extend child facilitator
+            user_id_list.extend([u_re.id 
+                                 for u_re in db.query(MdlUsers).filter(MdlUsers.parent_user_id==user_id).all()])
+        elif logged_user_record.role_id==4:
+            user_id_list.append(user_id)
+            #extract child project manager id
+            child_p_list = [u_re.id 
+                                 for u_re in db.query(MdlUsers).filter(MdlUsers.parent_user_id==user_id).all()]
+            user_id_list.extend(child_p_list)
+            for id in child_p_list:
+                # extract child facilitator id for each
+                child_f_list = [u_re.id 
+                                 for u_re in db.query(MdlUsers).filter(MdlUsers.parent_user_id==id).all()]
+                user_id_list.extend(child_f_list)
+
+        elif logged_user_record.role_id>4:
+            user_id_list.append(user_id)
+            #extract child director id
+            child_p_list = [u_re.id 
+                                 for u_re in db.query(MdlUsers).filter(MdlUsers.parent_user_id==user_id).all()]
+            user_id_list.extend(child_p_list)
+            for id in child_p_list:
+                # extract child project manager id for each
+                child_f_list = [u_re.id 
+                                 for u_re in db.query(MdlUsers).filter(MdlUsers.parent_user_id==id).all()]
+                user_id_list.extend(child_f_list)
+
+        if logged_user_record.role_id<=2:
+            list_ilts.extend([record.ilt_id for record in db.query(
+                                            MdlIltMembers).filter(MdlIltMembers.member_id == uid).all()])
+        elif logged_user_record.role_id>=3:
+            for  uid in user_id_list:
+                list_ilts.extend([record.id for record in db.query(
+                    MdlIlts).filter(MdlIlts.owner_id == uid).all()])
+        
         if list_ilts:
+            list_ilts  = list(set(list_ilts))
             for x in list_ilts:
                 latestMeetingId = 0
                 status = 0
@@ -29,21 +66,6 @@ class IltService:
                 ilt_owner_record = db.query(MdlUsers).filter(
                     MdlUsers.id == ilt_record.owner_id).first()
                 owner_name = ilt_owner_record.fname+" "+ilt_owner_record.lname
-                # find latest meeting
-                # meeting_record = (
-                #     db.query(MdlMeetings)
-                #     .join(MdlIltMeetings, MdlMeetings.id == MdlIltMeetings.ilt_meeting_id)
-                #     .filter(MdlIltMeetings.ilt_id == x)
-                #     .order_by(MdlMeetings.schedule_start_at.asc())
-                #     .first()
-                # )
-                # check if start_at is null
-                # if meeting_record:
-                #     latestMeetingId = meeting_record.id
-                #     start_meeting_time = meeting_record.start_at
-                #     end_meeting_time = meeting_record.end_at
-                #     status = calculate_meeting_status(
-                #         start_meeting_time, start_meeting_time, end_meeting_time)
 
                 val = {"iltId": ilt_record.id,
                        "title": ilt_record.title,
@@ -54,7 +76,8 @@ class IltService:
                        "meetingStatus": status}
                 ilt_list.append(val)
             return ilt_list
-        raise CustomException(400,  "records Not found")
+        else:
+            return []
 
     def get_ilt_details(self, user_id: int, ilt_id: int, db: Session):
         if db.query(MdlUsers).filter(MdlUsers.id == user_id).one_or_none() is None:
