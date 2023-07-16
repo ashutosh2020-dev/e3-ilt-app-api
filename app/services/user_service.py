@@ -290,8 +290,12 @@ class UserService:
         db.refresh(db_user)
 
         # update district
-        
-        
+        old_districts = set([re.district_id for re in db.query(MdlDistrictMember).filter(MdlDistrictMember.user_id==user_id).all()])
+        new_districts_list = districts - old_districts
+        remove_districts_list = old_districts - districts
+
+
+
         return {
             "statusCode": 200,
             "userMessage": "User Updated successfully."
