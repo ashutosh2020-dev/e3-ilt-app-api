@@ -8,7 +8,7 @@ user_service = UserService()
 
 @router.get("/api/v1/users/")
 def fn_read_users(keyword:str = "", UserId: int=Header(convert_underscores=False),  db: Session = Depends(get_db)):
-    if keyword is None:
+    if not keyword:
         return user_service.get_user(UserId, db =db)
     else:
         return user_service.search_user(UserId, keyword, db =db)
