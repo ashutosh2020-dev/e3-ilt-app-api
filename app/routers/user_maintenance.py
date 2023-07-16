@@ -7,9 +7,12 @@ router = APIRouter()
 user_service = UserService()
 
 @router.get("/api/v1/users/")
-def fn_read_users(UserId: int=Header(convert_underscores=False),  db: Session = Depends(get_db)):
-    return user_service.get_user(UserId, db =db)
-
+def fn_read_users(keyword:str = "", UserId: int=Header(convert_underscores=False),  db: Session = Depends(get_db)):
+    if not keyword:
+        return user_service.get_user(UserId, db =db)
+    else:
+        return user_service.search_user(UserId, keyword, db =db)
+    
 @router.get("/api/v1/users/{userId}")
 def fn_read_users(userId: int,  db: Session = Depends(get_db)):
     return user_service.get_single_user(userId, db =db)
@@ -21,10 +24,6 @@ def fn_read_users_districts(userId: int,  db: Session = Depends(get_db)):
 @router.get("/api/v1/users/districts/{districtId}/schools")
 def fn_read_users_schools(districtId: int,  db: Session = Depends(get_db)):
     return user_service.get_schools(districtId, db =db)
-
-@router.get("/api/v1/users/search/")
-def fn_read_users(keyword:str, UserId: int=Header(convert_underscores=False),  db: Session = Depends(get_db)):
-    return user_service.search_user(UserId, keyword, db =db)
 
 
 @router.post("/api/v1/users/")
