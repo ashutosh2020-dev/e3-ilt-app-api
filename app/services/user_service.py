@@ -1,4 +1,5 @@
 from sqlalchemy.orm import Session
+from sqlalchemy import and_
 from app.models import MdlUsers, MdlRoles, MdlIlts, MdlDistrict, MdlDistrictMember, MdlSchools
 from sqlalchemy.orm.exc import NoResultFound
 import sys
@@ -84,14 +85,22 @@ class UserService:
         u_record = db.query(MdlUsers).filter(
             MdlUsers.id == user_id).one_or_none()
         if u_record is None:
-            raise CustomException(404, "user records not found.")
-
+            raise CustomException(404, "User records not found.")
+        
         elif u_record.role_id != 1:
-            user_query = db.query(MdlUsers)
+            district_id_list = [re.district_id 
+                                for re in db.query(MdlDistrictMember)
+                                            .filter(MdlDistrictMember.user_id==user_id)
+                                            .all()]
+            user_query = (
+                            db.query(MdlUsers)
+                            .join(MdlDistrictMember, MdlUsers.id == MdlDistrictMember.user_id)
+                        )
             if keyword:
-                user_query = user_query.filter(MdlUsers.fname.like(f"%{keyword}%")
+                user_query = user_query.filter(MdlDistrictMember.district_id.in_(district_id_list),
+                                               and_(MdlUsers.fname.like(f"%{keyword}%")
                                                | MdlUsers.lname.like(f"%{keyword}%")
-                                               | MdlUsers.email.like(f"%{keyword}%"))
+                                               | MdlUsers.email.like(f"%{keyword}%")))
             associated_users_record = [UserAccount(record.id, record.fname, record.lname, record.role_id, record.email)
                                        for record in user_query.order_by(MdlUsers.id).all()]
             return associated_users_record
@@ -154,7 +163,7 @@ class UserService:
                              .one_or_none())
         if check_user_detail is not None:
             raise CustomException(
-                400,  "This email id already exists, Please change your email id.")
+                400,  "Email already exists. Please choose a different email address.")
         # number
         # check_user_detail = (db.query(MdlUsers)
         #                 .filter(MdlUsers.number == number.strip())
@@ -166,7 +175,7 @@ class UserService:
             raise CustomException(
                 400,  "Please downgrade the role to create user")
         if len(districts) == 0 and check_parent_id.role_id != 4:
-            raise CustomException(400,  "Please enter district")
+            raise CustomException(400,  "Please choose district")
 
         # create district_list
         district_list = []
@@ -262,13 +271,13 @@ class UserService:
             if check_iltOwner_record or check_parent_record:
                 if check_iltOwner_record and check_parent_record:
                     raise CustomException(
-                        400,  "This user is owner in Ilt and parent of other users, Can not to deactivate this user")
+                        400,  "Cannot deactivate user. This user is an owner in Ilt and a parent to other users.")
                 elif check_parent_record:
                     raise CustomException(
-                        400,  "This user is parent for other users, Can not deactivate this user")
+                        400,  "Cannot deactivate user. This user is a parent to other users.")
                 else:
                     raise CustomException(
-                        400,  "This user is Owner in Ilt{}, Can not to deactivate this user")
+                        400,  "Cannot deactivate user. This user is an owner in Ilt.")
             else:
                 pass
         
@@ -294,15 +303,19 @@ class UserService:
         input_new_district = set(districts)
         new_districts_list = input_new_district - old_districts
         remove_districts_list = old_districts - input_new_district
-        existing_districts_list = old_districts.intersection(input_new_district)
+        #existing_districts_list = old_districts.intersection(input_new_district)
         all_district_list = old_districts.union(input_new_district)
-        # for dis_id in all_district_list:
-        #     #check validation
-        #     #create the member
-            
-        #     if dis_id in new_districts_list:
-        #         map_record= db.query()
-
+        for dis_id in all_district_list:
+            if dis_id in new_districts_list:
+                distr_map_record= MdlDistrictMember(district_id=dis_id, user_id=id)
+                db.add(distr_map_record)
+                db.commit()
+            elif dis_id in remove_districts_list:
+                distr_map_record = db.query(MdlDistrictMember).filter(district_id=dis_id, user_id=id).one()
+                db.delete(distr_map_record)
+                db.commit()
+            else:
+                pass
 
         return {
             "statusCode": 200,
