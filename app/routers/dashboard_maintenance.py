@@ -6,6 +6,6 @@ from app.services.dashboard_service import DashboardService
 router = APIRouter()
 Dashboard_Service = DashboardService()
 
-@router.get("/api/v1/`dashboard/ilt/{iltId}")
+@router.get("/api/v1/dashboard/ilt/{iltId}")
 async def Show_Ilt_Dashboard( iltId :int, UserId: int=Header(convert_underscores=False), db: Session = Depends(get_db)):
     return Dashboard_Service.get_ilt_Meetings_dashboard_info(user_id=UserId, ilt_id=iltId, db=db)
