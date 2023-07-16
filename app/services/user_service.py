@@ -221,7 +221,7 @@ class UserService:
                 "userMessage": "User has created successfully"
             }
         else:
-            raise CustomException(400,  "Please enter district")
+            raise CustomException(400,  "Please choose district")
 
     def update_user(self, user_id: int, id: int, fname, lname, email, number, password, is_active, districts, role_id, db: Session):
         user_id_re = db.query(MdlUsers).filter(
@@ -299,10 +299,11 @@ class UserService:
         db.refresh(db_user)
 
         # update district
-        old_districts = set([re.district_id for re in db.query(MdlDistrictMember).filter(MdlDistrictMember.user_id==user_id).all()])
+        old_districts = set([re.district_id for re in db.query(MdlDistrictMember).filter(MdlDistrictMember.user_id==id).all()])
         input_new_district = set(districts)
         new_districts_list = input_new_district - old_districts
         remove_districts_list = old_districts - input_new_district
+        print("--------------------:",old_districts, input_new_district)
         #existing_districts_list = old_districts.intersection(input_new_district)
         all_district_list = old_districts.union(input_new_district)
         for dis_id in all_district_list:
@@ -311,7 +312,10 @@ class UserService:
                 db.add(distr_map_record)
                 db.commit()
             elif dis_id in remove_districts_list:
-                distr_map_record = db.query(MdlDistrictMember).filter(district_id=dis_id, user_id=id).one()
+                print("---------",dis_id, id)
+                print(remove_districts_list)
+                distr_map_record = db.query(MdlDistrictMember).filter(MdlDistrictMember.district_id==dis_id,
+                                                                       MdlDistrictMember.user_id==id).one()
                 db.delete(distr_map_record)
                 db.commit()
             else:
