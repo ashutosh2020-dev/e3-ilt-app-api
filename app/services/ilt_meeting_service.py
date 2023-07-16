@@ -204,7 +204,7 @@ class IltMeetingService:
                                      .filter(MdlIltMeetings.ilt_id == iltId,
                                              MdlIltMeetings.ilt_meeting_id == meeting_id)
                                      .one_or_none())
-            if db_ilt_meeting_record is None:
+            if db_ilt_meeting_record is None and user.role_id != 4:
                 raise CustomException(
                     404,  "Meeting ID is not associated with ILT id")
             if ilt_record.owner_id == User_id:

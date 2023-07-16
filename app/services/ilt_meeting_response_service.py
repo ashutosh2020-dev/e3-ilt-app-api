@@ -658,8 +658,9 @@ class IltMeetingResponceService:
 
         if name:
             user_meetingResponse_record.rockName = name
-        if onTrack:
-            user_meetingResponse_record.onTrack = onTrack
+        if onTrack != True:
+            onTrack = False
+        user_meetingResponse_record.onTrack = onTrack
 
         db.commit()
         db.refresh(user_meetingResponse_record)
