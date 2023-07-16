@@ -59,7 +59,7 @@ class IltMeetingService:
                                     })
             return ilt_list
         else:
-            raise CustomException(400,  "No meeting available for this Ilt")
+            return []
 
     def get_Ilts_meeting_list(self, user_id: int, ilt_id: int, db: Session):
         user = db.query(MdlUsers).filter(MdlUsers.id == user_id).first()
@@ -101,7 +101,7 @@ class IltMeetingService:
 
             return ilt_list
         else:
-            raise CustomException(400,  "No meeting available for this Ilt id")
+            return []
 
     def create_ilts_meeting(self, ilt_id: int, user_id: int,  scheduledStartDate,
                             meetingStart, meetingEnd, db: Session, location: str):
@@ -207,7 +207,7 @@ class IltMeetingService:
             if db_ilt_meeting_record is None and user.role_id != 4:
                 raise CustomException(
                     404,  "Meeting ID is not associated with ILT id")
-            if ilt_record.owner_id == User_id:
+            if ilt_record.owner_id == User_id or user.role_id==4:
                 ilt_members_ids = [x.member_id for x in db.query(
                     MdlIltMembers).filter(MdlIltMembers.ilt_id == iltId).all()]
             else:
@@ -323,7 +323,7 @@ class IltMeetingService:
         hour_diff = difference/3600
         print(hour_diff)
         if hour_diff>24:
-            raise CustomException(400,  "Meeting can be started before 24 hour only, Please change the meeting schedule start time to start this meeting")
+            raise CustomException(400,  "Meeting cannot start. Start time should be at least 24 hours from now. Please adjust the meeting schedule.")
         if db_meeting is None:
             raise CustomException(404,  "Meeting records not found")
         
@@ -337,7 +337,6 @@ class IltMeetingService:
             "userMessage": "Meeting have started successfully"
         }
         
-
     def stop_ilt_meeting(self, UserId: int, meeting_id: int, ilt_id: int, db: Session):
         if db.query(MdlUsers).filter(MdlUsers.id == UserId).one_or_none() is None:
             raise CustomException(400,  "No users available ")
