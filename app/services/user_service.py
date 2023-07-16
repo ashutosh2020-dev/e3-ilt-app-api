@@ -290,8 +290,20 @@ class UserService:
         db.refresh(db_user)
 
         # update district
-        
-        
+        old_districts = set([re.district_id for re in db.query(MdlDistrictMember).filter(MdlDistrictMember.user_id==user_id).all()])
+        input_new_district = set(districts)
+        new_districts_list = input_new_district - old_districts
+        remove_districts_list = old_districts - input_new_district
+        existing_districts_list = old_districts.intersection(input_new_district)
+        all_district_list = old_districts.union(input_new_district)
+        # for dis_id in all_district_list:
+        #     #check validation
+        #     #create the member
+            
+        #     if dis_id in new_districts_list:
+        #         map_record= db.query()
+
+
         return {
             "statusCode": 200,
             "userMessage": "User Updated successfully."

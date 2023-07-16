@@ -40,21 +40,21 @@ class IltService:
 
         elif logged_user_record.role_id > 4:
             user_id_list.append(user_id)
-            # extract child director id
-            child_p_list = [u_re.id
-                            for u_re in db.query(MdlUsers).filter(MdlUsers.parent_user_id == user_id).all()]
-            user_id_list.extend(child_p_list)
-            for id in child_p_list:
+            #extract child director id
+            child_director_list = [u_re.id 
+                                 for u_re in db.query(MdlUsers).filter(MdlUsers.parent_user_id==user_id).all()]
+            user_id_list.extend(child_director_list)
+            for id in child_director_list:
                 # extract child project manager id for each
-                child_f_list = [u_re.id
-                                for u_re in db.query(MdlUsers).filter(MdlUsers.parent_user_id == id).all()]
-                user_id_list.extend(child_f_list)
-
-        if logged_user_record.role_id <= 2:
+                child_p_list = [u_re.id 
+                                 for u_re in db.query(MdlUsers).filter(MdlUsers.parent_user_id==id).all()]
+                user_id_list.extend(child_p_list)
+        # ILT LIST
+        if logged_user_record.role_id<=2:
             list_ilts.extend([record.ilt_id for record in db.query(
-                MdlIltMembers).filter(MdlIltMembers.member_id == uid).all()])
-        elif logged_user_record.role_id >= 3:
-            for uid in user_id_list:
+                                            MdlIltMembers).filter(MdlIltMembers.member_id == user_id).all()])
+        elif logged_user_record.role_id>=3:
+            for  uid in user_id_list:
                 list_ilts.extend([record.id for record in db.query(
                     MdlIlts).filter(MdlIlts.owner_id == uid).all()])
 
@@ -226,7 +226,7 @@ class IltService:
         if ilt_data.schoolId:
             db_ilt.school_id = ilt_data.schoolId
         if ilt_data.ownerId:
-            common_msg = "unable to update ownerId for now!"
+            common_msg = "unable to update ownerId"
             # update tables - ilt, iltMember, upcoming_meetings_responce, for all rocks, and all user_maping
             pass
         db_ilt.updated_at = datetime.now()
