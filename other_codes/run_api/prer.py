@@ -8,11 +8,10 @@ def create_root_user():
     payload = json.dumps(  {
                 "firstName": "ashutosh",
                 "lastName": "tiwari",
-                "emailId": "string@gmail.com",
+                "emailId": "as@gmail.com",
                 "password": "123456",
                 "active": True,
-                "roleId": 4,
-                "districts": [1,2,3]
+                "roleId": 4
                 })
   
     headers = {
@@ -22,7 +21,7 @@ def create_root_user():
     print(response.text)
 
 def create_distict():
-    district = ["D1","D2", "D3" ]
+    district = ['Colonial', 'Decatur', 'Gainesville', 'Marion', 'Rio Grande', 'Roanoke', 'Pike', 'York']
     for i in district:
         url = host_url+"api/v1/others/district/"
         payload = json.dumps({
@@ -36,7 +35,7 @@ def create_distict():
 
 def create_school():
     d = 1
-    district = ["D1","D2", "D3" ]
+    district = ['Colonial', 'Decatur', 'Gainesville', 'Marion', 'Rio Grande', 'Roanoke', 'Pike', 'York']
     school_name_list = ["school_A", "school_B", "school_C", "school_D"]
     payload = {}
     headers = {}
@@ -68,7 +67,7 @@ def create_role():
         response = requests.request("POST", url, headers=headers, data=payload)
         print(response.text)
 
-create_role()
-create_distict()
-create_school()
+# create_role()
+# create_distict()
+# create_school()
 create_root_user()

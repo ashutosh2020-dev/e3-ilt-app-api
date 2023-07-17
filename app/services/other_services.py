@@ -57,6 +57,9 @@ class Create_otherService:
         #             raise CustomException(400,  "You can not create user in this district, Please change the district.")
 
             #district_list.extend([dis.name for dis in db.query(MdlDistrict).all()]) #cal parent access area & append                
+        if role_id ==4 and len(districts)==0:
+            districts = [re.id for re in db.query(MdlDistrict).all()]
+
         if districts:
             db_user = MdlUsers(fname=fname, lname=lname, email=email,
                             password=password, is_active=is_active, role_id=role_id, parent_user_id=0)
@@ -131,6 +134,17 @@ class Create_otherService:
         db.add(db_district)
         db.commit()
         db.refresh(db_district)
+        
+        all_director = [re.id for re in db.query(MdlUsers).filter(MdlUsers.role_id==4).all()]
+        if all_director:
+            for  director_id in  all_director:
+                db_distric_user = MdlDistrictMember(
+                            district_id=db_district.id, user_id=director_id)
+                db.add(db_distric_user)
+                db.commit()
+                db.refresh(db_distric_user)
+
+
         return {
                    
                     "statusCode": 200,

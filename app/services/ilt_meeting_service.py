@@ -207,9 +207,10 @@ class IltMeetingService:
             if db_ilt_meeting_record is None and user.role_id != 4:
                 raise CustomException(
                     404,  "Meeting ID is not associated with ILT id")
+            ilt_members_ids = []
             if ilt_record.owner_id == User_id or user.role_id==4:
-                ilt_members_ids = [x.member_id for x in db.query(
-                    MdlIltMembers).filter(MdlIltMembers.ilt_id == iltId).all()]
+                ilt_members_ids.extend([x.member_id for x in db.query(
+                    MdlIltMembers).filter(MdlIltMembers.ilt_id == iltId).all()])
             else:
                 check_ilt_user_map_record = (db.query(MdlIltMembers)
                                              .filter(MdlIltMembers.ilt_id == iltId, MdlIltMembers.member_id == User_id)
@@ -218,7 +219,7 @@ class IltMeetingService:
                 if check_ilt_user_map_record is None:
                     raise CustomException(
                         404,  "User ID is not associated with ILT")
-                ilt_members_ids = [User_id]
+                ilt_members_ids.extend([User_id])
 
             members_Info_dict = []
             meeting_response_id = 0
