@@ -350,7 +350,7 @@ class IltMeetingResponceService:
         return {
 
             "statusCode": 200,
-            "userMessage": "to-do list created successfully",
+            "userMessage": "Created/Updated successfully",
             "data": user_todolist_record
         }
 

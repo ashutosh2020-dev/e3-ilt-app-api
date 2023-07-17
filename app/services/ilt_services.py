@@ -230,8 +230,9 @@ class IltService:
             
             # update tables - ilt, iltMember, upcoming_meetings_responce, and all ilt_user_maping
             db_ilt = db.query(MdlIlts).get(ilt_data.iltId)
-            db_ilt_member = db.query(MdlIltMembers).filter(MdlIltMembers.ilt_id==ilt_data.iltId, 
-                                                           MdlIltMembers.member_id==ilt_data.ownerId).one_or_none()
+            db_ilt_member = (db.query(MdlIltMembers).filter(MdlIltMembers.ilt_id==ilt_data.iltId, 
+                                                           MdlIltMembers.member_id==db_ilt.owner_id)
+                                                            .one_or_none())
             db_ilt.owner_id = ilt_data.ownerId
             db_ilt_member.member_id = ilt_data.ownerId
             db.add(db_ilt)
@@ -256,6 +257,7 @@ class IltService:
             current_ilt_member_list= [re.member_id for re in ilt_query.filter(MdlIltMembers.ilt_id == ilt_id).all()]
             new_member_list=   set(ilt_data.memberIds) - set(current_ilt_member_list)
             removed_member_list = (set(current_ilt_member_list) - set(ilt_data.memberIds)) - set([db_ilt.owner_id])
+            print(new_member_list)
             for m_re in list(new_member_list):
                 ilt_record = ilt_query.filter(MdlIltMembers.ilt_id == ilt_id,
                                               MdlIltMembers.member_id == m_re).one_or_none()
