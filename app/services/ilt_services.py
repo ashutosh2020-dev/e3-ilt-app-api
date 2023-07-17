@@ -227,19 +227,19 @@ class IltService:
         if ilt_data.schoolId:
             db_ilt.school_id = ilt_data.schoolId
         if ilt_data.ownerId and ilt_data.ownerId != db_ilt.owner_id:
-            
+            common_msg = "owner not updated"
             # update tables - ilt, iltMember, upcoming_meetings_responce, and all ilt_user_maping
-            db_ilt = db.query(MdlIlts).get(ilt_data.iltId)
-            db_ilt_member = (db.query(MdlIltMembers).filter(MdlIltMembers.ilt_id==ilt_data.iltId, 
-                                                           MdlIltMembers.member_id==db_ilt.owner_id)
-                                                            .one_or_none())
-            db_ilt.owner_id = ilt_data.ownerId
-            db_ilt_member.member_id = ilt_data.ownerId
-            db.add(db_ilt)
-            db.add(db_ilt_member)
-            db.commit()
-            db.refresh(db_ilt)
-            db.refresh(db_ilt_member)
+            # db_ilt = db.query(MdlIlts).get(ilt_data.iltId)
+            # db_ilt_member = (db.query(MdlIltMembers).filter(MdlIltMembers.ilt_id==ilt_data.iltId, 
+            #                                                MdlIltMembers.member_id==db_ilt.owner_id)
+            #                                                 .one_or_none())
+            # db_ilt.owner_id = ilt_data.ownerId
+            # db_ilt_member.member_id = ilt_data.ownerId
+            # db.add(db_ilt)
+            # db.add(db_ilt_member)
+            # db.commit()
+            # db.refresh(db_ilt)
+            # db.refresh(db_ilt_member)
             
         db_ilt.updated_at = datetime.now()
         db_ilt.update_by = user_id
@@ -285,15 +285,15 @@ class IltService:
             # for newly added owner: updating meetingResponce_map_record  
             if ilt_data.ownerId and ilt_data.ownerId != db_ilt.owner_id:
                 # get all meetingResponce wrt old owner
-                for mid in upcoming_meetingId_list:
-                    db_meetingResponce_map_record = (db.query(MdlIltMeetingResponses).filter(MdlIltMeetingResponses.meeting_id ==mid,
-                                                            MdlIltMeetingResponses.meeting_user_id==db_ilt.owner_id)
-                    .one_or_none())
-                    db_meetingResponce_map_record.meeting_user_id = ilt_data.ownerId
-                    db.add(db_meetingResponce_map_record)
-                    db.commit()
-                    db.refresh(db_meetingResponce_map_record)
-                common_msg = "Also update ownerId"                                        
+                # for mid in upcoming_meetingId_list:
+                #     db_meetingResponce_map_record = (db.query(MdlIltMeetingResponses).filter(MdlIltMeetingResponses.meeting_id ==mid,
+                #                                             MdlIltMeetingResponses.meeting_user_id==db_ilt.owner_id)
+                #     .one_or_none())
+                #     db_meetingResponce_map_record.meeting_user_id = ilt_data.ownerId
+                #     db.add(db_meetingResponce_map_record)
+                #     db.commit()
+                #     db.refresh(db_meetingResponce_map_record)
+                common_msg = "Not updated ownerId"                                        
             # for removed_member_list: delete records
             if removed_member_list:
                 for user_id in removed_member_list:
