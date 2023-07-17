@@ -164,12 +164,6 @@ class UserService:
         if check_user_detail is not None:
             raise CustomException(
                 400,  "Email already exists. Please choose a different email address.")
-        # number
-        # check_user_detail = (db.query(MdlUsers)
-        #                 .filter(MdlUsers.number == number.strip())
-        #                 .one_or_none())
-        # if check_user_detail is not None:
-        #     raise CustomException(400,  "This phone number already exists, Please share your another number.")
         # check roleId
         if role_id >= check_parent_id.role_id and (check_parent_id.role_id != 4):
             raise CustomException(
@@ -243,12 +237,6 @@ class UserService:
             if check_user_detail is not None:
                 raise CustomException(
                     400,  "This email id already exists, Please change your email id.")
-        # if str(db_user.number) != number.strip():
-        #     check_user_detail = (db.query(MdlUsers)
-        #                 .filter(MdlUsers.number == number.strip())
-        #                 .one_or_none())
-        #     if check_user_detail is not None:
-        #         raise CustomException(400,  "This phone number already exists, Please share your another number.")
 
         if role_id:
             check_role_id = db.query(MdlRoles).filter(
@@ -314,8 +302,6 @@ class UserService:
                 db.add(distr_map_record)
                 db.commit()
             elif dis_id in remove_districts_list:
-                print("---------",dis_id, id)
-                print(remove_districts_list)
                 distr_map_record = db.query(MdlDistrictMember).filter(MdlDistrictMember.district_id==dis_id,
                                                                        MdlDistrictMember.user_id==id).one()
                 db.delete(distr_map_record)
