@@ -33,8 +33,9 @@ class MdlDistrict(Base):
 
 class MdlSchools(Base):
     __tablename__ = "schools"
+    __table_args__ = (UniqueConstraint('name', 'district'),)
     id = Column(Integer, primary_key=True, autoincrement=True)
-    name = Column(String, unique=True, nullable=False)
+    name = Column(String, nullable=False)
     location = Column(String, nullable=False)
     district = Column(Integer, ForeignKey("districts.id"), nullable=False, index=True)
 
