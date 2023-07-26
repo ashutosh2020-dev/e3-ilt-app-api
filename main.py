@@ -1,6 +1,7 @@
 from fastapi import FastAPI, Depends, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
+# from fastapi.middleware.httpsredirect import HTTPSRedirectMiddleware
 from sqlalchemy.orm import Session
 from app.config.app_settings import settings
 from app.config.database import engine, SessionLocal, Base
@@ -9,6 +10,22 @@ from app.routers import user_maintenance, dashboard_maintenance, ilt_maintenance
 import uvicorn
 from app.exceptions.customException import CustomException
 from fastapi.responses import JSONResponse
+import os
+import ssl
+
+sslSettings = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
+keyfile_path = os.path.abspath(
+    os.path.join(os.getcwd(), 'certs', 'private.key'))
+certfile_path = os.path.abspath(os.path.join(
+    os.getcwd(), 'certs', 'certificate.crt'))
+cafile_path = os.path.abspath(os.path.join(
+    os.getcwd(), 'certs', 'ca_bundle.crt'))
+
+# print('\nCERTFILE PATH\n', certfile_path)
+# print('\nKEYFILE PATH\n', keyfile_path)s
+# print('\nCAFILE PATH\n', cafile_path)
+sslSettings.load_verify_locations(cafile=cafile_path)
+sslSettings.load_cert_chain(certfile=certfile_path, keyfile=keyfile_path)
 
 
 tags_metadata = [
@@ -59,6 +76,7 @@ app = FastAPI(
                 version=settings.app_version,
                 description=settings.app_description
                 )
+# app.add_middleware(HTTPSRedirectMiddleware)
 @app.exception_handler(CustomException)
 async def custom_exception_handler(request, exc):
     
@@ -106,4 +124,7 @@ def home():
     return {"Request":"Success"}
 
 if __name__ == "__main__":
-    uvicorn.run("main:app", host="0.0.0.0", port=settings.app_port, reload=True, workers=4)
+    uvicorn.run("main:app", host="0.0.0.0", port=settings.app_port, reload=True,
+                                ssl_keyfile=keyfile_path,
+                                ssl_certfile= certfile_path,
+                                workers=4)

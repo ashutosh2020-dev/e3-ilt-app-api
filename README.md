@@ -27,8 +27,8 @@ app/
 
 ### Run these two commands docker cmd in root dir/path
 
-- docker build -t middle_ilt_app1 -f DockerFile .
-- docker run -p 8000:8000 middle_ilt_app2
+- docker build -t middle_ilt_app1 -f Dockerfile .
+- docker run -p 443:443 middle_ilt_app
 
 ### for migration
 

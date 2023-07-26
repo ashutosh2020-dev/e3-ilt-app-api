@@ -321,10 +321,9 @@ class IltMeetingService:
             MdlMeetings.id == meeting_id).one_or_none()
         
         difference = (db_meeting.schedule_start_at - datetime.now()).total_seconds()
-        hour_diff = difference/3600
-        print(hour_diff)
-        if hour_diff>24:
-            raise CustomException(400,  "Meeting cannot start. Start time should be at least 24 hours from now. Please adjust the meeting schedule.")
+        diff = difference/60
+        if diff>2:
+            raise CustomException(400,  "Meeting can start only after meeting schedule time. Please adjust the meeting schedule.")
         if db_meeting is None:
             raise CustomException(404,  "Meeting records not found")
         
