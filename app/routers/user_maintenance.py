@@ -27,7 +27,7 @@ def fn_read_users_schools(districtId: int,  db: Session = Depends(get_db)):
 
 
 @router.post("/api/v1/users/")
-def fn_create_user(user:UserRequest, UserId: int=Header(convert_underscores=False), db: Session = Depends(get_db)):
+async def fn_create_user(user:UserRequest, UserId: int=Header(convert_underscores=False), db: Session = Depends(get_db)):
     return user_service.create_user(parent_user_id=UserId,
                                     fname=user.firstName, 
                                     lname=user.lastName,

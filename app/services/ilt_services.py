@@ -31,7 +31,8 @@ class IltService:
             user_id_list.append(user_id)
             # extract child project manager id
             child_p_list = [u_re.id
-                            for u_re in db.query(MdlUsers).filter(MdlUsers.parent_user_id == user_id).all()]
+                            for u_re in db.query(MdlUsers).filter(MdlUsers.parent_user_id == user_id, 
+                                                                  MdlUsers.role_id!= 4).all()]
             user_id_list.extend(child_p_list)
             for id in child_p_list:
                 # extract child facilitator id for each
@@ -55,6 +56,7 @@ class IltService:
             list_ilts.extend([record.ilt_id for record in db.query(
                                             MdlIltMembers).filter(MdlIltMembers.member_id == user_id).all()])
         elif logged_user_record.role_id>=3:
+            user_id_list = list(set(user_id_list))
             for  uid in user_id_list:
                 list_ilts.extend([record.id for record in db.query(
                     MdlIlts).filter(MdlIlts.owner_id == uid).all()])
@@ -276,6 +278,7 @@ class IltService:
                 .filter(MdlIltMeetings.ilt_id == ilt_id)\
                 .filter(MdlMeetings.schedule_start_at > current_date)\
                 .all()
+            print("--",[i.id for i in upcoming_meeting_list])
             upcoming_meetingId_list = [
                 record.id for record in upcoming_meeting_list]
             # creating meetingResponce for new members
