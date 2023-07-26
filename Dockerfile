@@ -13,6 +13,8 @@ COPY ilt_db.db  /dockerworkdir/
 RUN  pip install --no-cache-dir --upgrade pip && \
      pip install --no-cache-dir -r requirements.txt
 
+EXPOSE 80
 EXPOSE 443
 
-CMD ["python", "main.py"]
+# CMD ["python", "main.py"]
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "80"]
