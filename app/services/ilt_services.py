@@ -57,10 +57,12 @@ class IltService:
                                             MdlIltMembers).filter(MdlIltMembers.member_id == user_id).all()])
         elif logged_user_record.role_id>=3:
             user_id_list = list(set(user_id_list))
+            # get all ilt where user_id is member
+            list_ilts.extend([record.ilt_id for record in db.query(
+                                            MdlIltMembers).filter(MdlIltMembers.member_id == user_id).all()])
             for  uid in user_id_list:
                 list_ilts.extend([record.id for record in db.query(
                     MdlIlts).filter(MdlIlts.owner_id == uid).all()])
-
         if list_ilts:
             list_ilts = list(set(list_ilts))
             for x in list_ilts:
@@ -242,7 +244,6 @@ class IltService:
             # db.commit()
             # db.refresh(db_ilt)
             # db.refresh(db_ilt_member)
-            
         db_ilt.updated_at = datetime.now()
         db_ilt.update_by = user_id
         db.commit()
@@ -259,6 +260,7 @@ class IltService:
             current_ilt_member_list= [re.member_id for re in ilt_query.filter(MdlIltMembers.ilt_id == ilt_id).all()]
             new_member_list=   set(ilt_data.memberIds) - set(current_ilt_member_list)
             removed_member_list = (set(current_ilt_member_list) - set(ilt_data.memberIds)) - set([db_ilt.owner_id])
+            print("new",new_member_list, "removed_member_list",removed_member_list)
             for m_re in list(new_member_list):
                 ilt_record = ilt_query.filter(MdlIltMembers.ilt_id == ilt_id,
                                               MdlIltMembers.member_id == m_re).one_or_none()
@@ -272,13 +274,13 @@ class IltService:
                     db.commit()
                     db.refresh(db_ilt_member)
 
-            current_date = datetime.now()
+            current_date = datetime.utcnow()
+            
             upcoming_meeting_list = db.query(MdlMeetings)\
                 .join(MdlIltMeetings, MdlMeetings.id == MdlIltMeetings.ilt_meeting_id)\
                 .filter(MdlIltMeetings.ilt_id == ilt_id)\
-                .filter(MdlMeetings.schedule_start_at > current_date)\
+                .filter(MdlMeetings.end_at == None)\
                 .all()
-            print("--",[i.id for i in upcoming_meeting_list])
             upcoming_meetingId_list = [
                 record.id for record in upcoming_meeting_list]
             # creating meetingResponce for new members
