@@ -84,12 +84,17 @@ class DashboardService:
             member_meeting_responce_records = [db.query(MdlMeetingsResponse)
                                                .filter(MdlMeetingsResponse.id == m_r_id).one()
                                                for m_r_id in member_meeting_response_id_list]
+        #  meeting end time
+            meetingEndTime = db.query(MdlMeetings).get(mid).end_at 
         # attandence
             attandence_nominator = sum([record.attendance_flag
                                         for record in member_meeting_responce_records])
 
             attandence_denominator = num_of_member_in_ilt
-            avg_attendence = attandence_nominator/attandence_denominator
+            avg_attendence = {
+                        "percentage": attandence_nominator*100/attandence_denominator,
+                        "total": attandence_denominator
+                    }
 
         # rating :
             mid_ratings = [
@@ -98,7 +103,10 @@ class DashboardService:
             if mid_ratings:
                 rating_nominator = sum(mid_ratings)
                 rating_denominator = len(mid_ratings)*5
-                avg_rating = rating_nominator/rating_denominator
+                avg_rating = {
+                        "percentage": (rating_nominator/rating_denominator)*100,
+                        "total": rating_denominator
+                    }
 
         # rock_on_track
             mid_rocks = [
@@ -107,7 +115,10 @@ class DashboardService:
             if mid_rocks:
                 rock_nominator = sum(mid_rocks)
                 rock_denominator = len(mid_rocks)
-                avg_rock = rock_nominator / rock_denominator
+                avg_rock = {
+                        "percentage": (rock_nominator/rock_denominator)*100,
+                        "total": rock_denominator
+                    }
 
         # issue
             list_of_list_of_issue_records = [db.query(MdlIltissue)
@@ -116,6 +127,7 @@ class DashboardService:
                                              for m_r_id in member_meeting_response_id_list]
             issue_id_list = []
             avg_issueResolve = []
+            avg_issueObj={}
             if list_of_list_of_issue_records:
                 for record in list_of_list_of_issue_records:
                     if record:
@@ -123,16 +135,39 @@ class DashboardService:
                             issue_id_list.append(r.issue_id)
                     else:
                         pass
-
+            denominator = 0
+            numOfIssueRepeat=0
+            issue_nominators = {
+                    'resolve': 0,
+                    'recognizePerformance': 0,
+                    'teacherSupport': 0,
+                    'leaderSupport': 0,
+                    'advanceEquality': 0,
+                    'othersFlag': 0
+                }
             if issue_id_list:
                 meetings_issue_resolve_list = [db.query(Mdl_issue)
                                                .get(issue_id)
                                                .resolves_flag
                                                for issue_id in issue_id_list]
-                issue_nominator = sum(meetings_issue_resolve_list)
-                issue_denominator = len(meetings_issue_resolve_list)
-
-                avg_issueResolve = issue_nominator/issue_denominator
+                for issue_id in issue_id_list:
+                    numOfIssueRepeat += len([record.meeting_response_id for record in db.query(MdlIltissue).filter(MdlIltissue.issue_id==issue_id).all()])
+                    issue_re = db.query(Mdl_issue).get(issue_id)
+                    issue_nominators['resolve'] += int(issue_re.resolves_flag)
+                    issue_nominators['recognizePerformance'] += int(issue_re.recognize_performance_flag)
+                    issue_nominators['teacherSupport'] += int(issue_re.teacher_support_flag)
+                    issue_nominators['leaderSupport'] += int(issue_re.leader_support_flag)
+                    issue_nominators['advanceEquality'] += int(issue_re.advance_equality_flag)
+                    issue_nominators['othersFlag'] += int(issue_re.others_flag)
+                    denominator += 1
+            avg_issueObj = {flag: {'percentage':(issue_nominators[flag]/denominator)*100 if denominator > 0 else 0, 'total':denominator} 
+                                            for flag in issue_nominators 
+                            }
+            if numOfIssueRepeat>0:
+                avg_issueObj["avgIssueRepeat"] =  {"percentage":(numOfIssueRepeat/denominator)*100, "total":denominator}
+            else:
+                avg_issueObj["avgIssueRepeat"] =  {"percentage":0 if denominator==0 else 0, "total":denominator} 
+            avg_issueObj["totalIssues"] = denominator
 
             # To-Do
             list_list_of_toDo_records = (db.query(MdlIlt_ToDoTask)
@@ -140,7 +175,8 @@ class DashboardService:
                                          .all()
                                          for m_r_id in member_meeting_response_id_list)
             meeting_todo_record_list = []
-            avg_ToDo = 0
+            avg_ToDo = {}
+            ToDo_denominator = 0
             if list_list_of_toDo_records:
                 for list_todo_record in list_list_of_toDo_records:
                     for todo_record in list_todo_record:
@@ -149,19 +185,25 @@ class DashboardService:
             if meeting_todo_record_list:
                 ToDo_nominator = sum(meeting_todo_record_list)
                 ToDo_denominator = len(meeting_todo_record_list)
-                avg_ToDo = ToDo_nominator/ToDo_denominator
+                avg_ToDo = {
+                        "percentage": ToDo_nominator/ToDo_denominator,
+                        "total": ToDo_denominator
+                    }
 
-            list_of_meeting_obj.append({
-                "meetingId": mid,
-                "avgAttendence": avg_attendence,
-                "avgRock": avg_rock,
-                "avgRating": avg_rating,
-                "avgIssueResolved": avg_issueResolve,
-                "avgToDo": avg_ToDo
-            })
+            list_of_meeting_obj.append(
+                {
+                    "id": ilt_id,
+                    "meetingId":mid,
+                    "meetingEndDate":meetingEndTime,
+                    "attendancePercentage": avg_attendence,
+                    "rockOnTrack": avg_rock,
+                    "avgRatings": avg_rating,
+                    "avgtoDo": avg_ToDo,
+                    "issues": avg_issueObj 
+                })
 
         return {
-            "iltId": ilt_id,
+            "id": ilt_id,
             "numOfEndMeeting": num_of_ended_meeting,
             "numOfNotStartedMeeting": num_of_notStarted_meeting,
             "numOfInprogressMeeting": num_of_inprogress_meeting,
