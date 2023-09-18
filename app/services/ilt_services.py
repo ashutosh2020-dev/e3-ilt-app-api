@@ -17,18 +17,14 @@ class IltService:
             MdlUsers.id == user_id).one_or_none()
         if logged_user_record is None:
             raise CustomException(400,  "User invalid")
+        
+        user_id_list.append(user_id)
 
-        # role<=2, append all ilt wrt userid
-        if logged_user_record.role_id <= 2:
-            user_id_list.append(user_id)
-
-        elif logged_user_record.role_id == 3:
-            user_id_list.append(user_id)
+        if logged_user_record.role_id == 3:
             # extend child facilitator
             user_id_list.extend([u_re.id
                                  for u_re in db.query(MdlUsers).filter(MdlUsers.parent_user_id == user_id).all()])
         elif logged_user_record.role_id == 4:
-            user_id_list.append(user_id)
             # extract child project manager id
             child_p_list = [u_re.id
                             for u_re in db.query(MdlUsers).filter(MdlUsers.parent_user_id == user_id, 
@@ -41,7 +37,6 @@ class IltService:
                 user_id_list.extend(child_f_list)
 
         elif logged_user_record.role_id > 4:
-            user_id_list.append(user_id)
             #extract child director id
             child_director_list = [u_re.id 
                                  for u_re in db.query(MdlUsers).filter(MdlUsers.parent_user_id==user_id).all()]
