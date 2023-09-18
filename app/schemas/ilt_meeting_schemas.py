@@ -22,3 +22,8 @@ class rockData_map(BaseModel):
 
 class Status(BaseModel):
     status:Optional[int]=3
+
+class PendingData(BaseModel):
+    listOfIssueIds :List[int] 
+    listOfToDoIds :List[int]
+    futureMeetingId :int
