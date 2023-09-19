@@ -158,6 +158,7 @@ class MdlIlt_ToDoTask(Base):
     description = Column(String, nullable=False)
     due_date = Column(DateTime, nullable=False)
     status = Column(Boolean, nullable=False, default=False)
+    parent_to_do_id = Column(Integer, nullable=True, default=None)
 
 
 class Mdl_updates(Base):

@@ -12,7 +12,6 @@ from app.exceptions.customException import CustomException
 from fastapi.responses import JSONResponse
 import os
 import ssl
-
 sslSettings = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
 keyfile_path = os.path.abspath(
     os.path.join(os.getcwd(), 'certs', 'private.key'))
@@ -124,7 +123,7 @@ def home():
     return {"Request":"Success"}
 
 # if __name__ == "__main__":
-#     uvicorn.run("main:app", host="0.0.0.0", port=settings.app_port, reload=True,
+#     uvicorn.run("main:app", host="0.0.0.0", port=443, reload=True,
 #                                 ssl_keyfile=keyfile_path,
 #                                 ssl_certfile= certfile_path,
 #                                 workers=4)

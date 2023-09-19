@@ -1,4 +1,4 @@
-# middle-ILT-app-api-code
+# middle-ILT-app-api
 
 ### structure
 
@@ -24,6 +24,10 @@ app/
 |Dockerfile
 
 </pre>
+
+## RUN app locally
+
+- uvicorn main:app --host 0.0.0.0 --port 443 --ssl-keyfile certs/private.key --ssl-certfile certs/certificate.crt
 
 ### Run these two commands docker cmd in root dir/path
 

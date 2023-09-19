@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from app.config.database import get_db
 from app.services.ilt_meeting_service import IltMeetingService
 from app.services.ilt_meeting_response_service import IltMeetingResponceService
-from app.schemas.ilt_meeting_schemas import MeetingData, rockData, rockData_map, Status
+from app.schemas.ilt_meeting_schemas import MeetingData, rockData, rockData_map, Status, PendingData
 from datetime import datetime, timezone
 from typing import Annotated, Union
 
@@ -70,6 +70,23 @@ def stop_ilt_meeting(id: int, meetingId: int, UserId: int = Header(convert_under
                                               ilt_id=id,
                                               UserId=UserId,
                                               db=db)
+
+@router.post("/api/v1/ilts/{id}/meetings/{meetingId}/pending")
+def stop_ilt_meeting(id: int, meetingId: int, UserId: int = Header(convert_underscores=False),
+                     db: Session = Depends(get_db)):
+
+    return IltMeetingService.pending_issue_todo(meeting_id=meetingId,
+                                              ilt_id=id,
+                                              UserId=UserId,
+                                              db=db)
+
+@router.post("/api/v1/ilts/{id}/meetings/{meetingId}/transfer")
+def transfer_ilt_meeting(id: int, meetingId: int,  pendingData:PendingData, UserId: int = Header(convert_underscores=False),
+                     db: Session = Depends(get_db)):
+    print(pendingData.listOfIssueIds)
+    return IltMeetingService.transfer_ilt_meeting(listOfIssueIds=pendingData.listOfIssueIds, 
+                                                  listOfToDoIds=pendingData.listOfToDoIds, 
+                                                  futureMeetingId=pendingData.futureMeetingId, db=db)
 
 
 @router.get("/api/v1/ilts/{id}/rocks")
