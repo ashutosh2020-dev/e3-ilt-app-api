@@ -193,7 +193,7 @@ class Mdl_issue(Base):
 
 class MdlIltissue(Base):
     __tablename__ = "meeting_issue_mapping"
-    # __table_args__ = (UniqueConstraint('meeting_response_id', 'issue_id'),)
+    __table_args__ = (UniqueConstraint('meeting_response_id', 'issue_id'),)
     id = Column(Integer, primary_key=True, autoincrement=True)
     meeting_response_id = Column(Integer, ForeignKey(
         "meeting_response.id"), nullable=False, index=True)
