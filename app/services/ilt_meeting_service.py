@@ -267,7 +267,7 @@ class IltMeetingService:
                     .filter(MdlIltissue.meeting_response_id == meeting_response_id).order_by(MdlIltissue.id.desc()).all()
 
                 user_issues_record = [db.query(Mdl_issue)
-                                      .filter(Mdl_issue.id == record.id).one_or_none() for record in issue_record]  \
+                                      .filter(Mdl_issue.id == record.issue_id).one_or_none() for record in issue_record]  \
                     if issue_record else []
 
                 members_Info_dict.append(
@@ -491,9 +491,10 @@ class IltMeetingService:
         future_meetings_list = self.get_upcomming_Ilts_meeting_list(user_id=UserId, statusId=0, ilt_id=ilt_id, db=db)
 
         return {
+                "iltMeetingId": ilt_id,
                 "meetingId":meeting_id,
-                "issues":pending_issue_record_list,
-                "toDoList":pending_to_do_record_list,
+                "ILTIssuesModel":pending_issue_record_list,
+                "ILTToDoListModel":pending_to_do_record_list,
                 "futureMeetings":future_meetings_list
             }
 
