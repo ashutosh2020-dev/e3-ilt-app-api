@@ -478,7 +478,7 @@ class IltMeetingResponceService:
             .filter(MdlIltissue.meeting_response_id == responce_id.id).order_by(MdlIltissue.id.desc()).all()
 
         user_issue_records = [db.query(Mdl_issue)
-                            .filter(Mdl_issue.id == record.id).one_or_none() for record in issue_records]  \
+                            .filter(Mdl_issue.id == record.issue_id).one_or_none() for record in issue_records]  \
                 if issue_records else []
         
         issues_records = [{

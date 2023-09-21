@@ -491,10 +491,10 @@ class IltMeetingService:
         future_meetings_list = self.get_upcomming_Ilts_meeting_list(user_id=UserId, statusId=0, ilt_id=ilt_id, db=db)
 
         return {
-                "iltMeetingId": ilt_id,
+                "iltId": ilt_id,
                 "meetingId":meeting_id,
-                "ILTIssuesModel":pending_issue_record_list,
-                "ILTToDoListModel":pending_to_do_record_list,
+                "issues":pending_issue_record_list,
+                "todoList":pending_to_do_record_list,
                 "futureMeetings":future_meetings_list
             }
 
