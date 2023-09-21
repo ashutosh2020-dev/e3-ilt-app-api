@@ -208,7 +208,7 @@ class DashboardService:
             "numOfNotStartedMeeting": num_of_notStarted_meeting,
             "numOfInprogressMeeting": num_of_inprogress_meeting,
             "numOfMembersInIlt": num_of_member_in_ilt,
-            "meetingsObj": list_of_meeting_obj
+            "meetings": list_of_meeting_obj
         }
 
     def get_ilt_Meeting_dashboard_info(self, user_id: int, meetingId:int, ilt_id: int, db: Session):
@@ -388,7 +388,7 @@ class DashboardService:
         return {
             "id": ilt_id, 
             "numOfMembersInIlt": num_of_member_in_ilt,
-            "meetingsObj": list_of_meeting_obj
+            "meetings": list_of_meeting_obj
         }
 
 

@@ -71,8 +71,8 @@ def stop_ilt_meeting(id: int, meetingId: int, UserId: int = Header(convert_under
                                               UserId=UserId,
                                               db=db)
 
-@router.post("/api/v1/ilts/{id}/meetings/{meetingId}/pending")
-def stop_ilt_meeting(id: int, meetingId: int, UserId: int = Header(convert_underscores=False),
+@router.get("/api/v1/ilts/{id}/meetings/{meetingId}/pending")
+def pending_ilt_meeting(id: int, meetingId: int, UserId: int = Header(convert_underscores=False),
                      db: Session = Depends(get_db)):
 
     return IltMeetingService.pending_issue_todo(meeting_id=meetingId,
