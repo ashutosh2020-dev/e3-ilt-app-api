@@ -450,7 +450,7 @@ class IltMeetingResponceService:
             db.commit()
             db.refresh(db_issue)
             db_meeting_issue = MdlIltissue(
-                meeting_response_id=meetingResponseId, issue_id=db_issue.id)
+                meeting_response_id=meetingResponseId, issue_id=db_issue.id, parent_meeting_responce_id=meetingResponseId)
             db.add(db_meeting_issue)
             db.commit()
             db.refresh(db_meeting_issue)

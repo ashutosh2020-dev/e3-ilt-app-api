@@ -267,7 +267,7 @@ class IltMeetingService:
                     .filter(MdlIltissue.meeting_response_id == meeting_response_id).order_by(MdlIltissue.id.desc()).all()
 
                 user_issues_record = [db.query(Mdl_issue)
-                                      .filter(Mdl_issue.id == record.id).one_or_none() for record in issue_record]  \
+                                      .filter(Mdl_issue.id == record.issue_id).one_or_none() for record in issue_record]  \
                     if issue_record else []
 
                 members_Info_dict.append(
