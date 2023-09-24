@@ -322,9 +322,9 @@ class IltMeetingService:
             MdlMeetings.id == meeting_id).one_or_none()
         
         difference = (db_meeting.schedule_start_at - datetime.now()).total_seconds()
-        diff = difference/60
+        diff = difference/60 
         if diff>2:
-            raise CustomException(400,  "Meeting can start only after meeting schedule time. Please adjust the meeting schedule.")
+            raise CustomException(400,  "Meeting can start only after meeting schedule time. Please adjust the meeting schedule(Use UTC format only).")
         if db_meeting is None:
             raise CustomException(404,  "Meeting records not found")
         
@@ -500,7 +500,7 @@ class IltMeetingService:
 
 
 
-    def transfer_ilt_meeting(self, listOfIssueIds:list, listOfToDoIds:list, futureMeetingId, db:Session):
+    def transfer_ilt_meeting(self, meetingId:int, listOfIssueIds:list, listOfToDoIds:list, futureMeetingId:int, db:Session):
         """
         as input
         {
@@ -514,7 +514,10 @@ class IltMeetingService:
         """
         # transfering pending ilt
         for id in listOfIssueIds:
-            map_re = db.query(MdlIltissue).filter(MdlIltissue.issue_id==id).order_by(MdlIltissue.id.desc()).first()
+            map_re = (db.query(MdlIltissue).filter(MdlIltissue.issue_id==id)
+                    .order_by(MdlIltissue.id.desc()).first())
+            
+
             # = map_re.parent_meeting_responce_id 
             parent_responce_id= map_re.meeting_response_id 
             parent_user_id = (db.query(MdlIltMeetingResponses)
@@ -526,7 +529,8 @@ class IltMeetingService:
             
             check_issue_record = (db.query(MdlIltissue)
                             .filter(MdlIltissue.meeting_response_id==current_meetingResponce,
-                                    MdlIltissue.issue_id==id).all())
+                                    MdlIltissue.issue_id==id).one_or_none())
+            
             if check_issue_record is not None:
                 continue
             # create re with MdlIltissue
