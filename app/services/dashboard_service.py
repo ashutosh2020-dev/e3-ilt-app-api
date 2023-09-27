@@ -2,7 +2,7 @@ from sqlalchemy.orm import Session
 from app.models import MdlUsers, MdlIltMeetings, MdlMeetings, MdlMeeting_rocks,\
     MdlIltMembers, MdlIltMeetingResponses, MdlMeetingsResponse, MdlIltissue,\
     Mdl_issue, MdlIlt_ToDoTask, MdlIlts, MdlSchools
-from app.schemas.dashboard_schemas import SummaryData, PercentageData
+from app.schemas.dashboard_schemas import SummaryData, PercentageData, DashboardFilterParamaters
 from datetime import datetime, timezone
 from app.exceptions.customException import CustomException
 """
@@ -30,16 +30,27 @@ def calculate_meeting_status(schedule_start_at, start_at, end_at):
 
 def compute_meetings_avg():
     pass
-def get_associated_schoolId_wrt_role(user_id:int, role_id:int, db:Session):
+def get_associated_schoolId_wrt_role(user_id:int, role_id:int, FilterParamaters:DashboardFilterParamaters, db:Session):
         user_id_list = [user_id,]
         list_ilts = []
         list_of_school_id = []
-        if role_id == 3:
+        if FilterParamaters:
+            if FilterParamaters.distict_id or FilterParamaters.school_id:
+                if role_id<4:
+                    raise CustomException(404,  "This User is not allowed to perform this action")
+                if FilterParamaters.distict_id:
+                    list_of_school_id.extend([id for id, in db.query(MdlSchools.id).filter(MdlSchools.district.in_(FilterParamaters.distict_id)).distinct()])
+                if FilterParamaters.school_id:
+                    list_of_school_id.extend(FilterParamaters.school_id)
+
+                return list_of_school_id
+
+        # for ilt
+        if role_id==3:
             # extend child facilitator
             user_id_list.extend([u_re.id
                                  for u_re in db.query(MdlUsers).filter(MdlUsers.parent_user_id == user_id).all()])
-        # for ilt
-        if role_id==3:
+            # remove duplicates
             user_id_list = list(set(user_id_list))
             # get all ilt where user_id is member
             list_ilts.extend([record.ilt_id for record in db.query(
@@ -427,19 +438,20 @@ class DashboardService:
             "meetings": list_of_meeting_obj
         }
     
-    def get_detailed_dashboard_info(self, user_id: int, db: Session):
+    def get_detailed_dashboard_info(self, user_id: int, db: Session, FilterParamaters:DashboardFilterParamaters=""): # school_id:list, distict_id:list,
         # check user
         user_record = db.query(MdlUsers).filter(
             MdlUsers.id == user_id).one_or_none()
         if user_record is None:
             raise CustomException(404,  "User not found")
-        if user_record.role_id<3:
-            raise CustomException(404,  "This User is not allowed to perform this action")
+        # if user_record.role_id<3:
+        #     raise CustomException(404,  "This User is not allowed to perform this action")
         total_num_of_ended_meeting = 0
         total_num_of_notStarted_meeting = 0
         total_num_of_inprogress_meeting = 0
         list_of_school_Summary = []
-        list_of_schoolId = get_associated_schoolId_wrt_role(user_id= user_id, role_id = user_record.role_id, db=db)
+        list_of_schoolId = get_associated_schoolId_wrt_role(user_id= user_id,role_id = user_record.role_id, 
+                                                            FilterParamaters=FilterParamaters, db=db)
 
         for s_id in list_of_schoolId:
             num_of_ended_meeting = 0
@@ -473,7 +485,7 @@ class DashboardService:
                     num_of_notStarted_meeting += 1
 
             
-          # 3. aggregate all ended meeting's summary within one school and append it to list_of_school_Summary
+          # 3. cal and aggregate all ended meeting's summary
             for mid in list_of_ended_meeting_ids:
 
                 member_meeting_response_id_list = [map_record.meeting_response_id
@@ -585,16 +597,20 @@ class DashboardService:
                     SummaryDataObj.avgtoDo.percentage += (ToDo_nominator*100/ToDo_denominator)
                 SummaryDataObj.avgtoDo.total += 1
                 
+          # 4. take avg and then append it to list_of_school_Summary
             if list_of_ended_meeting_ids:
 
                 total_num_of_ended_meeting += len(list_of_ended_meeting_ids)
                 total_num_of_notStarted_meeting += num_of_notStarted_meeting
                 total_num_of_inprogress_meeting += num_of_inprogress_meeting
+                
                 SummaryDataObj.numOfEndMeeting = len(list_of_ended_meeting_ids)
                 SummaryDataObj.numOfInprogressMeeting = num_of_inprogress_meeting
                 SummaryDataObj.numOfNotStartedMeeting = num_of_notStarted_meeting
                 SummaryDataObj.numOfMembers = db.query(MdlIltMembers).filter(MdlIltMembers.ilt_id.in_(list_of_ilt)).count()
-                SummaryDataObj.schoolName = db.query(MdlSchools).filter(MdlSchools.id==s_id).one().name
+                school_re = db.query(MdlSchools).filter(MdlSchools.id == s_id).one()
+                SummaryDataObj.schoolName = school_re.name
+                SummaryDataObj.schoolId = school_re.id
 
                 for key, value in vars(SummaryDataObj).items():
                         if key in ["attendancePercentage", "rockOnTrack", "avgRatings", "avgtoDo", "issues"]:
@@ -605,7 +621,6 @@ class DashboardService:
                                     setattr(SummaryDataObj.issues, key1, PercentageData(round((value1.percentage/value1.total)*100, 2) if value1.total > 0 else 0, value1.total))   
                             else:
                                 setattr(SummaryDataObj, key, PercentageData(round(value.percentage/value.total, 2) if value.total > 0 else 0, value.total))
-                            
 
                 list_of_school_Summary.append(SummaryDataObj)
         

@@ -459,7 +459,7 @@ class IltMeetingService:
             if issue_id_list:
                 for issue_id in issue_id_list:
                         issue_record = db.query(Mdl_issue).get(issue_id)
-                        if issue_record.resolves_flag == False:
+                        if issue_record.resolves_flag == False and issue_record.priority !=4:
                             pending_issue_record_list.append({
                                 "issueId": issue_record.id,
                                 "issue": issue_record.issue,

@@ -1,3 +1,7 @@
+from pydantic import BaseModel
+from typing import List, Optional
+
+
 class PercentageData:
     def __init__(self, percentage=0, total=0):
         self.percentage = percentage
@@ -14,6 +18,7 @@ class IssuesData:
 
 class SummaryData:
     def __init__(self):
+        self.schoolId=0
         self.schoolName = ""
         self.numOfEndMeeting = 0
         self.numOfNotStartedMeeting = 0
@@ -24,3 +29,7 @@ class SummaryData:
         self.avgRatings = PercentageData()
         self.avgtoDo = PercentageData()
         self.issues = IssuesData()
+
+class DashboardFilterParamaters(BaseModel):
+    school_id :List[int] =[]
+    distict_id :List[int] =[]
