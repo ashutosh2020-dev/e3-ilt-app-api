@@ -1,9 +1,9 @@
 from sqlalchemy.orm import Session
 from app.models import MdlIltMeetings, MdlMeetings, MdlUsers, MdlIlts, \
     MdlIltMembers, MdlIltMeetingResponses, MdlMeetingsResponse,  \
-    Mdl_updates, MdlIlt_ToDoTask, MdlIltissue, Mdl_issue
+    Mdl_updates, MdlIlt_ToDoTask, MdlIltissue, Mdl_issue, MdlIltMeetingWhiteBoard, MdlIltWhiteBoard
 import sys
-from app.schemas.ilt_meeting_schemas import Status
+from app.schemas.ilt_meeting_schemas import Status, whiteboardData
 from app.services.ilt_meeting_response_service import IltMeetingResponceService
 from datetime import datetime, timezone, timedelta
 from app.exceptions.customException import CustomException
@@ -355,6 +355,12 @@ class IltMeetingService:
             db_meeting.end_at = datetime.now()
             db.commit()
             db.refresh(db_meeting)
+        # taking White Board snapshot for meeting(common View across all meeting)
+        currect_des_of_whiteboard = db.query(MdlIltWhiteBoard.description).filter(MdlIltWhiteBoard.iltId==ilt_id).one_or_none()
+        db_whiteB = MdlIltMeetingWhiteBoard(description=currect_des_of_whiteboard, meetingId=meeting_id, IltId=ilt_id)
+        db.add(db_whiteB)
+        db.commit()
+        db.refresh(db_whiteB)
 
         ## check pending- issue, todo, 
         member_meeting_response_id_list = [map_record.meeting_response_id 
@@ -579,3 +585,28 @@ class IltMeetingService:
                 "userMessage": "meeting have successfully updated"
             }
 
+    def update_ilts_whiteboard(self, user_id:int, whiteboard:whiteboardData, db:Session):
+        iltId = whiteboard.ilt_id
+
+        check_ilt_id = db.query(MdlIlts).filter(MdlIlts.id == iltId).one_or_none()
+        db_whiteB_re = db.query(MdlIltWhiteBoard).filter(MdlIltWhiteBoard.iltId == iltId).all()
+        # print(db.query(MdlIltWhiteBoard).get(1).description)
+        
+        if check_ilt_id is None:
+            raise CustomException(404,  "Ilt not found")
+        print(db_whiteB_re, iltId)       
+        if not db_whiteB_re:
+            # create white board
+            db_whiteB = MdlIltWhiteBoard(description=whiteboard.description, iltId=whiteboard.ilt_id)
+            db.add(db_whiteB)
+        else:
+            # update
+            for re in db_whiteB_re:
+                print(re)
+                re.description = whiteboard.description
+        
+        db.commit()
+        return {
+                "statusCode": 200,
+                "userMessage": "successfully updated description"
+            }

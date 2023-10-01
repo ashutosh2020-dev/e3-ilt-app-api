@@ -27,3 +27,7 @@ class PendingData(BaseModel):
     listOfIssueIds :List[int] 
     listOfToDoIds :List[int]
     futureMeetingId :int
+
+class whiteboardData(BaseModel):
+    ilt_id:int
+    description:str
