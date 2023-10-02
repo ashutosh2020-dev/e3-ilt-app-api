@@ -1,9 +1,9 @@
 from sqlalchemy.orm import Session
 from app.models import MdlIltMeetings, MdlMeetings, MdlUsers, MdlIlts, \
     MdlIltMembers, MdlIltMeetingResponses, MdlMeetingsResponse,  \
-    Mdl_updates, MdlIlt_ToDoTask, MdlIltissue, Mdl_issue
+    Mdl_updates, MdlIlt_ToDoTask, MdlIltissue, Mdl_issue, MdlIltMeetingWhiteBoard, MdlIltWhiteBoard
 import sys
-from app.schemas.ilt_meeting_schemas import Status
+from app.schemas.ilt_meeting_schemas import Status, whiteboardData
 from app.services.ilt_meeting_response_service import IltMeetingResponceService
 from datetime import datetime, timezone, timedelta
 from app.exceptions.customException import CustomException
@@ -322,9 +322,9 @@ class IltMeetingService:
             MdlMeetings.id == meeting_id).one_or_none()
         
         difference = (db_meeting.schedule_start_at - datetime.now()).total_seconds()
-        diff = difference/60
+        diff = difference/60 
         if diff>2:
-            raise CustomException(400,  "Meeting can start only after meeting schedule time. Please adjust the meeting schedule.")
+            raise CustomException(400,  "Meeting can start only after meeting schedule time. Please adjust the meeting schedule(Use UTC format only).")
         if db_meeting is None:
             raise CustomException(404,  "Meeting records not found")
         
@@ -355,6 +355,12 @@ class IltMeetingService:
             db_meeting.end_at = datetime.now()
             db.commit()
             db.refresh(db_meeting)
+        # taking White Board snapshot for meeting(common View across all meeting)
+        currect_des_of_whiteboard = db.query(MdlIltWhiteBoard.description).filter(MdlIltWhiteBoard.iltId==ilt_id).one_or_none()
+        db_whiteB = MdlIltMeetingWhiteBoard(description=currect_des_of_whiteboard, meetingId=meeting_id, IltId=ilt_id)
+        db.add(db_whiteB)
+        db.commit()
+        db.refresh(db_whiteB)
 
         ## check pending- issue, todo, 
         member_meeting_response_id_list = [map_record.meeting_response_id 
@@ -459,7 +465,7 @@ class IltMeetingService:
             if issue_id_list:
                 for issue_id in issue_id_list:
                         issue_record = db.query(Mdl_issue).get(issue_id)
-                        if issue_record.resolves_flag == False:
+                        if issue_record.resolves_flag == False and issue_record.priority !=4:
                             pending_issue_record_list.append({
                                 "issueId": issue_record.id,
                                 "issue": issue_record.issue,
@@ -500,7 +506,7 @@ class IltMeetingService:
 
 
 
-    def transfer_ilt_meeting(self, listOfIssueIds:list, listOfToDoIds:list, futureMeetingId, db:Session):
+    def transfer_ilt_meeting(self, meetingId:int, listOfIssueIds:list, listOfToDoIds:list, futureMeetingId:int, db:Session):
         """
         as input
         {
@@ -514,7 +520,10 @@ class IltMeetingService:
         """
         # transfering pending ilt
         for id in listOfIssueIds:
-            map_re = db.query(MdlIltissue).filter(MdlIltissue.issue_id==id).order_by(MdlIltissue.id.desc()).first()
+            map_re = (db.query(MdlIltissue).filter(MdlIltissue.issue_id==id)
+                    .order_by(MdlIltissue.id.desc()).first())
+            
+
             # = map_re.parent_meeting_responce_id 
             parent_responce_id= map_re.meeting_response_id 
             parent_user_id = (db.query(MdlIltMeetingResponses)
@@ -526,7 +535,8 @@ class IltMeetingService:
             
             check_issue_record = (db.query(MdlIltissue)
                             .filter(MdlIltissue.meeting_response_id==current_meetingResponce,
-                                    MdlIltissue.issue_id==id).all())
+                                    MdlIltissue.issue_id==id).one_or_none())
+            
             if check_issue_record is not None:
                 continue
             # create re with MdlIltissue
@@ -575,3 +585,28 @@ class IltMeetingService:
                 "userMessage": "meeting have successfully updated"
             }
 
+    def update_ilts_whiteboard(self, user_id:int, whiteboard:whiteboardData, db:Session):
+        iltId = whiteboard.ilt_id
+
+        check_ilt_id = db.query(MdlIlts).filter(MdlIlts.id == iltId).one_or_none()
+        db_whiteB_re = db.query(MdlIltWhiteBoard).filter(MdlIltWhiteBoard.iltId == iltId).all()
+        # print(db.query(MdlIltWhiteBoard).get(1).description)
+        
+        if check_ilt_id is None:
+            raise CustomException(404,  "Ilt not found")
+        print(db_whiteB_re, iltId)       
+        if not db_whiteB_re:
+            # create white board
+            db_whiteB = MdlIltWhiteBoard(description=whiteboard.description, iltId=whiteboard.ilt_id)
+            db.add(db_whiteB)
+        else:
+            # update
+            for re in db_whiteB_re:
+                print(re)
+                re.description = whiteboard.description
+        
+        db.commit()
+        return {
+                "statusCode": 200,
+                "userMessage": "successfully updated description"
+            }

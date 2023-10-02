@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 from app.models import MdlIlts, MdlIltMembers, MdlUsers, MdlSchools, MdlMeetings, \
-                    MdlIltMeetings, MdlRocks, MdlIlt_rocks, MdlIltMeetingResponses
+                    MdlIltMeetings, MdlRocks, MdlIlt_rocks, MdlIltMeetingResponses, MdlIltWhiteBoard
 from app.schemas.ilt_schemas import Ilt
 from app.services.ilt_meeting_response_service import IltMeetingResponceService
 from datetime import datetime, timezone
@@ -196,9 +196,15 @@ class IltService:
             db.add(db_ilt_member)
             db.commit()
             db.refresh(db_ilt_member)
+        # creating White Board(common View across all meeting)
+        db_whiteB = MdlIltWhiteBoard(description="", IltId=db_ilt.id)
+        db.add(db_whiteB)
+        db.commit()
+        db.refresh(db_whiteB)
+        
         return {
             "statusCode": 200,
-            "userMessage": "ILT has created successfully and added all members"
+            "userMessage": "ILT has created successfully and added all members  "
         }
 
     def update_ilt(self, ilt_data: Ilt, user_id, ilt_id: int, db: Session):

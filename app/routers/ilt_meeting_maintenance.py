@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from app.config.database import get_db
 from app.services.ilt_meeting_service import IltMeetingService
 from app.services.ilt_meeting_response_service import IltMeetingResponceService
-from app.schemas.ilt_meeting_schemas import MeetingData, rockData, rockData_map, Status, PendingData
+from app.schemas.ilt_meeting_schemas import MeetingData, rockData, rockData_map, Status, PendingData, whiteboardData
 from datetime import datetime, timezone
 from typing import Annotated, Union
 
@@ -84,7 +84,7 @@ def pending_ilt_meeting(id: int, meetingId: int, UserId: int = Header(convert_un
 def transfer_ilt_meeting(id: int, meetingId: int,  pendingData:PendingData, UserId: int = Header(convert_underscores=False),
                      db: Session = Depends(get_db)):
     print(pendingData.listOfIssueIds)
-    return IltMeetingService.transfer_ilt_meeting(listOfIssueIds=pendingData.listOfIssueIds, 
+    return IltMeetingService.transfer_ilt_meeting(meetingId=meetingId, listOfIssueIds=pendingData.listOfIssueIds, 
                                                   listOfToDoIds=pendingData.listOfToDoIds, 
                                                   futureMeetingId=pendingData.futureMeetingId, db=db)
 
@@ -113,3 +113,9 @@ def assign_ilt_rocks_to_user(rock: rockData_map,
                                                        rock_id=rock.rockId,
                                                        rockOwnerId=rock.rockOwnerId,
                                                        db=db)
+
+@router.post("/api/v1/ilts/meeting/update/whiteboard")
+def create_ilt_rocks(whiteboard:whiteboardData, user_id:int=Header(convert_underscores=False), db: Session = Depends(get_db)):
+    return IltMeetingService.update_ilts_whiteboard(user_id=user_id,
+                                                    whiteboard=whiteboard,
+                                                    db=db)

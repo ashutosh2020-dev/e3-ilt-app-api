@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, Boolean, DateTime, UniqueConstraint
+from sqlalchemy import Column, Integer, String, ForeignKey, Boolean, DateTime, UniqueConstraint, Text
 import datetime
 from app.config.database import Base
 
@@ -6,18 +6,18 @@ from app.config.database import Base
 class MdlRoles(Base):
     __tablename__ = "roles"
     id = Column(Integer, primary_key=True, autoincrement=True)
-    name = Column(String, unique=True, nullable=False)
-    description = Column(String, nullable=False)
+    name = Column(String(255), unique=True, nullable=False)
+    description = Column(String(255), nullable=False)
 
 
 class MdlUsers(Base):
     __tablename__ = "users"
     id = Column(Integer, primary_key=True, autoincrement=True)
-    fname = Column(String, nullable=False)
-    lname = Column(String, nullable=False)
-    email = Column(String, unique=True, nullable=False)
+    fname = Column(String(255), nullable=False)
+    lname = Column(String(255), nullable=False)
+    email = Column(String(255), unique=True, nullable=False)
     number = Column(Integer, nullable=True)
-    password = Column(String, nullable=False)
+    password = Column(String(255), nullable=False)
     is_active = Column(Boolean, default=False, nullable=False)
     role_id = Column(Integer, ForeignKey("roles.id"),
                      nullable=False, index=True)
@@ -29,14 +29,14 @@ class MdlUsers(Base):
 class MdlDistrict(Base):
     __tablename__ = "districts"
     id = Column(Integer, primary_key=True, autoincrement=True)
-    name = Column(String, unique=True, nullable=False)
+    name = Column(String(255), unique=True, nullable=False)
 
 class MdlSchools(Base):
     __tablename__ = "schools"
     __table_args__ = (UniqueConstraint('name', 'district'),)
     id = Column(Integer, primary_key=True, autoincrement=True)
-    name = Column(String, nullable=False)
-    location = Column(String, nullable=False)
+    name = Column(String(255), nullable=False)
+    location = Column(String(255), nullable=False)
     district = Column(Integer, ForeignKey("districts.id"), nullable=False, index=True)
 
 class MdlDistrictMember(Base):
@@ -52,12 +52,12 @@ class MdlIlts(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     created_at = Column(DateTime, nullable=False,
                         default=datetime.datetime.utcnow)
-    created_by = Column(String, nullable=False)
+    created_by = Column(String(255), nullable=False)
     updated_at = Column(DateTime, nullable=True)
     update_by = Column(Integer, ForeignKey("users.id"), nullable=True, index=True )
     owner_id =  Column(Integer, ForeignKey("users.id"), nullable=False, index=True )
-    title = Column(String, nullable=False)
-    description = Column(String, nullable=False)
+    title = Column(String(255), nullable=False)
+    description = Column(String(255), nullable=False)
     school_id = Column(Integer, ForeignKey("schools.id"), nullable=False, index=True)
 
 
@@ -73,7 +73,7 @@ class MdlIltMembers(Base):
 class MdlMeetings(Base):
     __tablename__ = "Ilt_meetings"
     id = Column(Integer, primary_key=True, autoincrement=True)
-    location = Column(String, nullable=True, default=None)
+    location = Column(String(255), nullable=True, default=None)
     schedule_start_at = Column(DateTime, nullable=False, default=None)
     start_at = Column(DateTime, nullable=True, default=None)
     end_at = Column(DateTime, nullable=True, default=None)
@@ -89,16 +89,29 @@ class MdlIltMeetings(Base):
         "Ilt_meetings.id"), nullable=False, index=True)
 
 
+class MdlIltWhiteBoard(Base):
+    __tablename__ = "Ilt_whiteboard"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    description = Column(Text, nullable=True)
+    iltId = Column(Integer, ForeignKey("Ilts.id"), nullable=False, index=True)
+
+class MdlIltMeetingWhiteBoard(Base):
+    __tablename__ = "Ilt_meeting_whiteboard"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    description = Column(Text, nullable=True)
+    meetingId =  Column(Integer, ForeignKey("Ilt_meetings.id"), nullable=False, index=True)
+    # iltId = Column(Integer, ForeignKey("Ilts.id"), nullable=False, index=True)
+
 class MdlMeetingsResponse(Base):
     __tablename__ = "meeting_response"
     id = Column(Integer, primary_key=True, autoincrement=True)
     attendance_flag = Column(Boolean, nullable=True, default=False)
-    checkin_personal_best = Column(String, nullable=True, default=None)
-    checkin_professional_best = Column(String, nullable=True, default=None)
+    checkin_personal_best = Column(String(255), nullable=True, default=None)
+    checkin_professional_best = Column(String(255), nullable=True, default=None)
     rating = Column(Integer,  nullable=True, default=None)
-    feedback = Column(String, nullable=True, default="")
-    notes = Column(String, nullable=True, default="")
-    rockName = Column(String, nullable=True, default="")
+    feedback = Column(String(255), nullable=True, default="")
+    notes = Column(String(255), nullable=True, default="")
+    rockName = Column(String(255), nullable=True, default="")
     onTrack = Column(Boolean, nullable=True, default="")
 
 
@@ -121,8 +134,8 @@ class MdlRocks(Base):
     __table_args__ = (UniqueConstraint('ilt_id', 'name'),)
     id = Column(Integer, primary_key=True, autoincrement=True)
     ilt_id = Column(Integer, ForeignKey("Ilts.id"), nullable=False, index=True)
-    name = Column(String, nullable=False)
-    description = Column(String, nullable=False)
+    name = Column(String(255), nullable=False)
+    description = Column(String(255), nullable=False)
     owner_id = Column(Integer, ForeignKey("Ilt_rocks.id"),
                       nullable=True, index=True, default=False)
     # on_track_flag = Column(Boolean, nullable=False)
@@ -146,7 +159,7 @@ class MdlMeeting_rocks(Base):
     ilt_meeting_response_id = Column(Integer, ForeignKey(
         "meeting_response.id"), nullable=False, index=True)
     # rock_id = Column(Integer, ForeignKey("Ilt_rocks.id"), nullable=False, index=True)
-    name = Column(String, nullable=True, default=None)
+    name = Column(String(255), nullable=True, default=None)
     on_track_flag = Column(Boolean, nullable=True, default=None)
 
 
@@ -155,7 +168,7 @@ class MdlIlt_ToDoTask(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     meeting_response_id = Column(Integer, ForeignKey(
         "meeting_response.id"), nullable=False, index=True)
-    description = Column(String, nullable=False)
+    description = Column(String(255), nullable=False)
     due_date = Column(DateTime, nullable=False)
     status = Column(Boolean, nullable=False, default=False)
     parent_to_do_id = Column(Integer, nullable=True, default=None)
@@ -166,20 +179,20 @@ class Mdl_updates(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     meeting_response_id = Column(Integer, ForeignKey(
         "meeting_response.id"), nullable=False, index=True)
-    description = Column(String, nullable=False)
+    description = Column(String(255), nullable=False)
 
 
 class MdlPriorities(Base):
     __tablename__ = "Ilt_priorities"
     id = Column(Integer, primary_key=True, autoincrement=True)
-    name = Column(String, nullable=False)
-    description = Column(String, nullable=False)
+    name = Column(String(255), nullable=False)
+    description = Column(String(255), nullable=False)
 
 
 class Mdl_issue(Base):
     __tablename__ = "issue"
     id = Column(Integer, primary_key=True, autoincrement=True)
-    issue = Column(String, nullable=True)
+    issue = Column(String(255), nullable=True)
     priority = Column(Integer, ForeignKey(
         "Ilt_priorities.id"), nullable=True, index=True)
     created_at = Column(DateTime, nullable=True)
