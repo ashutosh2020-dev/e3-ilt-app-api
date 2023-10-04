@@ -1,3 +1,4 @@
+from sqlalchemy import and_
 from sqlalchemy.orm import Session
 from app.models import MdlMeeting_rocks, MdlIlt_ToDoTask, Mdl_updates, \
     MdlMeetingsResponse, MdlIltMeetingResponses, MdlRocks, \
@@ -333,7 +334,8 @@ class IltMeetingResponceService:
         else:
             # check if user_id is inside MdlIltMembers
             db_meeting_todo = MdlIlt_ToDoTask(
-                meeting_response_id=meetingResponseId, description=description, due_date=dueDate, status=status)
+                meeting_response_id=meetingResponseId, description=description, due_date=dueDate, status=status, 
+                created_at= datetime.utcnow())
             db.add(db_meeting_todo)
             db.commit()
             db.refresh(db_meeting_todo)
@@ -397,7 +399,7 @@ class IltMeetingResponceService:
                 500,  "unable to process your request {str(e)}")
 
     def create_update_issue(self, user_id: int, meetingResponseId: int, id: int, issue: str, priority: int,
-                            created_at,
+                            due_date,
                             resolves_flag: bool,
                             recognize_performance_flag: bool,
                             teacher_support_flag: bool,
@@ -419,14 +421,15 @@ class IltMeetingResponceService:
 
         if id:
             issue_map_re = (db.query(MdlIltissue)
-                            .filter(MdlIltissue.meeting_response_id == meetingResponseId,
-                                    MdlIltissue.issue_id == id)
+                            .filter(and_(MdlIltissue.meeting_response_id == meetingResponseId,
+                                    MdlIltissue.issue_id == id))
                             .one())
             user_issue_record = (db.query(Mdl_issue)
                                     .filter(Mdl_issue.id == issue_map_re.issue_id).one())
             user_issue_record.issue = issue
             user_issue_record.priority = priority
-            user_issue_record.created_at = created_at
+            user_issue_record.created_at = datetime.utcnow()
+            user_issue_record.due_date = due_date
             user_issue_record.resolves_flag = resolves_flag
             user_issue_record.recognize_performance_flag = recognize_performance_flag
             user_issue_record.teacher_support_flag = teacher_support_flag
@@ -438,7 +441,8 @@ class IltMeetingResponceService:
 
         elif priority == 0:
             db_issue = Mdl_issue(issue=issue,
-                                    created_at=created_at,
+                                    created_at=datetime.utcnow(),
+                                    due_date= due_date,   
                                     resolves_flag=resolves_flag,
                                     recognize_performance_flag=recognize_performance_flag,
                                     teacher_support_flag=teacher_support_flag,
@@ -457,7 +461,8 @@ class IltMeetingResponceService:
         else:
             db_issue = Mdl_issue(issue=issue,
                                     priority=3 if priority==0 else priority,
-                                    created_at=created_at,
+                                    created_at=datetime.utcnow(),
+                                    due_date= due_date, 
                                     resolves_flag=resolves_flag,
                                     recognize_performance_flag=recognize_performance_flag,
                                     teacher_support_flag=teacher_support_flag,

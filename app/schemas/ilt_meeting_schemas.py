@@ -7,6 +7,7 @@ class MeetingData(BaseModel):
     meetingStart: Optional[datetime]=None
     meetingEnd: Optional[datetime]=None
     location: Optional[str]=None
+    note_taker_id: Optional[int]=None
 
 class rockData(BaseModel):
     iltId:int
@@ -29,5 +30,12 @@ class PendingData(BaseModel):
     futureMeetingId :int
 
 class whiteboardData(BaseModel):
-    ilt_id:int
-    description:str
+    iltId:int
+    meetingId:int
+    description:Optional[str]=None
+
+class whiteboardDataInfo():
+    def __init__(self, iltId=0,meetingId=0):
+        self.iltId=iltId
+        self.meetingId=meetingId
+        self.description=""

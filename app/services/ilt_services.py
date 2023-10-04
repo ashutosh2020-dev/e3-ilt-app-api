@@ -261,7 +261,6 @@ class IltService:
             current_ilt_member_list= [re.member_id for re in ilt_query.filter(MdlIltMembers.ilt_id == ilt_id).all()]
             new_member_list=   set(ilt_data.memberIds) - set(current_ilt_member_list)
             removed_member_list = (set(current_ilt_member_list) - set(ilt_data.memberIds)) - set([db_ilt.owner_id])
-            print("new",new_member_list, "removed_member_list",removed_member_list)
             for m_re in list(new_member_list):
                 ilt_record = ilt_query.filter(MdlIltMembers.ilt_id == ilt_id,
                                               MdlIltMembers.member_id == m_re).one_or_none()

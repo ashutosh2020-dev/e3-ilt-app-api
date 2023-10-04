@@ -96,7 +96,7 @@ def create_update_ilt_meeting_issues(meetingResponseId: int,
                                                                  id=ilt.issues[i].issueId,
                                                                  issue=ilt.issues[i].issue,
                                                                  priority=ilt.issues[i].priorityId,
-                                                                 created_at=ilt.issues[i].date,
+                                                                 due_date=ilt.issues[i].date,
                                                                  resolves_flag=ilt.issues[i].resolvedFlag,
                                                                  recognize_performance_flag=ilt.issues[
                                                                      i].recognizePerformanceFlag,
