@@ -612,9 +612,12 @@ class IltMeetingService:
         whiteboardDataInfoObj = whiteboardDataInfo()
         whiteB_re = db.query(MdlIltWhiteBoard).filter(MdlIltWhiteBoard.iltId == whiteboard.iltId).one_or_none()
         if whiteB_re is None:
-            whiteboardDataInfoObj.iltId= whiteboard.iltId
-            whiteboardDataInfoObj.meetingId=whiteboard.meetingId
-            whiteboardDataInfoObj.description= ""
+            # raise CustomException(404,  "WhiteBoard is not available for this ILT")
+            # create whiteBoard for existing ilt
+            db_whiteB = MdlIltWhiteBoard(description="", iltId=whiteboard.iltId)
+            db.add(db_whiteB)
+            db.commit()
+        # if meeting is end- show snap of responces
         if check_meeting_status is not None:
             whiteB_meeting_re = (db.query(MdlIltMeetingWhiteBoard)
                                     .filter(MdlIltMeetingWhiteBoard.meetingId == whiteboard.meetingId)
