@@ -368,7 +368,7 @@ class IltMeetingService:
             db.refresh(db_meeting)
         # taking White Board snapshot for meeting(common View across all meeting)
         currect_des_of_whiteboard = db.query(MdlIltWhiteBoard.description).filter(MdlIltWhiteBoard.iltId==ilt_id).one_or_none()
-        db_whiteB = MdlIltMeetingWhiteBoard(description=currect_des_of_whiteboard, meetingId=meeting_id, IltId=ilt_id)
+        db_whiteB = MdlIltMeetingWhiteBoard(description=currect_des_of_whiteboard, meetingId=meeting_id)
         db.add(db_whiteB)
         db.commit()
         db.refresh(db_whiteB)
