@@ -48,8 +48,6 @@ def update_ilt_meeting(meetingId: int,
                                                 UserId=UserId,
                                                 location=iltMeeting.location,
                                                 scheduledStartDate=iltMeeting.scheduledStartDate,
-                                                meetingStart=0,
-                                                meetingEnd=0,
                                                 noteTakerId= iltMeeting.note_taker_id,
                                                 db=db)
 

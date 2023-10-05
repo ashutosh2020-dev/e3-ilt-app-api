@@ -197,6 +197,7 @@ class Mdl_issue(Base):
         "Ilt_priorities.id"), nullable=True, index=True)
     created_at = Column(DateTime, nullable=False) 
     due_date = Column(DateTime, nullable=True)
+    issue_resolve_date = Column(DateTime, nullable=True)
     resolves_flag = Column(Boolean, nullable=True)
     recognize_performance_flag = Column(Boolean, nullable=True)
     teacher_support_flag = Column(Boolean, nullable=True)

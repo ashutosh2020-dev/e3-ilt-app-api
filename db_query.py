@@ -10,7 +10,7 @@ DATABASE_URL = "sqlite:///ilt_db.db"
 # query = """ CREATE TABLE Ilt_whiteboard (id INT AUTO_INCREMENT PRIMARY KEY,description LONGTEXT,iltId INT NOT NULL,FOREIGN KEY (iltId) REFERENCES Ilts(id));"""
 
 query = """
-       ALTER TABLE Ilt_to_do_task ADD created_at DATETIME NULL;
+       ALTER TABLE issue ADD issue_resolve_date DATETIME NULL;
         """
 # meeting_note_taker_id  INT NULL DEFAULT NULL;
 

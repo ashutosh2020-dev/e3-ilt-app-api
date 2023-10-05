@@ -119,7 +119,7 @@ class IltMeetingService:
         if Ilt_record is None:
             raise CustomException(404,  "ILT not found")
 
-        current_date = datetime.now()
+        current_date = datetime.utcnow()
         if scheduledStartDate < current_date:
             raise CustomException(
                 404, "Please enter correct date, Date must be greater than currect date")
@@ -159,8 +159,7 @@ class IltMeetingService:
             "userMessage": "meeting and corresponding meeting_response have successfully created"
         }
 
-    def update_ilt_meeting(self, UserId: int, meeting_id: int, ilt_id: int, location, scheduledStartDate, meetingStart,
-                           meetingEnd, noteTakerId,  db: Session):
+    def update_ilt_meeting(self, UserId: int, meeting_id: int, ilt_id: int, location, scheduledStartDate, noteTakerId,  db: Session):
         if db.query(MdlUsers).filter(MdlUsers.id == UserId).one_or_none() is None:
             raise CustomException(404,  "userId did not found ")
         check_ilt_meeting_record = (db.query(MdlIltMeetings)
@@ -170,7 +169,7 @@ class IltMeetingService:
         if check_ilt_meeting_record is None:
             raise CustomException(
                 404,  "Meeting ID is not associated with ILT id")
-        if scheduledStartDate < datetime.now():
+        if scheduledStartDate < datetime.utcnow():
             raise CustomException(
                 400,  "please enter correct date, dates must be greater than currect data")
 
@@ -181,13 +180,9 @@ class IltMeetingService:
         
         db_meeting.location = location
         db_meeting.schedule_start_at = scheduledStartDate
-        if meetingStart:
-            db_meeting.start_at = meetingStart
-        if meetingEnd:
-            db_meeting.end_at = meetingEnd
         
         db_meeting_map = db.query(MdlIltMeetings).filter(MdlIltMeetings.ilt_meeting_id == meeting_id).one_or_none()
-        if (db_meeting_map is not None):
+        if db_meeting_map is not None:
             db_meeting_map.meeting_note_taker_id = noteTakerId
         db.commit()
         return {
@@ -219,9 +214,12 @@ class IltMeetingService:
                     404,  "Meeting ID is not associated with ILT id")
             ilt_members_ids = []
             if ilt_record.owner_id == User_id or user.role_id==4:
-                ilt_members_ids.extend([x.member_id for x in db.query(
-                    MdlIltMembers).filter(MdlIltMembers.ilt_id == iltId).all()])
+                # ilt_members_ids.extend([x.member_id for x in db.query(
+                #     MdlIltMembers).filter(MdlIltMembers.ilt_id == iltId).all()])
                 
+                user_ids = [userId for userId, in db.query(MdlIltMeetingResponses.meeting_user_id)\
+                    .filter(MdlIltMeetingResponses.meeting_id == meeting_id).all()]
+                ilt_members_ids.extend(user_ids)
             else:
                 check_ilt_user_map_record = (db.query(MdlIltMembers)
                                              .filter(MdlIltMembers.ilt_id == iltId, MdlIltMembers.member_id == User_id)
@@ -234,7 +232,7 @@ class IltMeetingService:
 
             members_Info_dict = []
             meeting_response_id = 0
-
+            noteTakerId = db_ilt_meeting_record.meeting_note_taker_id
             for uid in ilt_members_ids:
                 user_record = db.query(MdlUsers).filter(
                     MdlUsers.id == uid).one()
@@ -284,6 +282,7 @@ class IltMeetingService:
                     {
                         "iltMeetingResponseId": meeting_response_id,
                         "iltMeetingId": meeting_id,
+                        "meetingNoteTakerId":noteTakerId,
                         "member": {
                             "userId": user_record.id,
                             "firstName": user_record.fname,
@@ -305,16 +304,16 @@ class IltMeetingService:
                             "issueId": user_issues_single_record.id,
                             "issue": user_issues_single_record.issue,
                             "priorityId": user_issues_single_record.priority,
-                            "date": user_issues_single_record.created_at,
+                            "date": user_issues_single_record.due_date,
                             "resolvedFlag": user_issues_single_record.resolves_flag,
                             "recognizePerformanceFlag": user_issues_single_record.recognize_performance_flag,
                             "teacherSupportFlag": user_issues_single_record.teacher_support_flag,
                             "leaderSupportFlag": user_issues_single_record.leader_support_flag,
                             "advanceEqualityFlag": user_issues_single_record.advance_equality_flag,
                             "othersFlag": user_issues_single_record.others_flag,
-                            "numberOfdaysIssueDelay": (user_issues_single_record.due_date - datetime.utcnow()).days if \
-                                                        not user_issues_single_record.resolves_flag and user_issues_single_record.due_date \
-                                                         else 0
+                            "numberOfdaysIssueDelay":  (user_issues_single_record.issue_resolve_date - user_issues_single_record.created_at).days
+                                                        if user_issues_single_record.resolves_flag == True 
+                                                        else  (user_issues_single_record.due_date - datetime.utcnow()).days 
                         } for user_issues_single_record in user_issues_record]
                         if user_issues_record else []
                     }
@@ -607,18 +606,16 @@ class IltMeetingService:
         if check_meeting_re is None:
             raise CustomException(404,  "This meeting is associated with current Ilt")
         
-        check_meeting_status, = db.query(MdlMeetings.end_at).filter(MdlMeetings.id==whiteboard.meetingId).one()
+        check_meeting_end_date, = db.query(MdlMeetings.end_at).filter(MdlMeetings.id==whiteboard.meetingId).one()
         
         whiteboardDataInfoObj = whiteboardDataInfo()
         whiteB_re = db.query(MdlIltWhiteBoard).filter(MdlIltWhiteBoard.iltId == whiteboard.iltId).one_or_none()
         if whiteB_re is None:
-            # raise CustomException(404,  "WhiteBoard is not available for this ILT")
-            # create whiteBoard for existing ilt
-            db_whiteB = MdlIltWhiteBoard(description="", iltId=whiteboard.iltId)
-            db.add(db_whiteB)
-            db.commit()
-        # if meeting is end- show snap of responces
-        if check_meeting_status is not None:
+            raise CustomException(404,  "WhiteBoard is not available for this ILT")
+        
+        
+        if check_meeting_end_date is not None:
+            # if meeting is end- show snap of responces
             whiteB_meeting_re = (db.query(MdlIltMeetingWhiteBoard)
                                     .filter(MdlIltMeetingWhiteBoard.meetingId == whiteboard.meetingId)
                                     .one_or_none())
