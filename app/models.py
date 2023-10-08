@@ -79,14 +79,13 @@ class MdlMeetings(Base):
     end_at = Column(DateTime, nullable=True, default=None)
 
 
-
 class MdlIltMeetings(Base):
     __tablename__ = "Ilt_meeting_maping"
     __table_args__ = (UniqueConstraint('ilt_id', 'ilt_meeting_id'),)
     id = Column(Integer, primary_key=True, autoincrement=True)
     ilt_id = Column(Integer, ForeignKey("Ilts.id"), nullable=False, index=True)
-    ilt_meeting_id = Column(Integer, ForeignKey(
-        "Ilt_meetings.id"), nullable=False, index=True)
+    ilt_meeting_id = Column(Integer, ForeignKey("Ilt_meetings.id"), nullable=False, index=True)
+    meeting_note_taker_id = Column(Integer, ForeignKey("users.id"), nullable=True, index=True)
 
 
 class MdlIltWhiteBoard(Base):
@@ -169,7 +168,8 @@ class MdlIlt_ToDoTask(Base):
     meeting_response_id = Column(Integer, ForeignKey(
         "meeting_response.id"), nullable=False, index=True)
     description = Column(String(255), nullable=False)
-    due_date = Column(DateTime, nullable=False)
+    created_at = Column(DateTime, nullable=False)
+    due_date = Column(DateTime, nullable=True)
     status = Column(Boolean, nullable=False, default=False)
     parent_to_do_id = Column(Integer, nullable=True, default=None)
 
@@ -195,7 +195,9 @@ class Mdl_issue(Base):
     issue = Column(String(255), nullable=True)
     priority = Column(Integer, ForeignKey(
         "Ilt_priorities.id"), nullable=True, index=True)
-    created_at = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, nullable=False) 
+    due_date = Column(DateTime, nullable=True)
+    issue_resolve_date = Column(DateTime, nullable=True)
     resolves_flag = Column(Boolean, nullable=True)
     recognize_performance_flag = Column(Boolean, nullable=True)
     teacher_support_flag = Column(Boolean, nullable=True)

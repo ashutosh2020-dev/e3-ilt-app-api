@@ -1,5 +1,7 @@
 from pydantic import BaseModel
 from typing import List, Optional
+from datetime import datetime
+
 
 
 class PercentageData:
@@ -33,3 +35,5 @@ class SummaryData:
 class DashboardFilterParamaters(BaseModel):
     school_id :List[int] =[]
     distict_id :List[int] =[]
+    startDate:datetime = datetime(datetime.now().year,8,1)
+    endDate:datetime = datetime(datetime.now().year+1,6,30)

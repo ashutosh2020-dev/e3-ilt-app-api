@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from app.config.database import get_db
 from app.services.ilt_meeting_service import IltMeetingService
 from app.services.ilt_meeting_response_service import IltMeetingResponceService
-from app.schemas.ilt_meeting_schemas import MeetingData, rockData, rockData_map, Status, PendingData, whiteboardData
+from app.schemas.ilt_meeting_schemas import MeetingData, rockData, rockData_map, Status, PendingData, whiteboardData, whiteboardDataInfo
 from datetime import datetime, timezone
 from typing import Annotated, Union
 
@@ -28,6 +28,7 @@ def create_ilt_meeting(id: int, ilt: MeetingData, UserId: int = Header(convert_u
                                                  scheduledStartDate=ilt.scheduledStartDate,
                                                  meetingStart=0,
                                                  meetingEnd=0,
+                                                 noteTakerId = ilt.note_taker_id,
                                                  location=ilt.location,
                                                  db=db)
 
@@ -47,8 +48,7 @@ def update_ilt_meeting(meetingId: int,
                                                 UserId=UserId,
                                                 location=iltMeeting.location,
                                                 scheduledStartDate=iltMeeting.scheduledStartDate,
-                                                meetingStart=0,
-                                                meetingEnd=0,
+                                                noteTakerId= iltMeeting.note_taker_id,
                                                 db=db)
 
 
@@ -114,8 +114,14 @@ def assign_ilt_rocks_to_user(rock: rockData_map,
                                                        rockOwnerId=rock.rockOwnerId,
                                                        db=db)
 
+@router.get("/api/v1/ilts/{iltId}/meeting/{meetingId}/whiteboard")
+def ilts_whiteboard_info(iltId:int, meetingId:int, user_id:int=Header(convert_underscores=False), db: Session = Depends(get_db)):
+    return IltMeetingService.ilts_whiteboard_info(user_id=user_id,
+                                                    whiteboard=whiteboardDataInfo(iltId= iltId, meetingId= meetingId),
+                                                    db=db)
+
 @router.post("/api/v1/ilts/meeting/update/whiteboard")
-def create_ilt_rocks(whiteboard:whiteboardData, user_id:int=Header(convert_underscores=False), db: Session = Depends(get_db)):
+def update_ilts_whiteboard(whiteboard:whiteboardData, user_id:int=Header(convert_underscores=False), db: Session = Depends(get_db)):
     return IltMeetingService.update_ilts_whiteboard(user_id=user_id,
                                                     whiteboard=whiteboard,
                                                     db=db)
