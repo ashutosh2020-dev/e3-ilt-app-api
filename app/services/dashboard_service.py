@@ -1,3 +1,4 @@
+from sqlalchemy import and_
 from sqlalchemy.orm import Session
 from app.models import MdlUsers, MdlIltMeetings, MdlMeetings, MdlMeeting_rocks,\
     MdlIltMembers, MdlIltMeetingResponses, MdlMeetingsResponse, MdlIltissue,\
@@ -438,7 +439,7 @@ class DashboardService:
             "meetings": list_of_meeting_obj
         }
     
-    def get_detailed_dashboard_info(self, user_id: int, db: Session, FilterParamaters:DashboardFilterParamaters=""): # school_id:list, distict_id:list,
+    def get_detailed_dashboard_info(self, user_id: int, db: Session, FilterParamaters:DashboardFilterParamaters=DashboardFilterParamaters() ): # school_id:list, distict_id:list,
         # check user
         user_record = db.query(MdlUsers).filter(
             MdlUsers.id == user_id).one_or_none()
@@ -450,7 +451,7 @@ class DashboardService:
         total_num_of_notStarted_meeting = 0
         total_num_of_inprogress_meeting = 0
         list_of_school_Summary = []
-        list_of_schoolId = get_associated_schoolId_wrt_role(user_id= user_id,role_id = user_record.role_id, 
+        list_of_schoolId = get_associated_schoolId_wrt_role(user_id= user_id, role_id = user_record.role_id, 
                                                             FilterParamaters=FilterParamaters, db=db)
 
         for s_id in list_of_schoolId:
@@ -472,8 +473,8 @@ class DashboardService:
                                     .filter(MdlIltMeetings.ilt_id.in_(list_of_ilt)))
                            
             if start_date and end_date:
-                subquery = subquery.filter(MdlMeetings.schedule_start_at>start_date and
-                                           MdlMeetings.schedule_start_at<end_date)
+                subquery = subquery.filter(and_(MdlMeetings.schedule_start_at>start_date,
+                                           MdlMeetings.schedule_start_at<end_date))
 
             list_meeting_records = (subquery.order_by(MdlMeetings.schedule_start_at.asc()).all())
             
