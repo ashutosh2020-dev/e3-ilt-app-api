@@ -180,7 +180,7 @@ class IltMeetingService:
         
         db_meeting.location = location
         db_meeting.schedule_start_at = scheduledStartDate
-        
+
         db_meeting_map = db.query(MdlIltMeetings).filter(MdlIltMeetings.ilt_meeting_id == meeting_id).one_or_none()
         if db_meeting_map is not None:
             db_meeting_map.meeting_note_taker_id = noteTakerId
@@ -432,12 +432,12 @@ class IltMeetingService:
             "confirmMessageID": "string",
             "statusCode": 200,
             "userMessage": "Meeting have successfully ended",
-            "data":{
-                "meetingId":meeting_id,
-                "pendingIssues":pending_issue_record_list,
-                "pendingToDo":pending_to_do_record_list,
-                "futureMeetings":future_meetings_list
-            }
+            # "data":{
+            #     "meetingId":meeting_id,
+            #     "pendingIssues":pending_issue_record_list,
+            #     "pendingToDo":pending_to_do_record_list,
+            #     "futureMeetings":future_meetings_list
+            # }
         }
         
     def pending_issue_todo(self, UserId: int, meeting_id: int, ilt_id: int, db: Session):
