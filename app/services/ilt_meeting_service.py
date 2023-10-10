@@ -596,7 +596,7 @@ class IltMeetingService:
                 "userMessage": "meeting have successfully updated"
             }
 
-    def ilts_whiteboard_info(self, user_id:int, whiteboard:whiteboardData, db:Session):
+    def ilts_whiteboard_info(self, user_id: int, whiteboard:whiteboardDataInfo, db:Session):
         
         check_ilt_id = db.query(MdlIlts).filter(MdlIlts.id == whiteboard.iltId).one_or_none()
         if check_ilt_id is None:
@@ -632,25 +632,25 @@ class IltMeetingService:
         return  whiteboardDataInfoObj
 
 
-    def update_ilts_whiteboard(self, user_id:int, whiteboard:whiteboardData, db:Session):
+    def update_ilts_whiteboard(self, user_id:int, iltId:int, meetingId:int, whiteboard:whiteboardData, db:Session):
         
-        iltId = whiteboard.iltId
         check_ilt_id = db.query(MdlIlts).filter(MdlIlts.id == iltId).one_or_none()
-        check_meeting_re = db.query(MdlIltMeetings).filter(MdlIltMeetings.ilt_id==whiteboard.iltId,
-                                         MdlIltMeetings.ilt_meeting_id==whiteboard.meetingId).one_or_none()
+        check_meeting_re = db.query(MdlIltMeetings).filter(MdlIltMeetings.ilt_id==iltId,
+                                         MdlIltMeetings.ilt_meeting_id==meetingId).one_or_none()
         db_whiteB_re = db.query(MdlIltWhiteBoard).filter(MdlIltWhiteBoard.iltId == iltId).all()
         
-        check_meeting_status = db.query(MdlMeetings.end_at).filter(MdlMeetings.id==whiteboard.meetingId).one()
+        check_meeting_status, = db.query(MdlMeetings.end_at).filter(MdlMeetings.id==meetingId).one()
         print(check_meeting_status)
         
         if check_ilt_id is None:
             raise CustomException(404,  "Ilt not found")   
         if check_meeting_re is None:
-            raise CustomException(404,  "This meeting is associated with Ilt") 
-          
+            raise CustomException(404,  "This meeting is not associated with Ilt") 
+        if check_meeting_status is not None:
+            raise CustomException(404,  "This meeting is ended, we can not update it") 
         if not db_whiteB_re:
             # create white board
-            db_whiteB = MdlIltWhiteBoard(description=whiteboard.description, iltId=whiteboard.iltId)
+            db_whiteB = MdlIltWhiteBoard(description=whiteboard.description, iltId=iltId)
             db.add(db_whiteB)
         else:
             # update

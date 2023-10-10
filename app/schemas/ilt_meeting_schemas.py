@@ -30,8 +30,6 @@ class PendingData(BaseModel):
     futureMeetingId :int
 
 class whiteboardData(BaseModel):
-    iltId:int
-    meetingId:int
     description:Optional[str]=None
 
 class whiteboardDataInfo():
