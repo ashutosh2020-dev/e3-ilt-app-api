@@ -85,7 +85,7 @@ class IltMeetingService:
                 end_meeting_time = meeting_record.end_at if meeting_record.end_at else 0
                 status = calculate_meeting_status(
                     schedule_start_at, start_meeting_time, end_meeting_time)
-                note_taker_id = db.query(MdlIltMeetings).filter(MdlIltMeetings.ilt_meeting_id==mid).one_or_none().meeting_note_taker_id
+                note_taker_id = meeting_record.note_taker_id
 
                 val = {
                     "iltId": ilt_id,
@@ -132,6 +132,8 @@ class IltMeetingService:
             db_meeting.end_at = meetingEnd
         if location:
             db_meeting.location = location
+        if noteTakerId:
+            db_meeting.note_taker_id = noteTakerId
 
         db.add(db_meeting)
         db.commit()
@@ -148,9 +150,7 @@ class IltMeetingService:
 
         # update map table about new ilt and ilt_meeting's relationship
         db_ilt_meeting = MdlIltMeetings(
-            ilt_id=ilt_id, ilt_meeting_id=db_meeting.id, )
-        if noteTakerId:
-            db_ilt_meeting.meeting_note_taker_id = noteTakerId
+            ilt_id=ilt_id, ilt_meeting_id=db_meeting.id )
         db.add(db_ilt_meeting)
         db.commit()
         db.refresh(db_ilt_meeting)
@@ -180,10 +180,8 @@ class IltMeetingService:
         
         db_meeting.location = location
         db_meeting.schedule_start_at = scheduledStartDate
-
-        db_meeting_map = db.query(MdlIltMeetings).filter(MdlIltMeetings.ilt_meeting_id == meeting_id).one_or_none()
-        if db_meeting_map is not None:
-            db_meeting_map.meeting_note_taker_id = noteTakerId
+        if noteTakerId:
+            db_meeting.note_taker_id = noteTakerId
         db.commit()
         return {
             "statusCode": 200,
@@ -214,15 +212,12 @@ class IltMeetingService:
                     404,  "Meeting ID is not associated with ILT id")
             ilt_members_ids = []
             if ilt_record.owner_id == User_id or user.role_id==4:
-                # ilt_members_ids.extend([x.member_id for x in db.query(
-                #     MdlIltMembers).filter(MdlIltMembers.ilt_id == iltId).all()])
-                
                 user_ids = [userId for userId, in db.query(MdlIltMeetingResponses.meeting_user_id)\
                     .filter(MdlIltMeetingResponses.meeting_id == meeting_id).all()]
                 ilt_members_ids.extend(user_ids)
             else:
                 check_ilt_user_map_record = (db.query(MdlIltMembers)
-                                             .filter(MdlIltMembers.ilt_id == iltId, MdlIltMembers.member_id == User_id)
+                                             .filter(and_(MdlIltMembers.ilt_id == iltId, MdlIltMembers.member_id == User_id))
                                              .order_by(MdlIltMembers.id.asc())
                                              .one_or_none())
                 if check_ilt_user_map_record is None:
@@ -232,7 +227,7 @@ class IltMeetingService:
 
             members_Info_dict = []
             meeting_response_id = 0
-            noteTakerId = db_ilt_meeting_record.meeting_note_taker_id
+            noteTakerId = ilt_meeting_record.note_taker_id
             for uid in ilt_members_ids:
                 user_record = db.query(MdlUsers).filter(
                     MdlUsers.id == uid).one()

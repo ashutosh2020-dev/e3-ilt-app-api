@@ -77,7 +77,7 @@ class MdlMeetings(Base):
     schedule_start_at = Column(DateTime, nullable=False, default=None)
     start_at = Column(DateTime, nullable=True, default=None)
     end_at = Column(DateTime, nullable=True, default=None)
-
+    note_taker_id = Column(Integer, ForeignKey("users.id", name="fk_note_taker_id"), nullable=True, index=True, default=None)
 
 class MdlIltMeetings(Base):
     __tablename__ = "Ilt_meeting_maping"
@@ -85,7 +85,6 @@ class MdlIltMeetings(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     ilt_id = Column(Integer, ForeignKey("Ilts.id"), nullable=False, index=True)
     ilt_meeting_id = Column(Integer, ForeignKey("Ilt_meetings.id"), nullable=False, index=True)
-    meeting_note_taker_id = Column(Integer, ForeignKey("users.id"), nullable=True, index=True)
 
 
 class MdlIltWhiteBoard(Base):
