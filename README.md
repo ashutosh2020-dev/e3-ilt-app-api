@@ -26,7 +26,7 @@ app/
 </pre>
 
 ## RUN app locally
-
+- python -B -m uvicorn main:app --host 0.0.0.0 --port 80 
 - uvicorn main:app --host 0.0.0.0 --port 443 --ssl-keyfile certs/private.key --ssl-certfile certs/certificate.crt
 
 ### Run these two commands docker cmd in root dir/path

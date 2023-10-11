@@ -85,7 +85,7 @@ class IltMeetingService:
                 end_meeting_time = meeting_record.end_at if meeting_record.end_at else 0
                 status = calculate_meeting_status(
                     schedule_start_at, start_meeting_time, end_meeting_time)
-                note_taker_id = db.query(MdlIltMeetings).filter(MdlIltMeetings.ilt_meeting_id==mid).one_or_none().meeting_note_taker_id
+                note_taker_id = meeting_record.note_taker_id
 
                 val = {
                     "iltId": ilt_id,
@@ -132,6 +132,8 @@ class IltMeetingService:
             db_meeting.end_at = meetingEnd
         if location:
             db_meeting.location = location
+        if noteTakerId:
+            db_meeting.note_taker_id = noteTakerId
 
         db.add(db_meeting)
         db.commit()
@@ -148,9 +150,7 @@ class IltMeetingService:
 
         # update map table about new ilt and ilt_meeting's relationship
         db_ilt_meeting = MdlIltMeetings(
-            ilt_id=ilt_id, ilt_meeting_id=db_meeting.id, )
-        if noteTakerId:
-            db_ilt_meeting.meeting_note_taker_id = noteTakerId
+            ilt_id=ilt_id, ilt_meeting_id=db_meeting.id )
         db.add(db_ilt_meeting)
         db.commit()
         db.refresh(db_ilt_meeting)
@@ -180,10 +180,8 @@ class IltMeetingService:
         
         db_meeting.location = location
         db_meeting.schedule_start_at = scheduledStartDate
-        
-        db_meeting_map = db.query(MdlIltMeetings).filter(MdlIltMeetings.ilt_meeting_id == meeting_id).one_or_none()
-        if db_meeting_map is not None:
-            db_meeting_map.meeting_note_taker_id = noteTakerId
+        if noteTakerId:
+            db_meeting.note_taker_id = noteTakerId
         db.commit()
         return {
             "statusCode": 200,
@@ -214,15 +212,12 @@ class IltMeetingService:
                     404,  "Meeting ID is not associated with ILT id")
             ilt_members_ids = []
             if ilt_record.owner_id == User_id or user.role_id==4:
-                # ilt_members_ids.extend([x.member_id for x in db.query(
-                #     MdlIltMembers).filter(MdlIltMembers.ilt_id == iltId).all()])
-                
                 user_ids = [userId for userId, in db.query(MdlIltMeetingResponses.meeting_user_id)\
                     .filter(MdlIltMeetingResponses.meeting_id == meeting_id).all()]
                 ilt_members_ids.extend(user_ids)
             else:
                 check_ilt_user_map_record = (db.query(MdlIltMembers)
-                                             .filter(MdlIltMembers.ilt_id == iltId, MdlIltMembers.member_id == User_id)
+                                             .filter(and_(MdlIltMembers.ilt_id == iltId, MdlIltMembers.member_id == User_id))
                                              .order_by(MdlIltMembers.id.asc())
                                              .one_or_none())
                 if check_ilt_user_map_record is None:
@@ -232,7 +227,7 @@ class IltMeetingService:
 
             members_Info_dict = []
             meeting_response_id = 0
-            noteTakerId = db_ilt_meeting_record.meeting_note_taker_id
+            noteTakerId = ilt_meeting_record.note_taker_id
             for uid in ilt_members_ids:
                 user_record = db.query(MdlUsers).filter(
                     MdlUsers.id == uid).one()
@@ -432,12 +427,12 @@ class IltMeetingService:
             "confirmMessageID": "string",
             "statusCode": 200,
             "userMessage": "Meeting have successfully ended",
-            "data":{
-                "meetingId":meeting_id,
-                "pendingIssues":pending_issue_record_list,
-                "pendingToDo":pending_to_do_record_list,
-                "futureMeetings":future_meetings_list
-            }
+            # "data":{
+            #     "meetingId":meeting_id,
+            #     "pendingIssues":pending_issue_record_list,
+            #     "pendingToDo":pending_to_do_record_list,
+            #     "futureMeetings":future_meetings_list
+            # }
         }
         
     def pending_issue_todo(self, UserId: int, meeting_id: int, ilt_id: int, db: Session):
@@ -596,7 +591,7 @@ class IltMeetingService:
                 "userMessage": "meeting have successfully updated"
             }
 
-    def ilts_whiteboard_info(self, user_id:int, whiteboard:whiteboardData, db:Session):
+    def ilts_whiteboard_info(self, user_id: int, whiteboard:whiteboardDataInfo, db:Session):
         
         check_ilt_id = db.query(MdlIlts).filter(MdlIlts.id == whiteboard.iltId).one_or_none()
         if check_ilt_id is None:
@@ -632,25 +627,24 @@ class IltMeetingService:
         return  whiteboardDataInfoObj
 
 
-    def update_ilts_whiteboard(self, user_id:int, whiteboard:whiteboardData, db:Session):
+    def update_ilts_whiteboard(self, user_id:int, iltId:int, meetingId:int, whiteboard:whiteboardData, db:Session):
         
-        iltId = whiteboard.iltId
         check_ilt_id = db.query(MdlIlts).filter(MdlIlts.id == iltId).one_or_none()
-        check_meeting_re = db.query(MdlIltMeetings).filter(MdlIltMeetings.ilt_id==whiteboard.iltId,
-                                         MdlIltMeetings.ilt_meeting_id==whiteboard.meetingId).one_or_none()
+        check_meeting_re = db.query(MdlIltMeetings).filter(MdlIltMeetings.ilt_id==iltId,
+                                         MdlIltMeetings.ilt_meeting_id==meetingId).one_or_none()
         db_whiteB_re = db.query(MdlIltWhiteBoard).filter(MdlIltWhiteBoard.iltId == iltId).all()
         
-        check_meeting_status = db.query(MdlMeetings.end_at).filter(MdlMeetings.id==whiteboard.meetingId).one()
-        print(check_meeting_status)
+        check_meeting_status, = db.query(MdlMeetings.end_at).filter(MdlMeetings.id==meetingId).one()
         
         if check_ilt_id is None:
             raise CustomException(404,  "Ilt not found")   
         if check_meeting_re is None:
-            raise CustomException(404,  "This meeting is associated with Ilt") 
-          
+            raise CustomException(404,  "This meeting is not associated with Ilt") 
+        if check_meeting_status is not None:
+            raise CustomException(404,  "This meeting has been ended, we can not update it") 
         if not db_whiteB_re:
             # create white board
-            db_whiteB = MdlIltWhiteBoard(description=whiteboard.description, iltId=whiteboard.iltId)
+            db_whiteB = MdlIltWhiteBoard(description=whiteboard.description, iltId=iltId)
             db.add(db_whiteB)
         else:
             # update

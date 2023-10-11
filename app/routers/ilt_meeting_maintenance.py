@@ -28,7 +28,7 @@ def create_ilt_meeting(id: int, ilt: MeetingData, UserId: int = Header(convert_u
                                                  scheduledStartDate=ilt.scheduledStartDate,
                                                  meetingStart=0,
                                                  meetingEnd=0,
-                                                 noteTakerId = ilt.note_taker_id,
+                                                 noteTakerId = ilt.noteTakerId,
                                                  location=ilt.location,
                                                  db=db)
 
@@ -48,7 +48,7 @@ def update_ilt_meeting(meetingId: int,
                                                 UserId=UserId,
                                                 location=iltMeeting.location,
                                                 scheduledStartDate=iltMeeting.scheduledStartDate,
-                                                noteTakerId= iltMeeting.note_taker_id,
+                                                noteTakerId= iltMeeting.noteTakerId,
                                                 db=db)
 
 
@@ -115,13 +115,15 @@ def assign_ilt_rocks_to_user(rock: rockData_map,
                                                        db=db)
 
 @router.get("/api/v1/ilts/{iltId}/meeting/{meetingId}/whiteboard")
-def ilts_whiteboard_info(iltId:int, meetingId:int, user_id:int=Header(convert_underscores=False), db: Session = Depends(get_db)):
-    return IltMeetingService.ilts_whiteboard_info(user_id=user_id,
+def ilts_whiteboard_info(iltId:int, meetingId:int, UserId:int=Header(convert_underscores=False), db: Session = Depends(get_db)):
+    return IltMeetingService.ilts_whiteboard_info(user_id=UserId,
                                                     whiteboard=whiteboardDataInfo(iltId= iltId, meetingId= meetingId),
                                                     db=db)
 
-@router.post("/api/v1/ilts/meeting/update/whiteboard")
-def update_ilts_whiteboard(whiteboard:whiteboardData, user_id:int=Header(convert_underscores=False), db: Session = Depends(get_db)):
-    return IltMeetingService.update_ilts_whiteboard(user_id=user_id,
+@router.post("/api/v1/ilts/{iltId}/meeting/{meetingId}/whiteboard")
+def update_ilts_whiteboard(iltId:int, meetingId:int, whiteboard:whiteboardData, UserId:int=Header(convert_underscores=False), db: Session = Depends(get_db)):
+    return IltMeetingService.update_ilts_whiteboard(user_id=UserId,
+                                                    iltId =iltId,
+                                                    meetingId =meetingId, 
                                                     whiteboard=whiteboard,
                                                     db=db)

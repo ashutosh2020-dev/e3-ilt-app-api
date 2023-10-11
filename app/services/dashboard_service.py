@@ -436,7 +436,7 @@ class DashboardService:
         return {
             "id": ilt_id, 
             "numOfMembersInIlt": num_of_current_member_in_ilt,
-            "meetings": list_of_meeting_obj
+            "meetings": list_of_meeting_obj[0]
         }
     
     def get_detailed_dashboard_info(self, user_id: int, db: Session, FilterParamaters:DashboardFilterParamaters=DashboardFilterParamaters() ): # school_id:list, distict_id:list,

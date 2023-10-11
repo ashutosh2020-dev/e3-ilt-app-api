@@ -8,6 +8,9 @@ DATABASE_URL = "sqlite:///ilt_db.db"
 # query = """ ALTER TABLE ilt_to_do_task ADD parent_to_do_id INT NULL DEFAULT NULL;"""
 # query = """ ALTER TABLE Ilt_to_do_task ADD created_at DATETIME NULL; """
 # query = """ CREATE TABLE Ilt_whiteboard (id INT AUTO_INCREMENT PRIMARY KEY,description LONGTEXT,iltId INT NOT NULL,FOREIGN KEY (iltId) REFERENCES Ilts(id));"""
+# query = """ ALTER TABLE Ilt_meetings ADD CONSTRAINT fk_note_taker_id FOREIGN KEY (note_taker_id) REFERENCES users(id);"""
+# query = """ ALTER TABLE Ilt_meetings ADD COLUMN note_taker_id INT NULL DEFAULT NULL;"""
+
 
 query = """
        ALTER TABLE issue ADD issue_resolve_date DATETIME NULL;
