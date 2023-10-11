@@ -99,7 +99,7 @@ class MdlIltMeetingWhiteBoard(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     description = Column(Text, nullable=True)
     meetingId =  Column(Integer, ForeignKey("Ilt_meetings.id"), nullable=False, index=True)
-    # iltId = Column(Integer, ForeignKey("Ilts.id"), nullable=False, index=True)
+    
 
 class MdlMeetingsResponse(Base):
     __tablename__ = "meeting_response"

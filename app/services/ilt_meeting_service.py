@@ -640,14 +640,13 @@ class IltMeetingService:
         db_whiteB_re = db.query(MdlIltWhiteBoard).filter(MdlIltWhiteBoard.iltId == iltId).all()
         
         check_meeting_status, = db.query(MdlMeetings.end_at).filter(MdlMeetings.id==meetingId).one()
-        print(check_meeting_status)
         
         if check_ilt_id is None:
             raise CustomException(404,  "Ilt not found")   
         if check_meeting_re is None:
             raise CustomException(404,  "This meeting is not associated with Ilt") 
         if check_meeting_status is not None:
-            raise CustomException(404,  "This meeting is ended, we can not update it") 
+            raise CustomException(404,  "This meeting has been ended, we can not update it") 
         if not db_whiteB_re:
             # create white board
             db_whiteB = MdlIltWhiteBoard(description=whiteboard.description, iltId=iltId)

@@ -7,7 +7,7 @@ class MeetingData(BaseModel):
     meetingStart: Optional[datetime]=None
     meetingEnd: Optional[datetime]=None
     location: Optional[str]=None
-    note_taker_id: Optional[int]=None
+    noteTakerId: Optional[int]=None
 
 class rockData(BaseModel):
     iltId:int

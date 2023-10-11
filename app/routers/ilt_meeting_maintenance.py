@@ -28,7 +28,7 @@ def create_ilt_meeting(id: int, ilt: MeetingData, UserId: int = Header(convert_u
                                                  scheduledStartDate=ilt.scheduledStartDate,
                                                  meetingStart=0,
                                                  meetingEnd=0,
-                                                 noteTakerId = ilt.note_taker_id,
+                                                 noteTakerId = ilt.noteTakerId,
                                                  location=ilt.location,
                                                  db=db)
 
@@ -48,7 +48,7 @@ def update_ilt_meeting(meetingId: int,
                                                 UserId=UserId,
                                                 location=iltMeeting.location,
                                                 scheduledStartDate=iltMeeting.scheduledStartDate,
-                                                noteTakerId= iltMeeting.note_taker_id,
+                                                noteTakerId= iltMeeting.noteTakerId,
                                                 db=db)
 
 
