@@ -56,7 +56,8 @@ class IltMeetingService:
                                     "meetingEnd": (meeting_record.end_at 
                                     if meeting_record.end_at else meeting_record.end_at),
                                     "location": meeting_record.location,
-                                    "meetingStatus": status
+                                    "meetingStatus": status,
+                                    "noteTakerId":meeting_record.note_taker_id
                                     })
             return ilt_list
         else:
@@ -272,7 +273,7 @@ class IltMeetingService:
                 user_issues_record = [db.query(Mdl_issue)
                                       .filter(Mdl_issue.id == record.issue_id).one_or_none() for record in issue_record]  \
                     if issue_record else []
-                isRepeat = False
+                isRepeated = False
                 members_Info_dict.append(
                     {
                         "iltMeetingResponseId": meeting_response_id,
@@ -309,7 +310,7 @@ class IltMeetingService:
                             "numberOfdaysIssueDelay":  (user_issues_single_record.issue_resolve_date - user_issues_single_record.created_at).days
                                                         if user_issues_single_record.resolves_flag == True 
                                                         else  (user_issues_single_record.due_date - datetime.utcnow()).days, 
-                            "isRepeat":isRepeat
+                            "isRepeated": isRepeated
                         } for user_issues_single_record in user_issues_record]
                         if user_issues_record else []
                     }
