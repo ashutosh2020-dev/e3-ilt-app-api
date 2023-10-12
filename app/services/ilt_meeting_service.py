@@ -211,7 +211,7 @@ class IltMeetingService:
                 raise CustomException(
                     404,  "Meeting ID is not associated with ILT id")
             ilt_members_ids = []
-            if ilt_record.owner_id == User_id or user.role_id==4:
+            if ilt_record.owner_id == User_id or user.role_id==4 or ilt_meeting_record.note_taker_id==User_id:
                 user_ids = [userId for userId, in db.query(MdlIltMeetingResponses.meeting_user_id)\
                     .filter(MdlIltMeetingResponses.meeting_id == meeting_id).all()]
                 ilt_members_ids.extend(user_ids)
@@ -277,7 +277,7 @@ class IltMeetingService:
                     {
                         "iltMeetingResponseId": meeting_response_id,
                         "iltMeetingId": meeting_id,
-                        "meetingNoteTakerId":noteTakerId,
+                        "noteTakerId":noteTakerId,
                         "member": {
                             "userId": user_record.id,
                             "firstName": user_record.fname,
