@@ -320,8 +320,16 @@ class IltMeetingResponceService:
             raise CustomException(400,  f" userId is not valid")
         if db.query(MdlMeetingsResponse).filter(MdlMeetingsResponse.id == meetingResponseId).one_or_none() is None:
             raise CustomException(400,  f" meetingResponseId is not valid")
-
+        
         if id > 0:
+            meeting_id,  = db.query(MdlIltMeetingResponses.meeting_id).filter(MdlIltMeetingResponses.meeting_response_id==meetingResponseId).one()
+            meeting_re = db.query(MdlMeetings).filter(MdlMeetings.id==meeting_id).one_or_none()
+            if meeting_re.start_at and meeting_re.end_at is None:
+                iltId, = db.query(MdlIltMeetings.ilt_id).filter(MdlIltMeetings.ilt_meeting_id==meeting_id).one_or_none()
+                ownerId, = db.query(MdlIlts.owner_id).filter(MdlIlts.id==iltId).one_or_none()
+                if user_id != meeting_re.note_taker_id or user_id != ownerId:
+                    raise CustomException(404,  "Only Ilt owner and Note Taker can edit the data.")
+                
             user_todo_record = (db.query(MdlIlt_ToDoTask)
                                 .filter(MdlIlt_ToDoTask.meeting_response_id == meetingResponseId,
                                         MdlIlt_ToDoTask.id == id)
@@ -366,6 +374,14 @@ class IltMeetingResponceService:
             if db.query(MdlMeetingsResponse).filter(MdlMeetingsResponse.id == meetingResponseId).one_or_none() is None:
                 raise CustomException(400,  f" meetingResponseId is not valid")
             if id > 0:
+                meeting_id,  = db.query(MdlIltMeetingResponses.meeting_id).filter(MdlIltMeetingResponses.meeting_response_id==meetingResponseId).one()
+                meeting_re = db.query(MdlMeetings).filter(MdlMeetings.id==meeting_id).one_or_none()
+                if meeting_re.start_at and meeting_re.end_at is None:
+                    iltId, = db.query(MdlIltMeetings.ilt_id).filter(MdlIltMeetings.ilt_meeting_id==meeting_id).one_or_none()
+                    ownerId, = db.query(MdlIlts.owner_id).filter(MdlIlts.id==iltId).one_or_none()
+                    if user_id != meeting_re.note_taker_id or user_id != ownerId:
+                        raise CustomException(404,  "Only Ilt owner and Note Taker can edit the data.")
+                    
                 user_update_record = (db.query(Mdl_updates)
                                       .filter(Mdl_updates.meeting_response_id == meetingResponseId,
                                               Mdl_updates.id == id)
@@ -420,6 +436,14 @@ class IltMeetingResponceService:
             raise CustomException(404,  "responce_id not found")
 
         if id:
+            meeting_id,  = db.query(MdlIltMeetingResponses.meeting_id).filter(MdlIltMeetingResponses.meeting_response_id==meetingResponseId).one()
+            meeting_re = db.query(MdlMeetings).filter(MdlMeetings.id==meeting_id).one_or_none()
+            if meeting_re.start_at and meeting_re.end_at is None:
+                iltId, = db.query(MdlIltMeetings.ilt_id).filter(MdlIltMeetings.ilt_meeting_id==meeting_id).one_or_none()
+                ownerId, = db.query(MdlIlts.owner_id).filter(MdlIlts.id==iltId).one_or_none()
+                if user_id != meeting_re.note_taker_id or user_id != ownerId:
+                    raise CustomException(404,  "Only Ilt owner and Note Taker can edit the data.")
+                
             issue_map_re = (db.query(MdlIltissue)
                             .filter(and_(MdlIltissue.meeting_response_id == meetingResponseId,
                                     MdlIltissue.issue_id == id))
@@ -506,11 +530,15 @@ class IltMeetingResponceService:
         """
         try:
             try:
+                notUse = True
+                if notUse:
+                    raise CustomException(404,  "Not in use")
                 meetingResponse = db.query(MdlMeetingsResponse).filter(
                     MdlMeetingsResponse.id == data.iltMeetingResponseId).one_or_none()
                 if meetingResponse is None:
                     raise CustomException(
                         404,  "MeetingsResponse record did not found")
+                
                 # checking - is meeting stated
                 ilt_meeting_record = (db.query(MdlMeetings)
                                       .filter(MdlMeetings.id == data.iltMeetingId).one_or_none())
@@ -642,6 +670,13 @@ class IltMeetingResponceService:
         if user_meetingResponse_record is None:
             raise CustomException(
                 404,  "MeetingsResponse record did not found")
+        meeting_id,  = db.query(MdlIltMeetingResponses.meeting_id).filter(MdlIltMeetingResponses.meeting_response_id==meetingResponseId).one()
+        meeting_re = db.query(MdlMeetings).filter(MdlMeetings.id==meeting_id).one_or_none()
+        if meeting_re.start_at and meeting_re.end_at is None:
+            iltId, = db.query(MdlIltMeetings.ilt_id).filter(MdlIltMeetings.ilt_meeting_id==meeting_id).one_or_none()
+            ownerId, = db.query(MdlIlts.owner_id).filter(MdlIlts.id==iltId).one_or_none()
+            if user_id != meeting_re.note_taker_id or user_id != ownerId:
+                raise CustomException(404,  "Only Ilt owner and Note Taker can edit the data.")
 
         if name:
             user_meetingResponse_record.rockName = name
@@ -676,8 +711,14 @@ class IltMeetingResponceService:
             raise CustomException(
                 404,  "MeetingsResponse record did not found")
 
-        # user_meetingResponse_record = db.query(MdlMeetingsResponse)\
-        #                                         .filter(MdlMeetingsResponse.id==meetingResponseId).one()
+        meeting_id,  = db.query(MdlIltMeetingResponses.meeting_id).filter(MdlIltMeetingResponses.meeting_response_id==meetingResponseId).one()
+        meeting_re = db.query(MdlMeetings).filter(MdlMeetings.id==meeting_id).one_or_none()
+        if meeting_re.start_at and meeting_re.end_at is None:
+            iltId, = db.query(MdlIltMeetings.ilt_id).filter(MdlIltMeetings.ilt_meeting_id==meeting_id).one_or_none()
+            ownerId, = db.query(MdlIlts.owner_id).filter(MdlIlts.id==iltId).one_or_none()
+            if user_id != meeting_re.note_taker_id or user_id != ownerId:
+                raise CustomException(404,  "Only Ilt owner and Note Taker can edit the data.")
+        
         if personalBest:
             user_meetingResponse_record.checkin_personal_best = personalBest
         if professionalBest:
@@ -709,7 +750,14 @@ class IltMeetingResponceService:
         if user_meetingResponse_record is None:
             raise CustomException(
                 404,  "MeetingsResponse record did not found")
-
+        meeting_id,  = db.query(MdlIltMeetingResponses.meeting_id).filter(MdlIltMeetingResponses.meeting_response_id==meetingResponseId).one()
+        meeting_re = db.query(MdlMeetings).filter(MdlMeetings.id==meeting_id).one_or_none()
+        if meeting_re.start_at and meeting_re.end_at is None:
+            iltId, = db.query(MdlIltMeetings.ilt_id).filter(MdlIltMeetings.ilt_meeting_id==meeting_id).one_or_none()
+            ownerId, = db.query(MdlIlts.owner_id).filter(MdlIlts.id==iltId).one_or_none()
+            if user_id != meeting_re.note_taker_id or user_id != ownerId:
+                raise CustomException(404,  "Only Ilt owner and Note Taker can edit the data.")
+            
         user_meetingResponse_record.attendance_flag = True
         if rating:
             user_meetingResponse_record.rating = rating
