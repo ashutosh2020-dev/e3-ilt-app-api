@@ -170,17 +170,19 @@ class IltMeetingService:
         if check_ilt_meeting_record is None:
             raise CustomException(
                 404,  "Meeting ID is not associated with ILT id")
-        if scheduledStartDate < datetime.utcnow():
-            raise CustomException(
-                400,  "please enter correct date, dates must be greater than currect data")
+        if scheduledStartDate:
+            if scheduledStartDate < datetime.utcnow():
+                raise CustomException(
+                    400,  "please enter correct date, dates must be greater than currect data")
 
         db_meeting = db.query(MdlMeetings).filter(
             MdlMeetings.id == meeting_id).one_or_none()
         if db_meeting is None:
             raise CustomException(404,  "meeting records not found")
-        
-        db_meeting.location = location
-        db_meeting.schedule_start_at = scheduledStartDate
+        if location:
+            db_meeting.location = location
+        if scheduledStartDate:
+            db_meeting.schedule_start_at = scheduledStartDate
         if noteTakerId:
             db_meeting.note_taker_id = noteTakerId
         db.commit()
