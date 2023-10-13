@@ -3,7 +3,7 @@ from typing import List, Optional
 from datetime import datetime
 
 class MeetingData(BaseModel):
-    scheduledStartDate: datetime
+    scheduledStartDate: Optional[datetime]=None
     meetingStart: Optional[datetime]=None
     meetingEnd: Optional[datetime]=None
     location: Optional[str]=None

@@ -56,7 +56,8 @@ class IltMeetingService:
                                     "meetingEnd": (meeting_record.end_at 
                                     if meeting_record.end_at else meeting_record.end_at),
                                     "location": meeting_record.location,
-                                    "meetingStatus": status
+                                    "meetingStatus": status,
+                                    "noteTakerId":meeting_record.note_taker_id
                                     })
             return ilt_list
         else:
@@ -169,17 +170,19 @@ class IltMeetingService:
         if check_ilt_meeting_record is None:
             raise CustomException(
                 404,  "Meeting ID is not associated with ILT id")
-        if scheduledStartDate < datetime.utcnow():
-            raise CustomException(
-                400,  "please enter correct date, dates must be greater than currect data")
+        if scheduledStartDate:
+            if scheduledStartDate < datetime.utcnow():
+                raise CustomException(
+                    400,  "please enter correct date, dates must be greater than currect data")
 
         db_meeting = db.query(MdlMeetings).filter(
             MdlMeetings.id == meeting_id).one_or_none()
         if db_meeting is None:
             raise CustomException(404,  "meeting records not found")
-        
-        db_meeting.location = location
-        db_meeting.schedule_start_at = scheduledStartDate
+        if location:
+            db_meeting.location = location
+        if scheduledStartDate:
+            db_meeting.schedule_start_at = scheduledStartDate
         if noteTakerId:
             db_meeting.note_taker_id = noteTakerId
         db.commit()
@@ -211,7 +214,7 @@ class IltMeetingService:
                 raise CustomException(
                     404,  "Meeting ID is not associated with ILT id")
             ilt_members_ids = []
-            if ilt_record.owner_id == User_id or user.role_id==4:
+            if ilt_record.owner_id == User_id or user.role_id==4 or ilt_meeting_record.note_taker_id==User_id:
                 user_ids = [userId for userId, in db.query(MdlIltMeetingResponses.meeting_user_id)\
                     .filter(MdlIltMeetingResponses.meeting_id == meeting_id).all()]
                 ilt_members_ids.extend(user_ids)
@@ -228,6 +231,7 @@ class IltMeetingService:
             members_Info_dict = []
             meeting_response_id = 0
             noteTakerId = ilt_meeting_record.note_taker_id
+            
             for uid in ilt_members_ids:
                 user_record = db.query(MdlUsers).filter(
                     MdlUsers.id == uid).one()
@@ -237,9 +241,8 @@ class IltMeetingService:
 
                 if meeting_response_row is None:
                     continue
-                else:
-                    meeting_response_id = meeting_response_row.meeting_response_id
-
+                
+                meeting_response_id = meeting_response_row.meeting_response_id
                 meeting_response_record = db.query(MdlMeetingsResponse)\
                     .filter(MdlMeetingsResponse.id == meeting_response_id).one()
 
@@ -272,12 +275,18 @@ class IltMeetingService:
                 user_issues_record = [db.query(Mdl_issue)
                                       .filter(Mdl_issue.id == record.issue_id).one_or_none() for record in issue_record]  \
                     if issue_record else []
+                isRepeated = False
 
+                # print("---",meeting_response_id, [(user_issues_single_record.created_at,
+                #                                    user_issues_single_record.issue_resolve_date,
+                #                                    user_issues_single_record.resolves_flag,
+                #                                     user_issues_single_record.due_date - datetime.utcnow()) 
+                #                                   for user_issues_single_record in user_issues_record])
                 members_Info_dict.append(
                     {
                         "iltMeetingResponseId": meeting_response_id,
                         "iltMeetingId": meeting_id,
-                        "meetingNoteTakerId":noteTakerId,
+                        "noteTakerId":noteTakerId,
                         "member": {
                             "userId": user_record.id,
                             "firstName": user_record.fname,
@@ -307,8 +316,9 @@ class IltMeetingService:
                             "advanceEqualityFlag": user_issues_single_record.advance_equality_flag,
                             "othersFlag": user_issues_single_record.others_flag,
                             "numberOfdaysIssueDelay":  (user_issues_single_record.issue_resolve_date - user_issues_single_record.created_at).days
-                                                        if user_issues_single_record.resolves_flag == True 
-                                                        else  (user_issues_single_record.due_date - datetime.utcnow()).days 
+                                                        if (user_issues_single_record.resolves_flag == True and user_issues_single_record.issue_resolve_date)
+                                                        else  (user_issues_single_record.due_date - datetime.utcnow()).days, 
+                            "isRepeated": isRepeated
                         } for user_issues_single_record in user_issues_record]
                         if user_issues_record else []
                     }
