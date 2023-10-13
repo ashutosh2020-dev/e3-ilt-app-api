@@ -20,8 +20,8 @@ class IssuesData:
 
 class SummaryData:
     def __init__(self):
-        self.schoolId=0
-        self.schoolName = ""
+        self.id=0
+        self.name = ""
         self.numOfEndMeeting = 0
         self.numOfNotStartedMeeting = 0
         self.numOfInprogressMeeting = 0 
@@ -33,7 +33,8 @@ class SummaryData:
         self.issues = IssuesData()
 
 class DashboardFilterParamaters(BaseModel):
-    school_id :List[int] =[]
-    distict_id :List[int] =[]
+    schoolId : Optional[List[int]] =[]
+    distictId : Optional[List[int]] =[]
+    districtAggregateFlag: bool=False
     startDate:datetime = datetime(datetime.now().year,8,1)
     endDate:datetime = datetime(datetime.now().year+1,6,30)

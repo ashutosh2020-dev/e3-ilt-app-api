@@ -465,6 +465,7 @@ class IltMeetingResponceService:
                                     priority=priority,
                                     created_at=datetime.utcnow(),
                                     due_date= due_date, 
+                                    issue_resolve_date = datetime.utcnow() if resolves_flag==True else None,
                                     resolves_flag=resolves_flag,
                                     recognize_performance_flag=recognize_performance_flag,
                                     teacher_support_flag=teacher_support_flag,

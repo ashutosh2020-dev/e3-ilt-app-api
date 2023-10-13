@@ -231,6 +231,7 @@ class IltMeetingService:
             members_Info_dict = []
             meeting_response_id = 0
             noteTakerId = ilt_meeting_record.note_taker_id
+            
             for uid in ilt_members_ids:
                 user_record = db.query(MdlUsers).filter(
                     MdlUsers.id == uid).one()
@@ -240,9 +241,8 @@ class IltMeetingService:
 
                 if meeting_response_row is None:
                     continue
-                else:
-                    meeting_response_id = meeting_response_row.meeting_response_id
-
+                
+                meeting_response_id = meeting_response_row.meeting_response_id
                 meeting_response_record = db.query(MdlMeetingsResponse)\
                     .filter(MdlMeetingsResponse.id == meeting_response_id).one()
 
@@ -276,6 +276,12 @@ class IltMeetingService:
                                       .filter(Mdl_issue.id == record.issue_id).one_or_none() for record in issue_record]  \
                     if issue_record else []
                 isRepeated = False
+
+                # print("---",meeting_response_id, [(user_issues_single_record.created_at,
+                #                                    user_issues_single_record.issue_resolve_date,
+                #                                    user_issues_single_record.resolves_flag,
+                #                                     user_issues_single_record.due_date - datetime.utcnow()) 
+                #                                   for user_issues_single_record in user_issues_record])
                 members_Info_dict.append(
                     {
                         "iltMeetingResponseId": meeting_response_id,
@@ -310,7 +316,7 @@ class IltMeetingService:
                             "advanceEqualityFlag": user_issues_single_record.advance_equality_flag,
                             "othersFlag": user_issues_single_record.others_flag,
                             "numberOfdaysIssueDelay":  (user_issues_single_record.issue_resolve_date - user_issues_single_record.created_at).days
-                                                        if user_issues_single_record.resolves_flag == True 
+                                                        if (user_issues_single_record.resolves_flag == True and user_issues_single_record.issue_resolve_date)
                                                         else  (user_issues_single_record.due_date - datetime.utcnow()).days, 
                             "isRepeated": isRepeated
                         } for user_issues_single_record in user_issues_record]

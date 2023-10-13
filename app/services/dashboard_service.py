@@ -2,7 +2,7 @@ from sqlalchemy import and_
 from sqlalchemy.orm import Session
 from app.models import MdlUsers, MdlIltMeetings, MdlMeetings, MdlMeeting_rocks,\
     MdlIltMembers, MdlIltMeetingResponses, MdlMeetingsResponse, MdlIltissue,\
-    Mdl_issue, MdlIlt_ToDoTask, MdlIlts, MdlSchools
+    Mdl_issue, MdlIlt_ToDoTask, MdlIlts, MdlSchools, MdlDistrictMember, MdlDistrict
 from app.schemas.dashboard_schemas import SummaryData, PercentageData, DashboardFilterParamaters
 from datetime import datetime, timezone
 from app.exceptions.customException import CustomException
@@ -35,22 +35,40 @@ def get_associated_schoolId_wrt_role(user_id:int, role_id:int, FilterParamaters:
         user_id_list = [user_id,]
         list_ilts = []
         list_of_school_id = []
-        if FilterParamaters:
-            if FilterParamaters.distict_id or FilterParamaters.school_id:
-                if role_id<4:
-                    raise CustomException(404,  "This User is not allowed to perform this action")
-                if FilterParamaters.distict_id:
-                    list_of_school_id.extend([id for id, in db.query(MdlSchools.id).filter(MdlSchools.district.in_(FilterParamaters.distict_id)).distinct()])
-                if FilterParamaters.school_id:
-                    list_of_school_id.extend(FilterParamaters.school_id)
 
-                return list_of_school_id
+        if FilterParamaters.distictId or FilterParamaters.schoolId:
+            if role_id<4:
+                raise CustomException(404,  "Only Director is allowed to see filter info.")
+            if  FilterParamaters.districtAggregateFlag ==True:
+                if FilterParamaters.distictId:
+                    for d_id in FilterParamaters.distict_id:
+                        list_of_school_in_d_id = [id for id, in db.query(MdlSchools.id)
+                                                    .filter(MdlSchools.district==d_id)
+                                                    .distinct()
+                                                    ]
+                        list_of_school_id.append(list_of_school_in_d_id)
+
+                        
+                if FilterParamaters.schoolId:
+                    raise CustomException(404,  "School ids are not allowed if districtAggregateFlag is True")
+            else:
+                if FilterParamaters.distictId:
+                    schools_ids = [[id] for id, in db.query(MdlSchools.id)
+                                                    .filter(MdlSchools.district.in_(FilterParamaters.distict_id))
+                                                    .distinct()
+                                                    ]
+                    list_of_school_id.extend(schools_ids)
+
+                if FilterParamaters.schoolId:
+                    list_of_school_id.extend([FilterParamaters.school_id])
+
+            return list_of_school_id
 
         # for ilt
         if role_id==3:
             # extend child facilitator
-            user_id_list.extend([u_re.id
-                                 for u_re in db.query(MdlUsers).filter(MdlUsers.parent_user_id == user_id).all()])
+            user_id_list.extend([id
+                                 for id, in db.query(MdlUsers.id).filter(MdlUsers.parent_user_id == user_id).all()])
             # remove duplicates
             user_id_list = list(set(user_id_list))
             # get all ilt where user_id is member
@@ -59,19 +77,30 @@ def get_associated_schoolId_wrt_role(user_id:int, role_id:int, FilterParamaters:
             for  uid in user_id_list:
                 list_ilts.extend([record.id for record in db.query(
                     MdlIlts).filter(MdlIlts.owner_id == uid).all()])
-            unique_school_ids = [id for id, in db.query(MdlIlts.school_id)
+            unique_school_ids = [[id] for id, in db.query(MdlIlts.school_id)
                                  .filter(MdlIlts.id.in_(list_ilts))
                                  .distinct()
                                  ]
             list_of_school_id.extend(unique_school_ids)
 
         elif role_id==4:
-            unique_school_ids = [id for id, in db.query(MdlIlts.school_id).distinct()]
-            list_of_school_id.extend(unique_school_ids)
+            if  FilterParamaters.districtAggregateFlag ==True:
+                district_ids = [district_id for district_id, in db.query(MdlDistrictMember.district_id).filter(MdlDistrictMember.user_id==user_id).distinct()]
+                for d_id in district_ids:
+                        list_of_school_in_d_id = [id for id, in db.query(MdlSchools.id)
+                                                    .filter(MdlSchools.district==d_id)
+                                                    .distinct()
+                                                    ]
+                        list_of_school_id.append(list_of_school_in_d_id)
+
+            else:
+                district_ids = [district_id for district_id, in db.query(MdlDistrictMember.district_id).filter(MdlDistrictMember.user_id==user_id).all()]            
+                unique_school_ids = [[id] for id, in db.query(MdlSchools.id).filter(MdlSchools.district.in_(district_ids)).distinct()]
+                list_of_school_id.extend(unique_school_ids)
 
         return list_of_school_id
 
-
+ 
 class DashboardService:
     def get_ilt_Meetings_dashboard_info(self, user_id: int, ilt_id: int, db: Session):
         # check user
@@ -450,10 +479,9 @@ class DashboardService:
         total_num_of_ended_meeting = 0
         total_num_of_notStarted_meeting = 0
         total_num_of_inprogress_meeting = 0
-        list_of_school_Summary = []
+        list_of_Summary = []
         list_of_schoolId = get_associated_schoolId_wrt_role(user_id= user_id, role_id = user_record.role_id, 
                                                             FilterParamaters=FilterParamaters, db=db)
-
         for s_id in list_of_schoolId:
             num_of_ended_meeting = 0
             num_of_notStarted_meeting = 0
@@ -464,9 +492,9 @@ class DashboardService:
             list_of_ended_meeting_ids = []
             list_of_ilt = []
             SummaryDataObj = SummaryData()
-
-         #  1. fetch all ilt_id based on school id
-            list_of_ilt = [re.id for re in  db.query(MdlIlts).filter(MdlIlts.school_id==s_id).all()]
+        
+        #  1. fetch all ilt_id based on school id or ids  note : for district_aggregate_info s_id is list_of_school_ids
+            list_of_ilt = [id for id, in  db.query(MdlIlts.id).filter(MdlIlts.school_id.in_(s_id)).all()]
         #   2. get all meeting's records within the school 
             subquery = (db.query(MdlMeetings)
                                     .join(MdlIltMeetings, MdlMeetings.id == MdlIltMeetings.ilt_meeting_id)
@@ -615,10 +643,17 @@ class DashboardService:
                 SummaryDataObj.numOfEndMeeting = len(list_of_ended_meeting_ids)
                 SummaryDataObj.numOfInprogressMeeting = num_of_inprogress_meeting
                 SummaryDataObj.numOfNotStartedMeeting = num_of_notStarted_meeting
+                
                 SummaryDataObj.numOfMembers = db.query(MdlIltMembers).filter(MdlIltMembers.ilt_id.in_(list_of_ilt)).count()
-                school_re = db.query(MdlSchools).filter(MdlSchools.id == s_id).one()
-                SummaryDataObj.schoolName = school_re.name
-                SummaryDataObj.schoolId = school_re.id
+                if FilterParamaters.districtAggregateFlag ==True:
+                   dis_id, = db.query(MdlSchools.district).filter(MdlSchools.id == s_id[0]).one()   
+                   SummaryDataObj.id = dis_id
+                   SummaryDataObj.name, = db.query(MdlDistrict.name).filter(MdlDistrict.id==dis_id).one()
+                   
+                else:
+                    school_re = db.query(MdlSchools).filter(MdlSchools.id == s_id).one()
+                    SummaryDataObj.name = school_re.name
+                    SummaryDataObj.id = school_re.id
 
                 for key, value in vars(SummaryDataObj).items():
                         if key in ["attendancePercentage", "rockOnTrack", "avgRatings", "avgtoDo", "issues"]:
@@ -630,12 +665,17 @@ class DashboardService:
                             else:
                                 setattr(SummaryDataObj, key, PercentageData(round(value.percentage/value.total, 2) if value.total > 0 else 0, value.total))
 
-                list_of_school_Summary.append(SummaryDataObj)
-        
-        return {
+                list_of_Summary.append(SummaryDataObj)
+        final_val = {
             "totalNumOfEndMeeting": total_num_of_ended_meeting,
             "totalNumOfNotStartedMeeting": total_num_of_notStarted_meeting,
             "totalNumOfInprogressMeeting": total_num_of_inprogress_meeting,
-            "schools": list_of_school_Summary
         }
+
+        if  FilterParamaters.districtAggregateFlag ==True:
+            final_val["districts"] = list_of_Summary
+        else:
+            final_val["schools"] = list_of_Summary
+
+        return final_val
 
