@@ -41,7 +41,7 @@ def get_associated_schoolId_wrt_role(user_id:int, role_id:int, FilterParamaters:
                 raise CustomException(404,  "Only Director is allowed to see filter info.")
             if  FilterParamaters.districtAggregateFlag ==True:
                 if FilterParamaters.distictId:
-                    for d_id in FilterParamaters.distict_id:
+                    for d_id in FilterParamaters.distictId:
                         list_of_school_in_d_id = [id for id, in db.query(MdlSchools.id)
                                                     .filter(MdlSchools.district==d_id)
                                                     .distinct()
@@ -54,7 +54,7 @@ def get_associated_schoolId_wrt_role(user_id:int, role_id:int, FilterParamaters:
             else:
                 if FilterParamaters.distictId:
                     schools_ids = [[id] for id, in db.query(MdlSchools.id)
-                                                    .filter(MdlSchools.district.in_(FilterParamaters.distict_id))
+                                                    .filter(MdlSchools.district.in_(FilterParamaters.distictId))
                                                     .distinct()
                                                     ]
                     list_of_school_id.extend(schools_ids)
