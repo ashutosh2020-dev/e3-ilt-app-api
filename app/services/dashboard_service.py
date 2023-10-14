@@ -60,7 +60,7 @@ def get_associated_schoolId_wrt_role(user_id:int, role_id:int, FilterParamaters:
                     list_of_school_id.extend(schools_ids)
 
                 if FilterParamaters.schoolId:
-                    list_of_school_id.extend([FilterParamaters.school_id])
+                    list_of_school_id.extend([FilterParamaters.schoolId])
 
             return list_of_school_id
 
