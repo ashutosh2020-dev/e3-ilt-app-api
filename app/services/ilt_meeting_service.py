@@ -337,14 +337,14 @@ class IltMeetingService:
         db_meeting = db.query(MdlMeetings).filter(
             MdlMeetings.id == meeting_id).one_or_none()
         
-        difference = (db_meeting.schedule_start_at - datetime.now()).total_seconds()
+        difference = (db_meeting.schedule_start_at - datetime.utcnow()).total_seconds()
         diff = difference/60 
         if diff>2:
             raise CustomException(400,  "Meeting can start only after meeting schedule time. Please adjust the meeting schedule(Use UTC format only).")
         if db_meeting is None:
             raise CustomException(404,  "Meeting records not found")
         
-        db_meeting.start_at = datetime.now()
+        db_meeting.start_at = datetime.utcnow()
         db.commit()
         db.refresh(db_meeting)
         db.close()

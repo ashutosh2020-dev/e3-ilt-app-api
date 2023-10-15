@@ -1,4 +1,4 @@
-from sqlalchemy import and_
+from sqlalchemy import and_, func
 from sqlalchemy.orm import Session
 from app.models import MdlUsers, MdlIltMeetings, MdlMeetings, MdlMeeting_rocks,\
     MdlIltMembers, MdlIltMeetingResponses, MdlMeetingsResponse, MdlIltissue,\
@@ -60,7 +60,7 @@ def get_associated_schoolId_wrt_role(user_id:int, role_id:int, FilterParamaters:
                     list_of_school_id.extend(schools_ids)
 
                 if FilterParamaters.schoolId:
-                    list_of_school_id.extend([FilterParamaters.schoolId])
+                    list_of_school_id.extend([[i] for i in FilterParamaters.schoolId])
 
             return list_of_school_id
 
@@ -216,10 +216,10 @@ class DashboardService:
                     'othersFlag': 0
             }
             if issue_id_list:
-                meetings_issue_resolve_list = [db.query(Mdl_issue)
-                                               .get(issue_id)
-                                               .resolves_flag
-                                               for issue_id in issue_id_list]
+                # meetings_issue_resolve_list = [db.query(Mdl_issue)
+                #                                .get(issue_id)
+                #                                .resolves_flag
+                #                                for issue_id in issue_id_list]
                 for issue_id in issue_id_list:
                     numOfIssueRepeat += len([record.meeting_response_id for record in db.query(MdlIltissue).filter(MdlIltissue.issue_id==issue_id).all()])
                     issue_re = db.query(Mdl_issue).get(issue_id)
@@ -589,12 +589,12 @@ class DashboardService:
                                     "avgIssueRepeat":0
                 }
                 if issue_id_list:
-                    meetings_issue_resolve_list = [db.query(Mdl_issue)
-                                                .get(issue_id)
-                                                .resolves_flag
-                                                for issue_id in issue_id_list]
+                    # meetings_issue_resolve_list = [db.query(Mdl_issue)
+                    #                             .get(issue_id)
+                    #                             .resolves_flag
+                    #                             for issue_id in issue_id_list]
                     for issue_id in issue_id_list:
-                        issue_nominators['avgIssueRepeat'] += db.query(MdlIltissue).filter(MdlIltissue.issue_id == issue_id).count()
+                        issue_nominators['avgIssueRepeat'] += db.query(func.count(MdlIltissue.id)).filter(MdlIltissue.issue_id==issue_id).scalar()
                         issue_re = db.query(Mdl_issue).get(issue_id)
                         issue_nominators['resolve'] += int(issue_re.resolves_flag)
                         issue_nominators['recognizePerformance'] += int(issue_re.recognize_performance_flag)
@@ -661,10 +661,11 @@ class DashboardService:
                                 for key1, value1 in vars(SummaryDataObj.issues).items():
                                     if key1 =="avgIssueRepeat":
                                         setattr(SummaryDataObj.issues, key1, PercentageData(round(value1.percentage/value1.total, 1) if value1.total > 0 else 0, value1.total))
+                                        continue
                                     setattr(SummaryDataObj.issues, key1, PercentageData(round((value1.percentage/value1.total)*100, 2) if value1.total > 0 else 0, value1.total))   
                             else:
                                 setattr(SummaryDataObj, key, PercentageData(round(value.percentage/value.total, 2) if value.total > 0 else 0, value.total))
-
+                
                 list_of_Summary.append(SummaryDataObj)
         final_val = {
             "totalNumOfEndMeeting": total_num_of_ended_meeting,
