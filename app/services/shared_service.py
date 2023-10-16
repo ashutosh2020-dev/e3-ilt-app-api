@@ -1,8 +1,8 @@
 from sqlalchemy.orm import Session
 from app.models import MdlSchools
-from app.models import MdlRocks, MdlRoles, MdlPriorities, MdlDistrict
+from app.models import MdlRocks, MdlRoles, MdlPriorities, MdlDistrict, MdlIlts
 from app.exceptions.customException import CustomException
-
+from app.schemas.ilt_schemas import Ilt_scheema
 class SharedService:
     def get_list_of_schools(self,  db: Session):
 
@@ -14,9 +14,12 @@ class SharedService:
 
         return ilt_school_detail
         
-        
-        
+    def get_list_of_ilt_within_schools(self, schoolId, db: Session):
 
+        ilts_re = db.query(MdlIlts).filter(MdlIlts.school_id==schoolId).all()    
+        list_ilts = [Ilt_scheema(ilt_re) for ilt_re in ilts_re]
+        return list_ilts
+    
     def get_list_of_rocks(self, db: Session):
         try:
             

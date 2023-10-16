@@ -327,6 +327,8 @@ class IltMeetingResponceService:
             ownerId, = db.query(MdlIlts.owner_id).filter(MdlIlts.id==iltId).one_or_none()
             if user_id != meeting_re.note_taker_id and user_id != ownerId:
                 raise CustomException(404,  "Only Ilt owner and Note Taker can edit the data.")
+        if meeting_re.end_at:
+            raise CustomException(404,  "This meeting has been end, We can not update it.")
         if id > 0:
             user_todo_record = (db.query(MdlIlt_ToDoTask)
                                 .filter(MdlIlt_ToDoTask.meeting_response_id == meetingResponseId,
@@ -439,6 +441,8 @@ class IltMeetingResponceService:
             ownerId, = db.query(MdlIlts.owner_id).filter(MdlIlts.id==iltId).one_or_none()
             if user_id != meeting_re.note_taker_id and user_id != ownerId:
                 raise CustomException(404,  "Only Ilt owner and Note Taker can edit the data.")
+        if meeting_re.end_at:
+            raise CustomException(404,  "This meeting has been end, We can not update it.")
         if id:
                 
             issue_map_re = (db.query(MdlIltissue)
@@ -675,6 +679,8 @@ class IltMeetingResponceService:
             ownerId, = db.query(MdlIlts.owner_id).filter(MdlIlts.id==iltId).one_or_none()
             if user_id != meeting_re.note_taker_id and user_id != ownerId:
                 raise CustomException(404,  "Only Ilt owner and Note Taker can edit the data.")
+        if meeting_re.end_at:
+            raise CustomException(404,  "This meeting has been end, We can not update it.")
 
         if name:
             user_meetingResponse_record.rockName = name
@@ -716,6 +722,8 @@ class IltMeetingResponceService:
             ownerId, = db.query(MdlIlts.owner_id).filter(MdlIlts.id==iltId).one_or_none()
             if user_id != meeting_re.note_taker_id and user_id != ownerId:
                 raise CustomException(404,  "Only Ilt owner and Note Taker can edit the data.")
+        if meeting_re.end_at:
+            raise CustomException(404,  "This meeting has been end, We can not update it.")
         
         if personalBest:
             user_meetingResponse_record.checkin_personal_best = personalBest
@@ -755,6 +763,8 @@ class IltMeetingResponceService:
             ownerId, = db.query(MdlIlts.owner_id).filter(MdlIlts.id==iltId).one_or_none()
             if user_id != meeting_re.note_taker_id and user_id != ownerId:
                 raise CustomException(404,  "Only Ilt owner and Note Taker can edit the data.")
+        if meeting_re.end_at:
+            raise CustomException(404,  "This meeting has been end, We can not update it.")
             
         user_meetingResponse_record.attendance_flag = True
         if rating:
