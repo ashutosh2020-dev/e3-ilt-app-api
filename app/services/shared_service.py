@@ -17,12 +17,7 @@ class SharedService:
     def get_list_of_ilt_within_schools(self, schoolId, db: Session):
 
         ilts_re = db.query(MdlIlts).filter(MdlIlts.school_id==schoolId).all()    
-        list_ilts =[]
-        
-        for ilt_re in ilts_re:
-            i = Ilt_scheema(ilt_re)
-            i.memberIds = [1,4,4,5]
-            list_ilts.append(i)
+        list_ilts = [Ilt_scheema(ilt_re) for ilt_re in ilts_re]
         return list_ilts
     
     def get_list_of_rocks(self, db: Session):
