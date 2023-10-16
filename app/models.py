@@ -91,13 +91,13 @@ class MdlIltWhiteBoard(Base):
     __tablename__ = "Ilt_whiteboard"
     id = Column(Integer, primary_key=True, autoincrement=True)
     description = Column(Text, nullable=True)
-    iltId = Column(Integer, ForeignKey("Ilts.id"), nullable=False, index=True)
+    iltId = Column(Integer, ForeignKey("Ilts.id"), unique=True, nullable=False, index=True)
 
 class MdlIltMeetingWhiteBoard(Base):
     __tablename__ = "Ilt_meeting_whiteboard"
     id = Column(Integer, primary_key=True, autoincrement=True)
     description = Column(Text, nullable=True)
-    meetingId =  Column(Integer, ForeignKey("Ilt_meetings.id"), nullable=False, index=True)
+    meetingId =  Column(Integer, ForeignKey("Ilt_meetings.id"), unique=True, nullable=False, index=True)
     
 
 class MdlMeetingsResponse(Base):

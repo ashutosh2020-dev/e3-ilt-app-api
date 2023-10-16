@@ -84,7 +84,7 @@ def pending_ilt_meeting(id: int, meetingId: int, UserId: int = Header(convert_un
 def transfer_ilt_meeting(id: int, meetingId: int,  pendingData:PendingData, UserId: int = Header(convert_underscores=False),
                      db: Session = Depends(get_db)):
     print(pendingData.listOfIssueIds)
-    return IltMeetingService.transfer_ilt_meeting(meetingId=meetingId, listOfIssueIds=pendingData.listOfIssueIds, 
+    return IltMeetingService.transfer_ilt_meeting(meetingId=meetingId, ilt_id=id, UserId =UserId,listOfIssueIds=pendingData.listOfIssueIds, 
                                                   listOfToDoIds=pendingData.listOfToDoIds, 
                                                   futureMeetingId=pendingData.futureMeetingId, db=db)
 
