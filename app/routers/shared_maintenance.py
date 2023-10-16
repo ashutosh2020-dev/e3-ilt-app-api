@@ -10,6 +10,10 @@ shared_service = SharedService()
 def fn_read_list_of_schools( db: Session = Depends(get_db)):
     return shared_service.get_list_of_schools( db =db)
 
+@router.get("/api/v1/shared/schools/{schoolId}/ilts")
+def fn_read_list_of_schools_Ilts(schoolId:int, db: Session = Depends(get_db)):
+    return shared_service.get_list_of_ilt_within_schools(schoolId, db =db)
+
 @router.get("/api/v1/shared/districts")
 def fn_read_list_of_district( db: Session = Depends(get_db)):
     return shared_service.get_list_of_districts(db =db)
