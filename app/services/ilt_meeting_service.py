@@ -277,8 +277,6 @@ class IltMeetingService:
                 user_issues_record = [db.query(Mdl_issue)
                                       .filter(Mdl_issue.id == record.issue_id).one_or_none() for record in issue_record]  \
                     if issue_record else []
-                isRepeated = False
-
                 # print("---",meeting_response_id, [(user_issues_single_record.created_at,
                 #                                    user_issues_single_record.issue_resolve_date,
                 #                                    user_issues_single_record.resolves_flag,
@@ -320,7 +318,9 @@ class IltMeetingService:
                             "numberOfdaysIssueDelay":  (user_issues_single_record.issue_resolve_date - user_issues_single_record.created_at).days
                                                         if (user_issues_single_record.resolves_flag == True and user_issues_single_record.issue_resolve_date)
                                                         else  (user_issues_single_record.due_date - datetime.utcnow()).days, 
-                            "isRepeated": isRepeated
+                            "isRepeated": (True if db.query(MdlIltissue)
+                                                    .filter(MdlIltissue.issue_id==user_issues_single_record.id).count()>1 
+                                                else False)
                         } for user_issues_single_record in user_issues_record]
                         if user_issues_record else []
                     }
