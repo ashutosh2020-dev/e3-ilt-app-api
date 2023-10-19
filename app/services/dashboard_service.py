@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from app.models import MdlUsers, MdlIltMeetings, MdlMeetings, MdlMeeting_rocks,\
     MdlIltMembers, MdlIltMeetingResponses, MdlMeetingsResponse, MdlIltissue,\
     Mdl_issue, MdlIlt_ToDoTask, MdlIlts, MdlSchools, MdlDistrictMember, MdlDistrict
-from app.schemas.dashboard_schemas import SummaryData, PercentageData, DashboardFilterParamaters
+from app.schemas.dashboard_schemas import SummaryData, PercentageData, DashboardFilterParamaters, TimeFilterParameter
 from datetime import datetime, timezone
 from app.exceptions.customException import CustomException
 """
@@ -102,7 +102,7 @@ def get_associated_schoolId_wrt_role(user_id:int, role_id:int, FilterParamaters:
 
  
 class DashboardService:
-    def get_ilt_Meetings_dashboard_info(self, user_id: int, ilt_id: int, db: Session):
+    def get_ilt_Meetings_dashboard_info(self, user_id: int, FilterParamaters:TimeFilterParameter, ilt_id: int, db: Session):
         # check user
         user_record = db.query(MdlUsers).filter(
             MdlUsers.id == user_id).one_or_none()
@@ -112,20 +112,23 @@ class DashboardService:
         num_of_notStarted_meeting = 0
         num_of_inprogress_meeting = 0
         num_of_member_in_ilt = 0
+        start_date = FilterParamaters.startDate
+        end_date = FilterParamaters.endDate
 
         list_of_ended_meeting_ids = []
         list_of_meeting_obj = []
         if user_record.role_id <= 4:
-
-            list_meeting_records = (db.query(MdlMeetings)
+            list_meeting_subquery = (db.query(MdlMeetings)
                                     .join(MdlIltMeetings, MdlMeetings.id == MdlIltMeetings.ilt_meeting_id)
-                                    .filter(MdlIltMeetings.ilt_id == ilt_id)
-                                    .order_by(MdlMeetings.schedule_start_at.asc())
-                                    .all()
-                                    )
+                                    .filter(MdlIltMeetings.ilt_id == ilt_id))
+            if start_date and end_date:
+                    list_meeting_subquery = list_meeting_subquery.filter(and_(MdlMeetings.schedule_start_at>start_date,
+                                            MdlMeetings.schedule_start_at<end_date))
+            list_meeting_records = list_meeting_subquery.order_by(MdlMeetings.schedule_start_at.asc()).all()
+                                
+            
             if list_meeting_records:
                 for meeting_record in list_meeting_records:
-
                     status = calculate_meeting_status(
                         schedule_start_at=meeting_record.schedule_start_at,
                         start_at=meeting_record.start_at if meeting_record.start_at else 0,
@@ -153,7 +156,8 @@ class DashboardService:
                                                 .all())
             num_of_member_in_ilt = len(member_meeting_response_id_list)
         #  meeting end time
-            meetingEndTime = db.query(MdlMeetings).get(mid).end_at 
+            meetingEndTime,meetingSchedulaDate = (db.query(MdlMeetings.end_at,MdlMeetings.schedule_start_at)
+                                .filter(MdlMeetings.id == mid).one_or_none())
         # attandence
             attandence_nominator = sum([record.attendance_flag
                                         for record in member_meeting_responce_records])
@@ -234,7 +238,7 @@ class DashboardService:
                                             for flag in issue_nominators 
                             }
             if numOfIssueRepeat>0:
-                avg_issueObj["avgIssueRepeat"] =  {"percentage":round(numOfIssueRepeat/denominator, 0), "total":denominator}
+                avg_issueObj["avgIssueRepeat"] =  {"percentage":round(numOfIssueRepeat/denominator, 1), "total":denominator}
             else:
                 avg_issueObj["avgIssueRepeat"] =  {"percentage":0 if denominator==0 else 0, "total":denominator} 
             avg_issueObj["totalIssues"] = denominator
@@ -266,6 +270,7 @@ class DashboardService:
                 {
                     "id": ilt_id,
                     "meetingId":mid,
+                    "meetingSchedulaDate":meetingSchedulaDate,
                     "meetingEndDate":meetingEndTime,
                     "attendancePercentage": avg_attendence,
                     "rockOnTrack": avg_rock,
@@ -309,6 +314,8 @@ class DashboardService:
                                 .order_by(MdlMeetings.schedule_start_at.asc())
                                 .all()
                                 )
+ 
+
         if not meeting_records:
             raise CustomException(404,  "No records found.")
         
