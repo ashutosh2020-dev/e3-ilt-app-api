@@ -245,14 +245,8 @@ class IltService:
                                                             .one_or_none())
             if check_user_exist_in_ilt is None:
                 if ilt_data.ownerId not in ilt_data.memberIds:
-                    ilt_data.memberIds.append(ilt_data.ownerId) 
-        db_temp = (db.query(MdlIltMeetingResponses).filter(and_(MdlIltMeetingResponses.meeting_id==5, 
-                                                        MdlIltMeetingResponses.meeting_user_id==1,
-                                                        MdlIltMeetingResponses.meeting_response_id==46))
-                                                        .one_or_none())   
-        db_temp.meeting_user_id=8             
+                    ilt_data.memberIds.append(ilt_data.ownerId)             
         db.add(db_ilt)
-        db.add(db_temp)
         db.commit()
         db.refresh(db_ilt)
         
