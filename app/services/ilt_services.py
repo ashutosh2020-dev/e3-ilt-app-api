@@ -225,6 +225,8 @@ class IltService:
             raise CustomException(404,  "This user can not modify the ilt")
 
         common_msg = ""
+        flag = True
+        verified_new_member_ids = []
         # need to add members, change owner_id functionality
         if ilt_data.title:
             db_ilt.title = ilt_data.title
@@ -232,74 +234,64 @@ class IltService:
             db_ilt.description = ilt_data.description
         if ilt_data.schoolId:
             db_ilt.school_id = ilt_data.schoolId
+        db_ilt.updated_at = datetime.now()
+        db_ilt.update_by = user_id
         if ilt_data.ownerId and ilt_data.ownerId != db_ilt.owner_id:
             common_msg = "owner updated"
             # update tables - ilt, iltMember, upcoming_meetings_responce, and all ilt_user_maping
-            db_ilt = db.query(MdlIlts).get(ilt_data.iltId)
-            db_ilt_member = (db.query(MdlIltMembers).filter(MdlIltMembers.ilt_id==ilt_data.iltId, 
-                                                           MdlIltMembers.member_id==db_ilt.owner_id)
-                                                            .one_or_none())
             db_ilt.owner_id = ilt_data.ownerId
-            db_ilt_member.member_id = ilt_data.ownerId
-            db.add(db_ilt)
-            db.add(db_ilt_member)
-            db.commit()
-            db.refresh(db_ilt)
-            db.refresh(db_ilt_member)
-        db_ilt.updated_at = datetime.now()
-        db_ilt.update_by = user_id
+            check_user_exist_in_ilt = (db.query(MdlIltMembers).filter(MdlIltMembers.ilt_id==ilt_data.iltId, 
+                                                           MdlIltMembers.member_id==ilt_data.ownerId)
+                                                            .one_or_none())
+            if check_user_exist_in_ilt is None:
+                if ilt_data.ownerId not in ilt_data.memberIds:
+                    ilt_data.memberIds.append(ilt_data.ownerId) 
+        db_temp = (db.query(MdlIltMeetingResponses).filter(and_(MdlIltMeetingResponses.meeting_id==5, 
+                                                        MdlIltMeetingResponses.meeting_user_id==1,
+                                                        MdlIltMeetingResponses.meeting_response_id==46))
+                                                        .one_or_none())   
+        db_temp.meeting_user_id=8             
+        db.add(db_ilt)
+        db.add(db_temp)
         db.commit()
         db.refresh(db_ilt)
+        
 
         if len(ilt_data.memberIds) >= 1 and ilt_data.memberIds[0] != 0:
             if 0 in ilt_data.memberIds:
-                raise CustomException(
-                    500,  f"unable to process your request: found 0 in member list")
+                raise CustomException(500,  f"unable to process your request: found 0 in member list")
             msg, count = ("", 0)
             ilt_query = db.query(MdlIltMembers)
-            # check if user exist
-            verified_member_ids = []
+            # filtering user
             current_ilt_member_list= [re.member_id for re in ilt_query.filter(MdlIltMembers.ilt_id == ilt_id).all()]
             new_member_list=   set(ilt_data.memberIds) - set(current_ilt_member_list)
             removed_member_list = (set(current_ilt_member_list) - set(ilt_data.memberIds)) - set([db_ilt.owner_id])
+            
             for m_re in list(new_member_list):
                 ilt_record = ilt_query.filter(MdlIltMembers.ilt_id == ilt_id,
                                               MdlIltMembers.member_id == m_re).one_or_none()
                 if ilt_record is not None:
                     count += 1
                 else:
-                    verified_member_ids.append(m_re)
+                    verified_new_member_ids.append(m_re)
                     db_ilt_member = MdlIltMembers(
                         ilt_id=ilt_id, member_id=m_re)  # adding to ilt_user_map
                     db.add(db_ilt_member)
                     db.commit()
                     db.refresh(db_ilt_member)
-
-            current_date = datetime.utcnow()
             
-            upcoming_meeting_list = db.query(MdlMeetings)\
-                .join(MdlIltMeetings, MdlMeetings.id == MdlIltMeetings.ilt_meeting_id)\
-                .filter(MdlIltMeetings.ilt_id == ilt_id)\
-                .filter(MdlMeetings.end_at == None)\
-                .all()
-            upcoming_meetingId_list = [
-                record.id for record in upcoming_meeting_list]
-            # creating meetingResponce for new members
-            flag, msg = IltMeetingResponceService().create_meeting_responses_empty_for_newMember_for_all_meetings(
-                meeting_ids=upcoming_meetingId_list, member_list=verified_member_ids, db=db
-            )
-            # for newly added owner: updating meetingResponce_map_record  
-            if ilt_data.ownerId and ilt_data.ownerId != db_ilt.owner_id:
-                # get all meetingResponce wrt old owner
-                for mid in upcoming_meetingId_list:
-                    db_meetingResponce_map_record = (db.query(MdlIltMeetingResponses).filter(and_(MdlIltMeetingResponses.meeting_id ==mid,
-                                                            MdlIltMeetingResponses.meeting_user_id==db_ilt.owner_id))
-                    .one_or_none())
-                    db_meetingResponce_map_record.meeting_user_id = ilt_data.ownerId
-                    db.add(db_meetingResponce_map_record)
-                    db.commit()
-                    db.refresh(db_meetingResponce_map_record)
-                common_msg = "updated ownerId"                                        
+            if verified_new_member_ids:   
+                upcoming_meeting_list = db.query(MdlMeetings)\
+                    .join(MdlIltMeetings, MdlMeetings.id == MdlIltMeetings.ilt_meeting_id)\
+                    .filter(MdlIltMeetings.ilt_id == ilt_id)\
+                    .filter(and_(MdlMeetings.end_at == None, MdlMeetings.start_at==None))\
+                    .all()
+                upcoming_meetingId_list = [record.id 
+                                        for record in upcoming_meeting_list]
+                # creating meetingResponce for new members
+                flag, msg = IltMeetingResponceService().create_meeting_responses_empty_for_newMember_for_all_meetings(
+                    meeting_ids=upcoming_meetingId_list, member_list=verified_new_member_ids, db=db
+                )                                        
             # for removed_member_list: delete records
             if removed_member_list:
                 for user_id in removed_member_list:

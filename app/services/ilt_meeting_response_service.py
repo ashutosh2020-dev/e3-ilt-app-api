@@ -146,6 +146,7 @@ class IltMeetingResponceService:
 
     def create_meeting_responses_empty_for_newMember_for_all_meetings(self, meeting_ids: list, member_list: list, db: Session):
         try:
+            member_list = list(set(member_list))
             for mid in meeting_ids:
                 for uid in member_list:
                     db_meeting_response = MdlMeetingsResponse(attendance_flag=None,

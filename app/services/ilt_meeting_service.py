@@ -237,17 +237,16 @@ class IltMeetingService:
             for uid in ilt_members_ids:
                 user_record = db.query(MdlUsers).filter(
                     MdlUsers.id == uid).one()
-                meeting_response_row = db.query(MdlIltMeetingResponses)\
-                    .filter(MdlIltMeetingResponses.meeting_id == meeting_id,
-                            MdlIltMeetingResponses.meeting_user_id == uid).one_or_none()
-
+                meeting_response_row = (db.query(MdlIltMeetingResponses)
+                    .filter(and_(MdlIltMeetingResponses.meeting_id == meeting_id,
+                            MdlIltMeetingResponses.meeting_user_id == uid)).one_or_none())
                 if meeting_response_row is None:
                     continue
                 
                 meeting_response_id = meeting_response_row.meeting_response_id
                 meeting_response_record = db.query(MdlMeetingsResponse)\
                     .filter(MdlMeetingsResponse.id == meeting_response_id).one()
-
+        
                 update_records = db.query(Mdl_updates)\
                     .filter(Mdl_updates.meeting_response_id == meeting_response_id)\
                     .all()
