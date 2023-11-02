@@ -25,6 +25,9 @@ def fn_read_users_districts(userId: int,  db: Session = Depends(get_db)):
 def fn_read_users_schools(districtId: int,  db: Session = Depends(get_db)):
     return user_service.get_schools(districtId, db =db)
 
+@router.get("/api/v1/users/districts/{districtId}/ilts")
+def fn_read_users_district_ilts(districtId: int,  db: Session = Depends(get_db)):
+    return user_service.get_district_ilts(districtId, db =db)
 
 @router.post("/api/v1/users/")
 async def fn_create_user(user:UserRequest, UserId: int=Header(convert_underscores=False), db: Session = Depends(get_db)):
