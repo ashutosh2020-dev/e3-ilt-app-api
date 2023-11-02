@@ -13,9 +13,9 @@ DATABASE_URL = "sqlite:///ilt_db.db"
 
 
 query = """
-       ALTER TABLE issue ADD issue_resolve_date DATETIME NULL;
+  ALTER TABLE ilt_meeting_response_mapping ADD CONSTRAINT uq_ilt__mapping UNIQUE('meeting_user_id',  'meeting_user_id');
         """
-# meeting_note_taker_id  INT NULL DEFAULT NULL;
+## meeting_note_taker_id  INT NULL DEFAULT NULL;
 
 # query2= """
 #         ALTER TABLE ilt_to_do_task ADD parent_to_do_id INT NULL DEFAULT NULL;

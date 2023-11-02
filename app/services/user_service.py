@@ -3,6 +3,7 @@ from sqlalchemy import and_
 from app.models import MdlUsers, MdlRoles, MdlIlts, MdlDistrict, MdlDistrictMember, MdlSchools
 from sqlalchemy.orm.exc import NoResultFound
 import sys
+from app.schemas.ilt_schemas import Ilt_scheema
 from app.exceptions.customException import CustomException
 from app.schemas.user_schemas import UserAccount
 
@@ -126,6 +127,23 @@ class UserService:
                 "label": district_re.name
             })
         return district_list
+
+    def get_district_ilts(self, districtId, db:Session):
+         # check userId
+        d_record = db.query(MdlDistrict).filter(
+            MdlDistrict.id == districtId).one_or_none()
+        if d_record is None:
+            raise CustomException(404, "records not found.")
+        list_d_ilts = []
+        schoolIdList = db.query(MdlSchools.id,).filter(
+            MdlSchools.district == districtId).all()
+        print(schoolIdList)
+        for schoolId, in schoolIdList:
+            ilts_re = db.query(MdlIlts).filter(MdlIlts.school_id==schoolId).all()    
+            list_ilts = [Ilt_scheema(ilt_re) for ilt_re in ilts_re]
+            list_d_ilts.extend(list_ilts)
+        return list_d_ilts
+
 
     def get_schools(self, districtId: int, db: Session):
         d_record = db.query(MdlDistrict).filter(
