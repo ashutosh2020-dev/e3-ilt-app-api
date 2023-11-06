@@ -199,6 +199,13 @@ class DashboardService:
                                              .filter(MdlIltissue.meeting_response_id == m_r_id)
                                              .all()
                                              for m_r_id in member_meeting_response_id_list]
+            num_of_issue_raised =  sum(db.query(MdlIltissue.issue_id)
+                                             .filter(and_(MdlIltissue.meeting_response_id == m_r_id,
+                                                          MdlIltissue.parent_meeting_responce_id == m_r_id))
+                                             .count()
+                                             for m_r_id in member_meeting_response_id_list)
+            num_of_issue_resolved = 0
+            
             issue_id_list = []
             avg_issueResolve = []
             avg_issueObj={}
@@ -234,6 +241,18 @@ class DashboardService:
                     issue_nominators['advanceEquality'] += int(issue_re.advance_equality_flag)
                     issue_nominators['othersFlag'] += int(issue_re.others_flag)
                     denominator += 1
+                    if issue_re.resolves_flag == True:
+                        resolved_by_meeting_id = (db.query(MdlMeetings.id)
+                                                    .join(MdlIltMeetings, MdlMeetings.id == MdlIltMeetings.ilt_meeting_id)
+                                                    .filter(MdlIltMeetings.ilt_id == ilt_id)
+                                                    .filter(MdlMeetings.start_at<issue_re.issue_resolve_date)
+                                                    .order_by(MdlMeetings.start_at.desc())
+                                                    .first()
+                                                    )
+                        
+                        num_of_issue_resolved += 1 if resolved_by_meeting_id == mid else 0
+
+
             avg_issueObj = {flag: {'percentage':(issue_nominators[flag]/denominator)*100 if denominator > 0 else 0, 'total':denominator} 
                                             for flag in issue_nominators 
                             }
@@ -242,7 +261,8 @@ class DashboardService:
             else:
                 avg_issueObj["avgIssueRepeat"] =  {"percentage":0 if denominator==0 else 0, "total":denominator} 
             avg_issueObj["totalIssues"] = denominator
-
+            avg_issueObj["numIssueRaised"]= num_of_issue_raised
+            avg_issueObj["numIssueResolved"] = num_of_issue_resolved
             # To-Do
             list_list_of_toDo_records = (db.query(MdlIlt_ToDoTask)
                                          .filter(MdlIlt_ToDoTask.meeting_response_id == m_r_id)
