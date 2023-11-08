@@ -223,7 +223,7 @@ class DashboardService:
                     'recognizePerformance': 0,
                     'teacherSupport': 0,
                     'leaderSupport': 0,
-                    'advanceEquality': 0,
+                    'advanceEquity': 0,
                     'othersFlag': 0
             }
             if issue_id_list:
@@ -238,7 +238,7 @@ class DashboardService:
                     issue_nominators['recognizePerformance'] += int(issue_re.recognize_performance_flag)
                     issue_nominators['teacherSupport'] += int(issue_re.teacher_support_flag)
                     issue_nominators['leaderSupport'] += int(issue_re.leader_support_flag)
-                    issue_nominators['advanceEquality'] += int(issue_re.advance_equality_flag)
+                    issue_nominators['advanceEquity'] += int(issue_re.advance_equality_flag)
                     issue_nominators['othersFlag'] += int(issue_re.others_flag)
                     denominator += 1
                     if issue_re.resolves_flag == True:
@@ -427,7 +427,7 @@ class DashboardService:
                     'recognizePerformance': 0,
                     'teacherSupport': 0,
                     'leaderSupport': 0,
-                    'advanceEquality': 0,
+                    'advanceEquity': 0,
                     'othersFlag': 0
             }
             if issue_id_list:
@@ -442,7 +442,7 @@ class DashboardService:
                     issue_nominators['recognizePerformance'] += int(issue_re.recognize_performance_flag)
                     issue_nominators['teacherSupport'] += int(issue_re.teacher_support_flag)
                     issue_nominators['leaderSupport'] += int(issue_re.leader_support_flag)
-                    issue_nominators['advanceEquality'] += int(issue_re.advance_equality_flag)
+                    issue_nominators['advanceEquity'] += int(issue_re.advance_equality_flag)
                     issue_nominators['othersFlag'] += int(issue_re.others_flag)
                     denominator += 1
             avg_issueObj = {flag: {'percentage':(issue_nominators[flag]/denominator)*100 if denominator > 0 else 0, 'total':denominator} 
@@ -611,7 +611,7 @@ class DashboardService:
                                     'recognizePerformance': 0,
                                     'teacherSupport': 0,
                                     'leaderSupport': 0,
-                                    'advanceEquality': 0,
+                                    'advanceEquity': 0,
                                     'othersFlag': 0,
                                     "avgIssueRepeat":0
                 }
@@ -627,7 +627,7 @@ class DashboardService:
                         issue_nominators['recognizePerformance'] += int(issue_re.recognize_performance_flag)
                         issue_nominators['teacherSupport'] += int(issue_re.teacher_support_flag)
                         issue_nominators['leaderSupport'] += int(issue_re.leader_support_flag)
-                        issue_nominators['advanceEquality'] += int(issue_re.advance_equality_flag)
+                        issue_nominators['advanceEquity'] += int(issue_re.advance_equality_flag)
                         issue_nominators['othersFlag'] += int(issue_re.others_flag)
                         denominator += 1
 
