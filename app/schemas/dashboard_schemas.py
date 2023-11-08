@@ -14,7 +14,7 @@ class IssuesData:
         self.recognizePerformance = PercentageData()
         self.teacherSupport = PercentageData()
         self.leaderSupport = PercentageData()
-        self.advanceEquality = PercentageData()
+        self.advanceEquity = PercentageData()
         self.othersFlag = PercentageData()
         self.avgIssueRepeat = PercentageData()
 
