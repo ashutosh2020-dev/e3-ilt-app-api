@@ -642,7 +642,7 @@ class IltMeetingResponceService:
                             i].recognizePerformanceFlag
                         user_issue_record.teacher_support_flag = data.issues[i].teacherSupportFlag
                         user_issue_record.leader_support_flag = data.issues[i].leaderSupportFlag
-                        user_issue_record.advance_equality_flag = data.issues[i].advanceEqualityFlag
+                        user_issue_record.advance_equality_flag = data.issues[i].advanceEquityFlag
                         user_issue_record.others_flag = data.issues[i].othersFlag
                         db.commit()
                         db.refresh(user_issue_record)
