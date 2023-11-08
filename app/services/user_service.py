@@ -2,7 +2,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import and_
 from app.models import MdlUsers, MdlRoles, MdlIlts, MdlDistrict, MdlDistrictMember, MdlSchools
 from sqlalchemy.orm.exc import NoResultFound
-import sys
+import sys, re
 from app.schemas.ilt_schemas import Ilt_scheema
 from app.exceptions.customException import CustomException
 from app.schemas.user_schemas import UserAccount
@@ -163,10 +163,11 @@ class UserService:
 
     def create_user(self, parent_user_id, fname, lname, email, number, password, is_active, role_id, districts, db: Session):
         email = email.strip().lower()
-        password = password.strip()
         fname = fname.strip()
         lname = lname.strip()
-
+        is_valid_email = re.match(r'^[\w\.-]+@[\w\.-]+\.\w+$', email)
+        if not is_valid_email:
+            raise CustomException(400,  "Invalid Email format")
         check_parent_id = db.query(MdlUsers).filter(
             MdlUsers.id == parent_user_id).one_or_none()
         if check_parent_id is None:
@@ -238,6 +239,9 @@ class UserService:
             raise CustomException(400,  "Please choose district")
 
     def update_user(self, user_id: int, id: int, fname, lname, email, number, password, is_active, districts, role_id, db: Session):
+        email = email.strip().lower()
+        fname = fname.strip()
+        lname = lname.strip()
         user_id_re = db.query(MdlUsers).filter(
             MdlUsers.id == user_id).one_or_none()
         if user_id_re is None:
@@ -247,6 +251,10 @@ class UserService:
             MdlUsers.parent_user_id == id).all()
         check_iltOwner_record = db.query(
             MdlIlts).filter(MdlIlts.owner_id == id).all()
+        is_valid_email = re.match(r'^[\w\.-]+@[\w\.-]+\.\w+$', email)
+        if not is_valid_email:
+            raise CustomException(400,  "Invalid Email format")
+        
         if db_user.email != email:
 
             check_user_detail = (db.query(MdlUsers)
