@@ -308,7 +308,7 @@ class IltMeetingService:
                             "recognizePerformanceFlag": user_issues_single_record.recognize_performance_flag,
                             "teacherSupportFlag": user_issues_single_record.teacher_support_flag,
                             "leaderSupportFlag": user_issues_single_record.leader_support_flag,
-                            "advanceEqualityFlag": user_issues_single_record.advance_equality_flag,
+                            "advanceEquityFlag": user_issues_single_record.advance_equality_flag,
                             "othersFlag": user_issues_single_record.others_flag,
                             "numberOfdaysIssueDelay":  (user_issues_single_record.issue_resolve_date - user_issues_single_record.created_at).days
                                                         if (user_issues_single_record.resolves_flag == True and user_issues_single_record.issue_resolve_date)
@@ -436,7 +436,7 @@ class IltMeetingService:
                                 "recognizePerformanceFlag": issue_record.recognize_performance_flag,
                                 "teacherSupportFlag": issue_record.teacher_support_flag,
                                 "leaderSupportFlag": issue_record.leader_support_flag,
-                                "advanceEqualityFlag": issue_record.advance_equality_flag,
+                                "advanceEquityFlag": issue_record.advance_equality_flag,
                                 "othersFlag": issue_record.others_flag
                             })
 

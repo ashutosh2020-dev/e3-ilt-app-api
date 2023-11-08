@@ -72,7 +72,7 @@ class IltMeetingResponceService:
             "recognizePerformanceFlag": user_issues_single_record.recognize_performance_flag,
             "teacherSupportFlag": user_issues_single_record.teacher_support_flag,
             "leaderSupportFlag": user_issues_single_record.leader_support_flag,
-            "advanceEqualityFlag": user_issues_single_record.advance_equality_flag,
+            "advanceEquityFlag": user_issues_single_record.advance_equality_flag,
             "othersFlag": user_issues_single_record.others_flag
         } for user_issues_single_record in user_issues_record)
 
@@ -503,7 +503,7 @@ class IltMeetingResponceService:
             "recognizePerformanceFlag": user_issues_single_record.recognize_performance_flag,
             "teacherSupportFlag": user_issues_single_record.teacher_support_flag,
             "leaderSupportFlag": user_issues_single_record.leader_support_flag,
-            "advanceEqualityFlag": user_issues_single_record.advance_equality_flag,
+            "advanceEquityFlag": user_issues_single_record.advance_equality_flag,
             "othersFlag": user_issues_single_record.others_flag
         } for user_issues_single_record in user_issue_records] if user_issue_records else []
 
