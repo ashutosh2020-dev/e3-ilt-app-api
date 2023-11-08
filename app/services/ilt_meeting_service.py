@@ -120,7 +120,7 @@ class IltMeetingService:
         if Ilt_record is None:
             raise CustomException(404,  "ILT not found")
 
-        current_date = datetime.utcnow()
+        current_date = datetime(2020, 1, 1, 00, 00)
         if scheduledStartDate < current_date:
             raise CustomException(
                 404, "Please enter correct date, Date must be greater than currect date")
@@ -171,7 +171,7 @@ class IltMeetingService:
             raise CustomException(
                 404,  "Meeting ID is not associated with ILT id")
         if scheduledStartDate:
-            if scheduledStartDate < datetime.utcnow():
+            if scheduledStartDate < datetime(2020, 1, 1, 00, 00):
                 raise CustomException(
                     400,  "Please enter correct date, dates must be greater than currect data")
 
@@ -212,23 +212,19 @@ class IltMeetingService:
                                      .filter(and_(MdlIltMeetings.ilt_id == iltId,
                                              MdlIltMeetings.ilt_meeting_id == meeting_id))
                                      .one_or_none())
-            if db_ilt_meeting_record is None and user.role_id != 4:
+            if db_ilt_meeting_record is None:
                 raise CustomException(
                     404,  "Meeting ID is not associated with ILT id")
             ilt_members_ids = []
-            if ilt_record.owner_id == User_id or user.role_id==4 or ilt_meeting_record.note_taker_id==User_id:
+            current_ilt_members_ids = [id for id, in db.query(MdlIltMembers.member_id)
+                                       .filter(MdlIltMembers.ilt_id==iltId)
+                                       .all()]             
+            if (User_id in current_ilt_members_ids) or (user.role_id == 4):
                 user_ids = [userId for userId, in db.query(MdlIltMeetingResponses.meeting_user_id)\
                     .filter(MdlIltMeetingResponses.meeting_id == meeting_id).all()]
                 ilt_members_ids.extend(user_ids)
             else:
-                check_ilt_user_map_record = (db.query(MdlIltMembers)
-                                             .filter(and_(MdlIltMembers.ilt_id == iltId, MdlIltMembers.member_id == User_id))
-                                             .order_by(MdlIltMembers.id.asc())
-                                             .one_or_none())
-                if check_ilt_user_map_record is None:
-                    raise CustomException(
-                        404,  "User ID is not associated with ILT")
-                ilt_members_ids.extend([User_id])
+                raise CustomException( 404,  "Invalid user")
 
             members_Info_dict = []
             meeting_response_id = 0
@@ -312,7 +308,7 @@ class IltMeetingService:
                             "recognizePerformanceFlag": user_issues_single_record.recognize_performance_flag,
                             "teacherSupportFlag": user_issues_single_record.teacher_support_flag,
                             "leaderSupportFlag": user_issues_single_record.leader_support_flag,
-                            "advanceEqualityFlag": user_issues_single_record.advance_equality_flag,
+                            "advanceEquityFlag": user_issues_single_record.advance_equality_flag,
                             "othersFlag": user_issues_single_record.others_flag,
                             "numberOfdaysIssueDelay":  (user_issues_single_record.issue_resolve_date - user_issues_single_record.created_at).days
                                                         if (user_issues_single_record.resolves_flag == True and user_issues_single_record.issue_resolve_date)
@@ -440,7 +436,7 @@ class IltMeetingService:
                                 "recognizePerformanceFlag": issue_record.recognize_performance_flag,
                                 "teacherSupportFlag": issue_record.teacher_support_flag,
                                 "leaderSupportFlag": issue_record.leader_support_flag,
-                                "advanceEqualityFlag": issue_record.advance_equality_flag,
+                                "advanceEquityFlag": issue_record.advance_equality_flag,
                                 "othersFlag": issue_record.others_flag
                             })
 

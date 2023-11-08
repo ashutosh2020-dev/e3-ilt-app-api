@@ -102,7 +102,7 @@ def create_update_ilt_meeting_issues(meetingResponseId: int,
                                                                      i].recognizePerformanceFlag,
                                                                  teacher_support_flag=ilt.issues[i].teacherSupportFlag,
                                                                  leader_support_flag=ilt.issues[i].leaderSupportFlag,
-                                                                 advance_equality_flag=ilt.issues[i].advanceEqualityFlag,
+                                                                 advance_equality_flag=ilt.issues[i].advanceEquityFlag,
                                                                  others_flag=ilt.issues[i].othersFlag,
                                                                  db=db)
 

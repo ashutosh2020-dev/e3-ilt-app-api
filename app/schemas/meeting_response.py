@@ -29,7 +29,7 @@ class Issue(BaseModel):
     recognizePerformanceFlag: bool
     teacherSupportFlag: bool
     leaderSupportFlag: bool
-    advanceEqualityFlag: bool
+    advanceEquityFlag : bool
     othersFlag: bool
 
 class MeetingResponse(BaseModel):
@@ -92,7 +92,7 @@ class singleIssue(BaseModel):
     recognizePerformanceFlag: bool
     teacherSupportFlag: bool
     leaderSupportFlag: bool
-    advanceEqualityFlag: bool
+    advanceEquityFlag: bool
     othersFlag: bool
 
 class IssueList(BaseModel):
