@@ -759,11 +759,23 @@ class IltMeetingResponceService:
                 404,  "MeetingsResponse record did not found")
         meeting_id,  = db.query(MdlIltMeetingResponses.meeting_id).filter(MdlIltMeetingResponses.meeting_response_id==meetingResponseId).one()
         meeting_re = db.query(MdlMeetings).filter(MdlMeetings.id==meeting_id).one_or_none()
+        
+
         if meeting_re.start_at and meeting_re.end_at is None:
-            iltId, = db.query(MdlIltMeetings.ilt_id).filter(MdlIltMeetings.ilt_meeting_id==meeting_id).one_or_none()
-            ownerId, = db.query(MdlIlts.owner_id).filter(MdlIlts.id==iltId).one_or_none()
-            if user_id != meeting_re.note_taker_id and user_id != ownerId:
-                raise CustomException(404,  "Only Ilt owner and Note Taker can edit the data.")
+            iltId, = db.query(MdlIltMeetings.ilt_id).filter(MdlIltMeetings.ilt_meeting_id == meeting_id).one_or_none()
+            ilt_re = db.query(MdlIlts).filter(MdlIlts.id==iltId).one_or_none()
+            current_member_ids = [mid for mid, in db.query(MdlIltMembers.member_id).filter(MdlIltMembers.ilt_id == iltId).all()]
+            mr_user_id, = db.query(MdlIltMeetingResponses.meeting_user_id).filter(
+                MdlIltMeetingResponses.meeting_response_id==meetingResponseId).one_or_none()
+            
+            if user_id not in current_member_ids:
+                raise CustomException(404,  "Cannot edit, Member is not in current ILT.")
+            if user_id != mr_user_id or user_id != ilt_re.owner_id or user_id != meeting_re.note_taker_id :
+                raise CustomException(404,  "Cannot edit, Invalid member.")
+        
+        if meeting_re.start_at is None:
+            raise CustomException(500,  "Meeting is not started.")
+            
         if meeting_re.end_at:
             raise CustomException(404,  "This meeting has been end, We can not update it.")
             
