@@ -770,8 +770,9 @@ class IltMeetingResponceService:
             
             if user_id not in current_member_ids:
                 raise CustomException(404,  "Cannot edit, Member is not in current ILT.")
-            if user_id != mr_user_id or user_id != ilt_re.owner_id or user_id != meeting_re.note_taker_id :
-                raise CustomException(404,  "Cannot edit, Invalid member.")
+            # print(mr_user_id, bool(user_id == mr_user_id or user_id !=ilt_re.owner_id or user_id != meeting_re.note_taker_id))
+            # if user_id == mr_user_id or user_id != ilt_re.owner_id or user_id != meeting_re.note_taker_id :
+            #     raise CustomException(404,  "Cannot edit, Invalid member.")
         
         if meeting_re.start_at is None:
             raise CustomException(500,  "Meeting is not started.")
