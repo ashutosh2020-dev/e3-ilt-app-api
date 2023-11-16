@@ -423,6 +423,7 @@ class IltMeetingResponceService:
                             leader_support_flag: bool,
                             advance_equality_flag: bool,
                             others_flag: bool,
+                            assign_to_user_id:int,
                             db: Session):
 
         
@@ -450,6 +451,7 @@ class IltMeetingResponceService:
                             .filter(and_(MdlIltissue.meeting_response_id == meetingResponseId,
                                     MdlIltissue.issue_id == id))
                             .one())
+            
             user_issue_record = (db.query(Mdl_issue)
                                     .filter(Mdl_issue.id == issue_map_re.issue_id).one())
             user_issue_record.issue = issue
@@ -464,6 +466,26 @@ class IltMeetingResponceService:
             user_issue_record.others_flag = others_flag
             db.commit()
             db.refresh(user_issue_record)
+            #get all responcesId from current meeting, 
+            if assign_to_user_id:
+                meeting_id = (db.query(MdlIltMeetingResponses.meeting_id)
+                                            .filter(MdlIltMeetingResponses.meeting_response_id == meetingResponseId)
+                                            .one())
+                meeting_responcesId_list = [r_id for r_id, in db.query(MdlIltMeetingResponses.meeting_response_id)
+                                            .filter(MdlIltMeetingResponses.meeting_id == meeting_id)
+                                            .all()]
+
+                db_issue_latest_re = (db.query(MdlIltissue)
+                            .filter(and_(MdlIltissue.issue_id==id,
+                                         MdlIltissue.meeting_response_id.isin(meeting_responcesId_list)))).one_or_none()
+                assignto_responce_id, = (db.query(MdlIltMeetingResponses.meeting_response_id)
+                                        .filter(and_(MdlIltMeetingResponses.meeting_id==meeting_id,
+                                                      MdlIltMeetingResponses.meeting_user_id==assign_to_user_id)
+                                                      )
+                                                      )
+                db_issue_latest_re.meeting_response_id == assignto_responce_id
+                db.commit()
+                db.refresh(db_issue_latest_re)
 
         else:
             db_issue = Mdl_issue(issue=issue,
