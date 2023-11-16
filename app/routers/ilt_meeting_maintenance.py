@@ -3,7 +3,8 @@ from sqlalchemy.orm import Session
 from app.config.database import get_db
 from app.services.ilt_meeting_service import IltMeetingService
 from app.services.ilt_meeting_response_service import IltMeetingResponceService
-from app.schemas.ilt_meeting_schemas import MeetingData, rockData, rockData_map, Status, PendingData, whiteboardData, whiteboardDataInfo
+from app.schemas.ilt_meeting_schemas import MeetingData, rockData, rockData_map,\
+    Status, PendingData, whiteboardData, whiteboardDataInfo, PastData
 from datetime import datetime, timezone
 from typing import Annotated, Union
 
@@ -26,8 +27,7 @@ def create_ilt_meeting(id: int, ilt: MeetingData, UserId: int = Header(convert_u
     return IltMeetingService.create_ilts_meeting(ilt_id=id,
                                                  user_id=UserId,
                                                  scheduledStartDate=ilt.scheduledStartDate,
-                                                 meetingStart=0,
-                                                 meetingEnd=0,
+                                                 pastData_flag = ilt.pastData_flag,
                                                  noteTakerId = ilt.noteTakerId,
                                                  location=ilt.location,
                                                  db=db)
@@ -53,21 +53,23 @@ def update_ilt_meeting(meetingId: int,
 
 
 @router.post("/api/v1/ilts/{id}/meetings/{meetingId}/start")
-def start_ilt_meeting(id: int, meetingId: int, UserId: int = Header(convert_underscores=False),
+def start_ilt_meeting(id: int, meetingId: int, pastData_flag: PastData, UserId: int = Header(convert_underscores=False),
                       db: Session = Depends(get_db)):
 
     return IltMeetingService.start_ilt_meeting(meeting_id=meetingId,
                                                ilt_id=id,
+                                               pastData_flag=pastData_flag,
                                                UserId=UserId,
                                                db=db)
 
 
 @router.post("/api/v1/ilts/{id}/meetings/{meetingId}/stop")
-def stop_ilt_meeting(id: int, meetingId: int, UserId: int = Header(convert_underscores=False),
+def stop_ilt_meeting(id: int, meetingId: int, pastData_flag: PastData, UserId: int = Header(convert_underscores=False),
                      db: Session = Depends(get_db)):
 
     return IltMeetingService.stop_ilt_meeting(meeting_id=meetingId,
                                               ilt_id=id,
+                                              pastData_flag=pastData_flag,
                                               UserId=UserId,
                                               db=db)
 

@@ -109,7 +109,7 @@ class IltMeetingService:
             return []
 
     def create_ilts_meeting(self, ilt_id: int, user_id: int,  scheduledStartDate,
-                            meetingStart, meetingEnd, noteTakerId, db: Session, location: str):
+                             noteTakerId, db: Session, pastData_flag:bool, location: str):
 
         user_record = db.query(MdlUsers).filter(
             MdlUsers.id == user_id).one_or_none()
@@ -121,16 +121,11 @@ class IltMeetingService:
             raise CustomException(404,  "ILT not found")
 
         current_date = datetime(2020, 1, 1, 00, 00)
-        if scheduledStartDate < current_date:
+        if scheduledStartDate < current_date and pastData_flag == False:
             raise CustomException(
                 404, "Please enter correct date, Date must be greater than currect date")
-
         db_meeting = MdlMeetings()
         db_meeting.schedule_start_at = scheduledStartDate
-        if meetingStart:
-            db_meeting.start_at = meetingStart
-        if meetingEnd:
-            db_meeting.end_at = meetingEnd
         if location:
             db_meeting.location = location
         if noteTakerId:
@@ -324,7 +319,7 @@ class IltMeetingService:
         except Exception as e:
             raise CustomException(500,  f"Internal server error {str(e)}")
 
-    def start_ilt_meeting(self, UserId: int, meeting_id: int, ilt_id: int, db: Session):
+    def start_ilt_meeting(self, UserId: int, pastData_flag:bool, meeting_id: int, ilt_id: int, db: Session):
 
         if db.query(MdlUsers).filter(MdlUsers.id == UserId).one_or_none() is None:
             raise CustomException(400,  "User did not found ")
@@ -345,7 +340,7 @@ class IltMeetingService:
         if db_meeting is None:
             raise CustomException(404,  "Meeting records not found")
         
-        db_meeting.start_at = datetime.utcnow()
+        db_meeting.start_at = datetime.utcnow() if pastData_flag==False else db_meeting.schedule_start_at
         db.commit()
         db.refresh(db_meeting)
         db.close()
@@ -355,7 +350,7 @@ class IltMeetingService:
             "userMessage": "Meeting have started successfully"
         }
         
-    def stop_ilt_meeting(self, UserId: int, meeting_id: int, ilt_id: int, db: Session):
+    def stop_ilt_meeting(self, UserId: int, meeting_id: int, ilt_id: int,pastData_flag:bool, db: Session):
         if db.query(MdlUsers).filter(MdlUsers.id == UserId).one_or_none() is None:
             raise CustomException(400,  "No users available ")
         if db.query(MdlIlts).filter(MdlIlts.id == ilt_id).one_or_none() is None:
@@ -374,7 +369,7 @@ class IltMeetingService:
             raise CustomException(400,  "Meeting has not started")
         
         if db_meeting.start_at:
-            db_meeting.end_at = datetime.utcnow()
+            db_meeting.end_at = datetime.utcnow() if pastData_flag == False else db_meeting.schedule_start_at + timedelta(hours=1)
             db.commit()
             db.refresh(db_meeting)
         # taking White Board snapshot for meeting(common View across all meeting)
@@ -396,12 +391,12 @@ class IltMeetingService:
         if db.query(MdlIlts).filter(MdlIlts.id == ilt_id).one_or_none() is None:
             raise CustomException(400,  "No Ilt present")
 
-        db_meeting = db.query(MdlMeetings).filter(
+        meeting_re = db.query(MdlMeetings).filter(
             MdlMeetings.id == meeting_id).one_or_none()
-        if db_meeting is None:
+        if meeting_re is None:
             raise CustomException(400,  "Meeting records is not available")
         
-        
+        num_of_attand_members = 0
         ## check pending- issue, todo, 
         member_meeting_response_id_list = [map_record.meeting_response_id 
                                             for map_record in db.query(MdlIltMeetingResponses)
@@ -415,7 +410,7 @@ class IltMeetingService:
         pending_to_do_record_list = []
         for responceRecord in member_meeting_responce_records:
             meeting_response_id = responceRecord.id
-            
+            num_of_attand_members += 1 if responceRecord.attendance_flag else 0
             ##issue
             list_of_issue_records = (db.query(MdlIltissue)
                                         .filter(MdlIltissue.meeting_response_id==meeting_response_id)
@@ -456,10 +451,11 @@ class IltMeetingService:
         # cal future_meetings_list
         # here 0 is for meeting which are notStarted 
         future_meetings_list = self.get_upcomming_Ilts_meeting_list(user_id=UserId, statusId=0, ilt_id=ilt_id, db=db)
-
+        attandancePercentage = (num_of_attand_members / len(member_meeting_responce_records)) *100
         return {
                 "iltId": ilt_id,
                 "meetingId":meeting_id,
+                "attandancePercentage":attandancePercentage,
                 "issues":pending_issue_record_list,
                 "todoList":pending_to_do_record_list,
                 "futureMeetings":future_meetings_list
