@@ -483,9 +483,10 @@ class IltMeetingResponceService:
                                                       MdlIltMeetingResponses.meeting_user_id==assign_to_user_id)
                                                       )
                                                       )
-                db_issue_latest_re.meeting_response_id == assignto_responce_id
-                db.commit()
-                db.refresh(db_issue_latest_re)
+                if db_issue_latest_re.meeting_response_id != assignto_responce_id:
+                    db_issue_latest_re.meeting_response_id == assignto_responce_id
+                    db.commit()
+                    db.refresh(db_issue_latest_re)
 
         else:
             db_issue = Mdl_issue(issue=issue,
