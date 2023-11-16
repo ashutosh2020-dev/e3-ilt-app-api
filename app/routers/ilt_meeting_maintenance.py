@@ -27,7 +27,7 @@ def create_ilt_meeting(id: int, ilt: MeetingData, UserId: int = Header(convert_u
     return IltMeetingService.create_ilts_meeting(ilt_id=id,
                                                  user_id=UserId,
                                                  scheduledStartDate=ilt.scheduledStartDate,
-                                                 pastData_flag = ilt.pastData_flag,
+                                                 pastData_flag = ilt.pastData_flag.pastData_flag,
                                                  noteTakerId = ilt.noteTakerId,
                                                  location=ilt.location,
                                                  db=db)
@@ -58,7 +58,7 @@ def start_ilt_meeting(id: int, meetingId: int, pastData_flag: PastData, UserId: 
 
     return IltMeetingService.start_ilt_meeting(meeting_id=meetingId,
                                                ilt_id=id,
-                                               pastData_flag=pastData_flag,
+                                               pastData_flag=pastData_flag.pastData_flag,
                                                UserId=UserId,
                                                db=db)
 
@@ -69,7 +69,7 @@ def stop_ilt_meeting(id: int, meetingId: int, pastData_flag: PastData, UserId: i
 
     return IltMeetingService.stop_ilt_meeting(meeting_id=meetingId,
                                               ilt_id=id,
-                                              pastData_flag=pastData_flag,
+                                              pastData_flag=pastData_flag.pastData_flag,
                                               UserId=UserId,
                                               db=db)
 
