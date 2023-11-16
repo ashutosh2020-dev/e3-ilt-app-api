@@ -468,7 +468,7 @@ class IltMeetingResponceService:
             db.refresh(user_issue_record)
             #get all responcesId from current meeting, 
             if assign_to_user_id:
-                meeting_id = (db.query(MdlIltMeetingResponses.meeting_id)
+                meeting_id, = (db.query(MdlIltMeetingResponses.meeting_id)
                                             .filter(MdlIltMeetingResponses.meeting_response_id == meetingResponseId)
                                             .one())
                 meeting_responcesId_list = [r_id for r_id, in db.query(MdlIltMeetingResponses.meeting_response_id)
@@ -504,8 +504,18 @@ class IltMeetingResponceService:
             db.add(db_issue)
             db.commit()
             db.refresh(db_issue)
+
+            meeting_id, = (db.query(MdlIltMeetingResponses.meeting_id)
+                                            .filter(MdlIltMeetingResponses.meeting_response_id == meetingResponseId)
+                                            .one())
+            assignto_responce_id, = (db.query(MdlIltMeetingResponses.meeting_response_id)
+                                     .filter(and_(MdlIltMeetingResponses.meeting_id == meeting_id,
+                                                  MdlIltMeetingResponses.meeting_user_id == assign_to_user_id)
+                                             )
+                                     )
+
             db_meeting_issue = MdlIltissue(
-                meeting_response_id=meetingResponseId, issue_id=db_issue.id, parent_meeting_responce_id=meetingResponseId)
+                meeting_response_id=assignto_responce_id, issue_id=db_issue.id, parent_meeting_responce_id=meetingResponseId)
             db.add(db_meeting_issue)
             db.commit()
             db.refresh(db_meeting_issue)
