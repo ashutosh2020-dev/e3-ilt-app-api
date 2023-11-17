@@ -88,7 +88,7 @@ def create_ilt_meeting_updates(meetingResponseId: int, ilt: updatesData,
 def create_update_ilt_meeting_issues(meetingResponseId: int,
                                      ilt: IssueList,
                                      UserId: int = Header(
-                                         convert_underscores=False),
+                                     convert_underscores=False),
                                      db: Session = Depends(get_db)):
     for i in range(len(ilt.issues)):
         responce = IltMeetingResponceService.create_update_issue(user_id=UserId,
@@ -104,6 +104,7 @@ def create_update_ilt_meeting_issues(meetingResponseId: int,
                                                                  leader_support_flag=ilt.issues[i].leaderSupportFlag,
                                                                  advance_equality_flag=ilt.issues[i].advanceEquityFlag,
                                                                  others_flag=ilt.issues[i].othersFlag,
+                                                                 assign_to_user_id=ilt.issues[i].assignTo,
                                                                  db=db)
 
     return responce

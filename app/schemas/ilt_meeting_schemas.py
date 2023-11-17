@@ -2,8 +2,12 @@ from pydantic import BaseModel
 from typing import List, Optional
 from datetime import datetime
 
+class PastData(BaseModel):
+    pastData_flag: Optional[bool]=False
+
 class MeetingData(BaseModel):
     scheduledStartDate: Optional[datetime]=None
+    pastData_flag: PastData
     meetingStart: Optional[datetime]=None
     meetingEnd: Optional[datetime]=None
     location: Optional[str]=None
