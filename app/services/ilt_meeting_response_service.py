@@ -415,7 +415,7 @@ class IltMeetingResponceService:
             raise CustomException(
                 500,  "unable to process your request {str(e)}")
 
-    def create_update_issue(self, user_id: int, meetingResponseId: int, id: int, issue: str, priority: int,
+    def create_update_issue(self, user_id: int, meetingResponseId: int, id: int,meeting_id:int,  issue: str, priority: int,
                             due_date,
                             resolves_flag: bool,
                             recognize_performance_flag: bool,
@@ -423,7 +423,7 @@ class IltMeetingResponceService:
                             leader_support_flag: bool,
                             advance_equality_flag: bool,
                             others_flag: bool,
-                            assign_to_user_id:int,
+                            assign_to_responce_id:int,
                             db: Session):
 
         
@@ -436,6 +436,10 @@ class IltMeetingResponceService:
             MdlMeetingsResponse.id == meetingResponseId).one_or_none()
         if responce_id is None:
             raise CustomException(404,  "responce_id not found")
+        check_assign_to_responce_id = db.query(MdlIltMeetingResponses).filter(and_(MdlIltMeetingResponses.meeting_id==meeting_id,
+                                                                                   MdlIltMeetingResponses.meeting_response_id==assign_to_responce_id)).one_or_none()
+        if check_assign_to_responce_id is None:
+            raise CustomException(404,  "This responce_id is not associated with This Meeting.")
         meeting_id,  = db.query(MdlIltMeetingResponses.meeting_id).filter(MdlIltMeetingResponses.meeting_response_id==meetingResponseId).one()
         meeting_re = db.query(MdlMeetings).filter(MdlMeetings.id==meeting_id).one_or_none()
         if meeting_re.start_at and meeting_re.end_at is None:
@@ -445,10 +449,24 @@ class IltMeetingResponceService:
                 raise CustomException(404,  "Only Ilt owner and Note Taker can edit the data.")
         if meeting_re.end_at:
             raise CustomException(404,  "This meeting has been end, We can not update it.")
+        
         if id:
+            if assign_to_responce_id:
+
+                meeting_responcesId_list = [r_id for r_id, in db.query(MdlIltMeetingResponses.meeting_response_id)
+                                            .filter(MdlIltMeetingResponses.meeting_id == meeting_id)
+                                            .all()]
+                db_issue_latest_re = (db.query(MdlIltissue)
+                                      .filter(and_(MdlIltissue.issue_id == id,
+                                                   MdlIltissue.meeting_response_id.isin(meeting_responcesId_list)))).one_or_none()
                 
+                if db_issue_latest_re.meeting_response_id != assign_to_responce_id:
+                    db_issue_latest_re.meeting_response_id == assign_to_responce_id
+                    db.commit()
+                    db.refresh(db_issue_latest_re)
+
             issue_map_re = (db.query(MdlIltissue)
-                            .filter(and_(MdlIltissue.meeting_response_id == meetingResponseId,
+                            .filter(and_(MdlIltissue.meeting_response_id == assign_to_responce_id,
                                     MdlIltissue.issue_id == id))
                             .one())
             
@@ -467,27 +485,8 @@ class IltMeetingResponceService:
             db.commit()
             db.refresh(user_issue_record)
             #get all responcesId from current meeting, 
-            if assign_to_user_id:
-                meeting_id, = (db.query(MdlIltMeetingResponses.meeting_id)
-                                            .filter(MdlIltMeetingResponses.meeting_response_id == meetingResponseId)
-                                            .one())
-                meeting_responcesId_list = [r_id for r_id, in db.query(MdlIltMeetingResponses.meeting_response_id)
-                                            .filter(MdlIltMeetingResponses.meeting_id == meeting_id)
-                                            .all()]
 
-                db_issue_latest_re = (db.query(MdlIltissue)
-                            .filter(and_(MdlIltissue.issue_id==id,
-                                         MdlIltissue.meeting_response_id.isin(meeting_responcesId_list)))).one_or_none()
-                assignto_responce_id, = (db.query(MdlIltMeetingResponses.meeting_response_id)
-                                        .filter(and_(MdlIltMeetingResponses.meeting_id==meeting_id,
-                                                      MdlIltMeetingResponses.meeting_user_id==assign_to_user_id)
-                                                      )
-                                                      )
-                if db_issue_latest_re.meeting_response_id != assignto_responce_id:
-                    db_issue_latest_re.meeting_response_id == assignto_responce_id
-                    db.commit()
-                    db.refresh(db_issue_latest_re)
-
+            
         else:
             db_issue = Mdl_issue(issue=issue,
                                     priority=priority,
@@ -505,17 +504,17 @@ class IltMeetingResponceService:
             db.commit()
             db.refresh(db_issue)
 
-            meeting_id, = (db.query(MdlIltMeetingResponses.meeting_id)
-                                            .filter(MdlIltMeetingResponses.meeting_response_id == meetingResponseId)
-                                            .one())
-            assignto_responce_id, = (db.query(MdlIltMeetingResponses.meeting_response_id)
-                                     .filter(and_(MdlIltMeetingResponses.meeting_id == meeting_id,
-                                                  MdlIltMeetingResponses.meeting_user_id == assign_to_user_id)
-                                             )
-                                     )
+            # meeting_id, = (db.query(MdlIltMeetingResponses.meeting_id)
+            #                                 .filter(MdlIltMeetingResponses.meeting_response_id == meetingResponseId)
+            #                                 .one())
+            # assignto_responce_id, = (db.query(MdlIltMeetingResponses.meeting_response_id)
+            #                          .filter(and_(MdlIltMeetingResponses.meeting_id == meeting_id,
+            #                                       MdlIltMeetingResponses.meeting_user_id == assign_to_responce_id)
+            #                                  )
+            #                          )
 
             db_meeting_issue = MdlIltissue(
-                meeting_response_id=assignto_responce_id, issue_id=db_issue.id, parent_meeting_responce_id=meetingResponseId)
+                meeting_response_id=assign_to_responce_id, issue_id=db_issue.id, parent_meeting_responce_id=assign_to_responce_id)
             db.add(db_meeting_issue)
             db.commit()
             db.refresh(db_meeting_issue)
