@@ -440,7 +440,10 @@ class IltMeetingResponceService:
                                                                                    MdlIltMeetingResponses.meeting_response_id==assign_to_responce_id)).one_or_none()
         if check_assign_to_responce_id is None:
             raise CustomException(404,  "This responce_id is not associated with This Meeting.")
-        meeting_id,  = db.query(MdlIltMeetingResponses.meeting_id).filter(MdlIltMeetingResponses.meeting_response_id==meetingResponseId).one()
+        
+        meeting_id_,  = db.query(MdlIltMeetingResponses.meeting_id).filter(MdlIltMeetingResponses.meeting_response_id==meetingResponseId).one()
+        if meeting_id_ != meeting_id:
+             raise CustomException(404,  "invalid Meeting Id")
         meeting_re = db.query(MdlMeetings).filter(MdlMeetings.id==meeting_id).one_or_none()
         if meeting_re.start_at and meeting_re.end_at is None:
             iltId, = db.query(MdlIltMeetings.ilt_id).filter(MdlIltMeetings.ilt_meeting_id==meeting_id).one_or_none()

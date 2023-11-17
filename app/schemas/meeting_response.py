@@ -85,7 +85,8 @@ class feedback(BaseModel):
 
 class singleIssue(BaseModel):
     issueId:Optional[int]=0
-    assignTo: Optional[int] = 0
+    assignToResponceId: Optional[int] = 0
+    meetingID: Optional[int] = 0
     issue: str
     priorityId: Optional[int] = 0
     date: datetime= Field(default_factory=lambda: datetime.now())
