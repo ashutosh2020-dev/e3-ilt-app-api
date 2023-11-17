@@ -459,17 +459,18 @@ class IltMeetingResponceService:
                 meeting_responcesId_list = [r_id for r_id, in db.query(MdlIltMeetingResponses.meeting_response_id)
                                             .filter(MdlIltMeetingResponses.meeting_id == meeting_id)
                                             .all()]
+                # print("----------",meeting_responcesId_list)
                 db_issue_latest_re = (db.query(MdlIltissue)
                                       .filter(and_(MdlIltissue.issue_id == id,
-                                                   MdlIltissue.meeting_response_id.isin(meeting_responcesId_list)))).one_or_none()
-                
+                                                   MdlIltissue.meeting_response_id.in_(meeting_responcesId_list)))).one_or_none()
+                # print(db_issue_latest_re.meeting_response_id, assign_to_responce_id)
                 if db_issue_latest_re.meeting_response_id != assign_to_responce_id:
-                    db_issue_latest_re.meeting_response_id == assign_to_responce_id
+                    db_issue_latest_re.meeting_response_id = assign_to_responce_id
                     db.commit()
                     db.refresh(db_issue_latest_re)
 
             issue_map_re = (db.query(MdlIltissue)
-                            .filter(and_(MdlIltissue.meeting_response_id == assign_to_responce_id,
+                            .filter(and_(MdlIltissue.meeting_response_id == db_issue_latest_re.meeting_response_id,
                                     MdlIltissue.issue_id == id))
                             .one())
             
