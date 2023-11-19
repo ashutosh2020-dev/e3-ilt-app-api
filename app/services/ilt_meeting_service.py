@@ -388,7 +388,7 @@ class IltMeetingService:
         
         difference = (db_meeting.schedule_start_at - datetime.utcnow()).total_seconds()
         diff = difference/60 
-        if diff>2:
+        if diff > 2 and pastData_flag == False:
             raise CustomException(400,  "Meeting can start only after meeting schedule time. Please adjust the meeting schedule(Use UTC format only).")
         if db_meeting is None:
             raise CustomException(404,  "Meeting records not found")
