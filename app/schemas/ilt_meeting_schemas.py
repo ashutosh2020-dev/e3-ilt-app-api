@@ -7,7 +7,7 @@ class PastData(BaseModel):
 
 class MeetingData(BaseModel):
     scheduledStartDate: Optional[datetime]=None
-    pastData_flag: PastData
+    pastDataFlag: Optional[bool] = False
     meetingStart: Optional[datetime]=None
     meetingEnd: Optional[datetime]=None
     location: Optional[str]=None
