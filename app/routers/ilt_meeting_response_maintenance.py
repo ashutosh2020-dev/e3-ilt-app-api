@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from app.config.database import get_db
 from app.services.ilt_meeting_response_service import IltMeetingResponceService
 from app.schemas.meeting_response import MeetingResponse, checkIn, feedback, \
-    TodoList, meetingReasponceRock, updatesData, IssueList
+    TodoList, meetingReasponceRock, updatesData, IssueList, RockData
 from app.exceptions.customException import CustomException
 
 
@@ -94,6 +94,7 @@ def create_update_ilt_meeting_issues(meetingResponseId: int,
         responce = IltMeetingResponceService.create_update_issue(user_id=UserId,
                                                                  meetingResponseId=meetingResponseId,
                                                                  id=ilt.issues[i].issueId,
+                                                                 meeting_id=ilt.issues[i].meetingID,
                                                                  issue=ilt.issues[i].issue,
                                                                  priority=ilt.issues[i].priorityId,
                                                                  due_date=ilt.issues[i].date,
@@ -104,7 +105,7 @@ def create_update_ilt_meeting_issues(meetingResponseId: int,
                                                                  leader_support_flag=ilt.issues[i].leaderSupportFlag,
                                                                  advance_equality_flag=ilt.issues[i].advanceEquityFlag,
                                                                  others_flag=ilt.issues[i].othersFlag,
-                                                                 assign_to_user_id=ilt.issues[i].assignTo,
+                                                                 assign_to_responce_id=ilt.issues[i].assignToResponceId,
                                                                  db=db)
 
     return responce
@@ -113,3 +114,9 @@ def create_update_ilt_meeting_issues(meetingResponseId: int,
 @router.post("/api/v1/ilts/meetingResponses/{meetingResponseId}")
 async def update_meeting_response(ilt_data: MeetingResponse, db: Session = Depends(get_db)):
     return IltMeetingResponceService.update_ilt_meeting_responses(data=ilt_data, db=db)
+
+# @router.post("/api/v1/ilts/rocks/")
+# async def create_ilt_rocks(rockData:RockData, userId:int=Header(convert_underscores=False), db:Session=Depends(get_db)):
+#     return IltMeetingResponceService.create_ilts_rocks(user_id=userId, 
+#                                                        name=rockData.name, 
+#                                                        description=rockData.description, Ilt_id=rockData.iltId)
