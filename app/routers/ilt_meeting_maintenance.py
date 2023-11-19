@@ -53,23 +53,23 @@ def update_ilt_meeting(meetingId: int,
 
 
 @router.post("/api/v1/ilts/{id}/meetings/{meetingId}/start")
-def start_ilt_meeting(id: int, meetingId: int, pastData_flag: PastData, UserId: int = Header(convert_underscores=False),
+def start_ilt_meeting(id: int, meetingId: int, pastDataFlag: PastData, UserId: int = Header(convert_underscores=False),
                       db: Session = Depends(get_db)):
 
     return IltMeetingService.start_ilt_meeting(meeting_id=meetingId,
                                                ilt_id=id,
-                                               pastData_flag=pastData_flag.pastDataFlag,
+                                               pastData_flag=pastDataFlag.pastDataFlag,
                                                UserId=UserId,
                                                db=db)
 
 
 @router.post("/api/v1/ilts/{id}/meetings/{meetingId}/stop")
-def stop_ilt_meeting(id: int, meetingId: int, pastData_flag: PastData, UserId: int = Header(convert_underscores=False),
+def stop_ilt_meeting(id: int, meetingId: int, pastDataFlag: PastData, UserId: int = Header(convert_underscores=False),
                      db: Session = Depends(get_db)):
 
     return IltMeetingService.stop_ilt_meeting(meeting_id=meetingId,
                                               ilt_id=id,
-                                              pastData_flag=pastData_flag.pastDataFlag,
+                                              pastData_flag=pastDataFlag.pastDataFlag,
                                               UserId=UserId,
                                               db=db)
 
