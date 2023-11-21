@@ -6,7 +6,7 @@ from app.models import MdlMeeting_rocks, MdlIlt_ToDoTask, Mdl_updates, \
     MdlIlt_rocks, MdlIltMembers, MdlIltMeetings, MdlPriorities
 from sqlalchemy import desc, join
 from typing import List, Optional
-from app.schemas.meeting_response import MeetingResponse, Duedate
+from app.schemas.meeting_response import MeetingResponse, Duedate, RockInput, RockOutput, Member
 from datetime import datetime, timezone
 from typing import Annotated, Union
 from app.exceptions.customException import CustomException
@@ -180,139 +180,199 @@ class IltMeetingResponceService:
         db.refresh(map_record)
         return True
 
-    def create_ilts_rocks(self, user_id: int, name: str, description: str, Ilt_id: int, db: Session):
-        try:
-            # check meetingResponseId
-            user_re = db.query(MdlUsers).filter(
-                MdlUsers.id == user_id).one_or_none()
-            if user_re is None:
-                raise CustomException(404,  "User_id not found")
-            ilt_re = db.query(MdlIlts).filter(
-                MdlIlts.id == Ilt_id).one_or_none()
-            if ilt_re is None:
-                raise CustomException(404,  "ilt_id not found")
-            # db_rock = MdlRocks(name =name, description=description, on_track_flag=onTrack)
+    def create_ilts_rocks(self, Ilt_id: int, name: str, description: str,  db: Session):
+        
             db_rock = MdlRocks(ilt_id=Ilt_id, name=name,
                                description=description)
             db.add(db_rock)
             db.commit()
             db.refresh(db_rock)
-            return {
+            return True
+        
+    def read_ilt_rock(self, user_id: int, ilt_id: int, meeting_id: int,  db: Session):
+        check_user_id = db.query(MdlUsers).filter(MdlUsers.id == user_id).one_or_none()
+        if check_user_id is None:
+            raise CustomException(404,  "user_id did not exist!")
+        
+        if db.query(MdlIlts).filter(MdlIlts.id == ilt_id).one_or_none() is None:
+            raise CustomException(404,  "Ilt not found")
+        meeting_re = (db.query(MdlMeetings)
+                        .filter(MdlMeetings.id==meeting_id)
+                        .one_or_none())
+        list_rocks_re = (db.query(MdlRocks).filter(MdlRocks.ilt_id == ilt_id,
+                                              MdlRocks.created_at < meeting_re.schedule_start_at)
+                                    .all())
+        meeting_rock_records = []
+        for record in list_rocks_re:
+            rockObj = RockOutput()
+            rockObj.rockId =record.id
+            rockObj.iltId = record.ilt_id
+            rockObj.name = record.name
+            rockObj.description = record.description
+            rockObj.onTrack = record.on_track_flag
+            rockObj.isComplete = record.is_complete
 
-                "statusCode": 200,
-                "userMessage": "rock have successfully created inside the Ilt"
-            }
-        except Exception as e:
-            raise CustomException(500, f"unable to create rock: {str(e)}")
+            rockObj.rockOwner = [Member(u_re.id, u_re.fname, u_re.lname)
+                                    for u_re in db.query(MdlUsers).filter(MdlUsers.id==record.owner_id)]
+            
+            rockObj.rockMembers = [ Member(u_re.id, u_re.fname, u_re.lname) 
+                                    for u_re in db.query(MdlUsers)
+                                    .join(MdlIlt_rocks, MdlUsers.id == MdlIlt_rocks.user_id)
+                                    .filter(MdlIlt_rocks.ilt_rock_id == record.id,
+                                            MdlIlt_rocks.is_rock_owner == False)
+                                    .all()
+                                ]
+           
+            meeting_rock_records.append(rockObj)
 
-    def read_ilt_rock(self, user_id: int, ilt_id: int, db: Session):
-        try:
-            check_user_id = db.query(MdlUsers).filter(
-                MdlUsers.id == user_id).one_or_none()
-            if check_user_id is None:
-                raise CustomException(404,  "user_id did not exist!")
-            check_ilt = db.query(MdlRocks).filter(
-                MdlRocks.ilt_id == ilt_id).first()
-            if not check_ilt:
-                raise CustomException(
-                    404,  "No rocks has created for this ilt_id")
+        return meeting_rock_records
 
-            ilt_rock_records = [{"id": record.id,
-                                "name": record.name,
-                                 "description": record.description}
-                                for record in db.query(MdlRocks)
-                                .filter(MdlRocks.ilt_id == ilt_id)
-                                .all()]
-            return ilt_rock_records
-        except Exception as e:
-            raise CustomException(404,  f"unable to process your request{e}")
+    def assign_ilts_rocks(self, name: str, description: str, logged_user_id: int, user_ids, Ilt_id: int, rock_id: int, rockOwnerId: int, db: Session):
 
-    def assign_ilts_rocks(self, logged_user_id: int, user_ids, Ilt_id: int, rock_id: int, rockOwnerId: int, db: Session):
-
-        if db.query(MdlUsers).filter(MdlUsers.id == logged_user_id).one_or_none() is None:
-            raise CustomException(400,  "logged userId is not found")
-        rockOwner_Record = db.query(MdlUsers).filter(
-            MdlUsers.id == rockOwnerId).one_or_none()
-        if rockOwner_Record is None:
-            raise CustomException(400,  "owner userId does not exist")
+        # create
+        db_rock = MdlRocks(name, description, Ilt_id)
+        db_rock.owner_id = rockOwnerId
+        db.add(db_rock)
+        db.commit()
+        db.refresh(db_rock)
+        
+        # assign
         user_ids = list(set(user_ids))
         for user_id in user_ids:
             ilt_member_exists = db.query(
-                db.query(MdlIltMembers)
-                .filter(MdlIltMembers.ilt_id == Ilt_id, MdlIltMembers.member_id == user_id)
-                .exists()
-            ).scalar()
+                                        db.query(MdlIltMembers)
+                                        .filter(MdlIltMembers.ilt_id == Ilt_id, MdlIltMembers.member_id == user_id)
+                                        .exists()
+                                    ).scalar()
             if not ilt_member_exists:
-                raise CustomException(
-                    404,  "record not found wrt user and ilt id, user is not a member of the ilt")
-            else:
-                pass
-
+                raise CustomException(404,  "record not found wrt user and ilt id, user is not a member of the ilt")
         check_ilt_inside_rock = db.query(
-            db.query(MdlRocks)
-            .filter(MdlRocks.ilt_id == Ilt_id, MdlRocks.id == rock_id)
-            .exists()
-        ).scalar()
+                                        db.query(MdlRocks)
+                                        .filter(MdlRocks.ilt_id == Ilt_id, MdlRocks.id == rock_id)
+                                        .exists()
+                                    ).scalar()
         if not check_ilt_inside_rock:
-            raise CustomException(
-                400,  "this rock_id is not create inside ilt")
-        db_rock_Record = db.query(MdlRocks).filter(
-            MdlRocks.id == rockOwnerId).one()
-        db_rock_Record.owner_id = rockOwnerId
-        db.add(db_rock_Record)
+            raise CustomException(400,  "this rock_id is not create inside ilt")
+        
+        for uid in user_ids:
+            ownerStatus = False
+            if uid == rockOwnerId:
+                ownerStatus = True
+            db_ilt_rocks = MdlIlt_rocks(
+                ilt_id=Ilt_id, user_id=uid, ilt_rock_id=rock_id, is_rock_owner=ownerStatus)
+
+            db.add(db_ilt_rocks)
+            db.commit()
+            db.refresh(db_ilt_rocks)
+            db.close()
+        
+        # map with meeting Responce
+        meetingResponseId = 0
+        db_meeting_rocks = MdlMeeting_rocks(ilt_meeting_response_id=meetingResponseId,
+                                            rock_id=rockId,
+                                            on_track_flag=onTrack)
+        db.add(db_meeting_rocks)
         db.commit()
-        db.refresh(db_rock_Record)
-        try:
-            for uid in user_ids:
-                ownerStatus = False
-                if uid == rockOwnerId:
-                    ownerStatus = True
-                db_ilt_rocks = MdlIlt_rocks(
-                    ilt_id=Ilt_id, user_id=uid, ilt_rock_id=rock_id, is_rock_owner=ownerStatus)
+        db.refresh(db_meeting_rocks)
+        db.close()
+        return {
 
-                db.add(db_ilt_rocks)
-                db.commit()
-                db.refresh(db_ilt_rocks)
-                db.close()
-            return {
-
-                "statusCode": 200,
-                "userMessage": "rock is added to the corresponding user_id successfully with updated ownerId "
-            }
-        except Exception as e:
-            raise CustomException(
-                500,  f"unable to process your request, error {e}")
+            "statusCode": 200,
+            "userMessage": "rock is added to the corresponding user_id successfully with updated ownerId "
+        }
+        
 
     def create_ilts_meeting_rocks(self, user_id: int, meetingResponseId: int, rockId: int,
                                   onTrack: bool, db: Session):
-        try:
-            user = db.query(MdlUsers).filter(
-                MdlUsers.id == user_id).one_or_none()
-            if user is None:
-                raise CustomException(404,  "User not found")
-            MeetingsResponse = db.query(MdlMeetingsResponse).filter(
-                MdlMeetingsResponse.id == meetingResponseId).one_or_none()
-            if MeetingsResponse is None:
-                raise CustomException(
-                    404,  "MeetingsResponse record not found")
-            check_rock_re = db.query(MdlRocks).filter(
-                MdlRocks.id == rockId).one_or_none()
-            if check_rock_re is None:
-                raise CustomException(404,  "please enter correct rock id")
+    
+        check_rock_re = (db.query(MdlRocks)
+                        .filter(MdlRocks.id == rockId)
+                        .one_or_none())
+        if check_rock_re is None:
+            raise CustomException(404,  "please enter correct rock id")
+        
+        MeetingsResponse = (db.query(MdlMeetingsResponse)
+                            .filter(MdlMeetingsResponse.id == meetingResponseId)
+                            .one_or_none())
+        if MeetingsResponse is None:
+            raise CustomException(404,  "MeetingsResponse record not found")
+        
+        
 
-            db_meeting_rocks = MdlMeeting_rocks(ilt_meeting_response_id=meetingResponseId,
-                                                rock_id=rockId, on_track_flag=onTrack)
-            db.add(db_meeting_rocks)
-            db.commit()
-            db.refresh(db_meeting_rocks)
-            db.close()
-            return {
+        db_meeting_rocks = MdlMeeting_rocks(ilt_meeting_response_id=meetingResponseId,
+                                            rock_id=rockId, 
+                                            on_track_flag=onTrack)
+        db.add(db_meeting_rocks)
+        db.commit()
+        db.refresh(db_meeting_rocks)
+        db.close()
+        return {
 
-                "statusCode": 200,
-                "userMessage": "rock added to the corresponding meetingRosponse id successfully"
-            }
-        except Exception as e:
-            raise CustomException(500,  f"unable to process your request {e}")
+            "statusCode": 200,
+            "userMessage": "rock added to the corresponding meetingRosponse id successfully"
+        }
+
+    def create_assign_update_rock(self, rockData:RockInput, user_id, meeting_id, db:Session):
+
+        if db.query(MdlIlts).filter(MdlIlts.id == rockData.iltId).one_or_none() is None:
+            raise CustomException(404,  "ilt not found")
+        if db.query(MdlIltMembers).filter(and_(MdlIltMembers.ilt_id==rockData.iltId,MdlIltMembers.member_id == rockData.rockOwnerId)
+                                          ).one_or_none() is None:
+            raise CustomException(400,  "Rock owner not found.")
+        user_re = db.query(MdlUsers).filter(MdlUsers.id == user_id).one_or_none()
+        if user_re is None:
+            raise CustomException(404,  "User not found")
+        #verify each member
+        rockMembers = rockData.rockMembers
+        rockMembers.append(rockData.rockOwnerId)
+        unique_user_ids = list(set(rockMembers))
+
+        ilt_member_count = (db.query(MdlIltMembers)
+                            .filter(MdlIltMembers.ilt_id == rockData.iltId, MdlIltMembers.member_id.in_(unique_user_ids))
+                            .count())
+        if ilt_member_count != len(unique_user_ids):
+            raise CustomException(
+                404, "Record not found for some users. They are not members of the ILT")
+        
+        # create
+        db_rock = MdlRocks(ilt_id=rockData.iltId, 
+                           name=rockData.name, 
+                           description=rockData.description, 
+                           owner_id=rockData.rockOwnerId,
+                           is_complete =False,
+                           created_at = datetime.utcnow(),
+                           on_track_flag = rockData.onTrack)
+        
+        
+        db.add(db_rock)
+        db.commit()
+        db.refresh(db_rock)
+        rock_id = db_rock.id
+        
+        # assign
+        check_ilt_inside_rock = db.query(MdlRocks.id).filter(and_(MdlRocks.ilt_id == rockData.iltId, MdlRocks.id == rock_id)).one_or_none()
+        if check_ilt_inside_rock is None:
+            raise CustomException(400,  "unable to create rock")
+        
+        rock_objects = [
+            MdlIlt_rocks(
+                ilt_id=rockData.iltId,
+                user_id=uid,
+                ilt_rock_id=rockData.rockId,
+                is_rock_owner=(uid == rockData.rockOwnerId)
+            )
+            for uid in unique_user_ids
+        ]
+        db.add_all(rock_objects)
+        db.commit()
+        db.refresh_all(rock_objects)
+
+        return {
+            "statusCode": 200,
+            "userMessage": "Rock added to the corresponding meetingRosponse id successfully"
+        }
+
+
 
     def create_update_to_do_list(self, user_id: int, id: int, meetingResponseId: int, description: str,
                                  dueDate: Duedate, status: bool, db: Session):
