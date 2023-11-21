@@ -99,3 +99,16 @@ class singleIssue(BaseModel):
 
 class IssueList(BaseModel):
     issues: List[singleIssue]
+
+# class Rock():
+#     def __init__(self) -> None:
+#         iltId: int = 
+#         name: str
+#         discription: str
+#         onTrack: bool
+
+class RockData(BaseModel):
+    iltId:int
+    name:str
+    description:Optional[str]=""
+    onTrack:Optional[bool] = False
