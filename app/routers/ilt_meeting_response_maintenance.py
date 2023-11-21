@@ -1,9 +1,10 @@
 from fastapi import APIRouter, Depends, Header
 from sqlalchemy.orm import Session
 from app.config.database import get_db
+from typing import List
 from app.services.ilt_meeting_response_service import IltMeetingResponceService
 from app.schemas.meeting_response import MeetingResponse, checkIn, feedback, \
-    TodoList, meetingReasponceRock, updatesData, IssueList, RockData
+    TodoList, meetingReasponceRock, updatesData, IssueList, RockInput, RockOutput
 from app.exceptions.customException import CustomException
 
 
@@ -115,8 +116,123 @@ def create_update_ilt_meeting_issues(meetingResponseId: int,
 async def update_meeting_response(ilt_data: MeetingResponse, db: Session = Depends(get_db)):
     return IltMeetingResponceService.update_ilt_meeting_responses(data=ilt_data, db=db)
 
-# @router.post("/api/v1/ilts/rocks/")
-# async def create_ilt_rocks(rockData:RockData, userId:int=Header(convert_underscores=False), db:Session=Depends(get_db)):
-#     return IltMeetingResponceService.create_ilts_rocks(user_id=userId, 
-#                                                        name=rockData.name, 
-#                                                        description=rockData.description, Ilt_id=rockData.iltId)
+
+@router.get("/api/v1/ilts/{iltId}/meeting/{meetingId}/rocks", response_model=List[RockOutput])
+async def read_rocks(meetingId:int, iltId: int, userId: int = Header(convert_underscores=False), db: Session = Depends(get_db)):
+    # return IltMeetingResponceService.read_ilt_rock( user_id= userId, ilt_id=iltId, meeting_id=meetingId, db=db)
+    return [{
+        "rockId": 723,
+        "iltId": iltId,
+        "name": "forward",
+        "description": "Quasi architecto excepturi fuga sint.",
+        "onTrack": True,
+        "rockOwner": {
+            "userId": 456,
+            "firstName": "John",
+            "lastName": "Doe"
+        },
+        "rockMembers": [
+            {
+                "userId": 789,
+                "firstName": "Alice",
+                "lastName": "Smith"
+            },
+            {
+                "userId": 234,
+                "firstName": "Bob",
+                "lastName": "Johnson"
+            }
+        ],
+        "isComplete": False
+    },
+        {
+        "rockId": 723,
+        "iltId": iltId,
+        "name": "forward",
+        "description": "Quasi architecto excepturi fuga sint.",
+        "onTrack": True,
+        "rockOwner": {
+            "userId": 456,
+            "firstName": "John",
+            "lastName": "Doe"
+        },
+        "rockMembers": [
+            {
+                "userId": 789,
+                "firstName": "Alice",
+                "lastName": "Smith"
+            },
+            {
+                "userId": 234,
+                "firstName": "Bob",
+                "lastName": "Johnson"
+            }
+        ],
+        "isComplete": False
+    },
+        {
+        "rockId": 723,
+        "iltId": iltId,
+        "name": "forward",
+        "description": "Quasi architecto excepturi fuga sint.",
+        "onTrack": True,
+        "rockOwner": {
+            "userId": 456,
+            "firstName": "John",
+            "lastName": "Doe"
+        },
+        "rockMembers": [
+            {
+                "userId": 789,
+                "firstName": "Alice",
+                "lastName": "Smith"
+            },
+            {
+                "userId": 234,
+                "firstName": "Bob",
+                "lastName": "Johnson"
+            }
+        ],
+        "isComplete": False
+    },
+        {
+        "rockId": 723,
+        "iltId": iltId,
+        "name": "forward",
+        "description": "Quasi architecto excepturi fuga sint.",
+        "onTrack": True,
+        "rockOwner": {
+            "userId": 456,
+            "firstName": "John",
+            "lastName": "Doe"
+        },
+        "rockMembers": [
+            {
+                "userId": 789,
+                "firstName": "Alice",
+                "lastName": "Smith"
+            },
+            {
+                "userId": 234,
+                "firstName": "Bob",
+                "lastName": "Johnson"
+            }
+        ],
+        "isComplete": False
+    }]
+
+@router.post("/api/v1/ilts/{iltId}/meeting/{meetingId}/rocks")
+async def create_assign_update_ilt_rocks(rockData: RockInput, 
+                                         meetingId:int,
+                                         iltId:int,
+                                         userId: int = Header(convert_underscores=False), 
+                                         db: Session = Depends(get_db)):
+    # return IltMeetingResponceService.create_assign_update_rock(user_id=userId,
+    #                                                            meeting_id = meetingId,
+    #                                                            rockData=rockData, 
+    #                                                            db=db)
+    return {
+        "statusCode": 200,
+        "userMessage": "Rock added to the corresponding meetingRosponse id successfully"
+    }
+    

@@ -107,8 +107,24 @@ class IssueList(BaseModel):
 #         discription: str
 #         onTrack: bool
 
-class RockData(BaseModel):
+class RockInput(BaseModel):
+    rockId: Optional[int]=None
     iltId:int
     name:str
     description:Optional[str]=""
     onTrack:Optional[bool] = False
+    rockOwnerId:int
+    rockMembers:Optional[List[int]] = []
+    isComplete: Optional[bool] = None
+
+
+
+class RockOutput(BaseModel):
+    rockId: int
+    iltId: int
+    name: str
+    description: str
+    onTrack: bool
+    rockOwner: Member
+    rockMembers: List[Member]
+    isComplete: bool

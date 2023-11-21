@@ -437,6 +437,7 @@ class IltMeetingService:
             "statusCode": 200,
             "userMessage": "Meeting have successfully ended",
         }
+
     def pending_issue_todo_raw(self, meeting_id ,db):
             num_of_attand_members = 0
             ## check pending- issue, todo, 
