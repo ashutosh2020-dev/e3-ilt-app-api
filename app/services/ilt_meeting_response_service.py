@@ -191,7 +191,7 @@ class IltMeetingResponceService:
                         .filter(MdlMeetings.id==meeting_id)
                         .one_or_none())
         list_rocks_re = (db.query(MdlRocks).filter(MdlRocks.ilt_id == ilt_id
-                                                   ,MdlRocks.created_at < meeting_re.schedule_start_at
+                                                   ,MdlRocks.created_at <= meeting_re.schedule_start_at
                                                    )
                                     .all())
         meeting_rock_records = []
