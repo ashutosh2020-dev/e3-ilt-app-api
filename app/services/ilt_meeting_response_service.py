@@ -232,6 +232,9 @@ class IltMeetingResponceService:
         if db.query(MdlIltMembers).filter(and_(MdlIltMembers.ilt_id==rockData.iltId,MdlIltMembers.member_id == rockData.rockOwnerId)
                                           ).one_or_none() is None:
             raise CustomException(400,  "Rock owner not found.")
+        meeting_re = db.query(MdlMeetings).filter(MdlMeetings.id ==meeting_id).one_or_none()
+        if meeting_re is None:
+             raise CustomException(400,  "Meeting not found.")
         user_re = db.query(MdlUsers).filter(MdlUsers.id == user_id).one_or_none()
         if user_re is None:
             raise CustomException(404,  "User not found")
@@ -356,12 +359,13 @@ class IltMeetingResponceService:
 
         if check_title:
             raise CustomException(404, "Rock Already Exists, Please change Rock Name")
+        
         # create
         db_rock = MdlRocks(ilt_id=rockData.iltId, 
                            name=rockData.name, 
                            description=rockData.description, 
                            is_complete =False,
-                           created_at = datetime.utcnow(),
+                           created_at = meeting_re.schedule_start_at,
                            on_track_flag = rockData.onTrack)
         
         db.add(db_rock)
