@@ -380,11 +380,10 @@ class IltMeetingService:
             raise CustomException(400,  "Ilt did not found ")
     
         ownerId, = db.query(MdlIlts.owner_id).filter(MdlIlts.id==ilt_id).one_or_none()
-        if UserId != ownerId:
-            raise CustomException(404,  "Only Ilt owner can start the data.")
-
-        db_meeting = db.query(MdlMeetings).filter(
-            MdlMeetings.id == meeting_id).one_or_none()
+        db_meeting = db.query(MdlMeetings).filter(MdlMeetings.id == meeting_id).one_or_none()
+        
+        if UserId != ownerId or UserId != db_meeting.note_taker_id:
+            raise CustomException(404,  "Only Ilt Owner or Note Taker can start the meeting.")
         
         difference = (db_meeting.schedule_start_at - datetime.utcnow()).total_seconds()
         diff = difference/60 
@@ -515,7 +514,7 @@ class IltMeetingService:
                                                                     statusId=0, 
                                                                     ilt_id=ilt_id, db=db)  # (here 0 is for meeting which are notStarted )
         attandancePercentage = (num_of_attand_members / num_of_member) * 100
-        attandiesFeedbackPercentage = (num_of_feedback_in_attand_members/num_of_attand_members)*100
+        attandiesFeedbackPercentage = (num_of_feedback_in_attand_members/num_of_attand_members)*100 if num_of_attand_members != 0 else 0
 
         return {
                 "iltId": ilt_id,
