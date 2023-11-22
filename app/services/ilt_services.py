@@ -1,7 +1,7 @@
 
 from sqlalchemy.orm import Session
 from app.models import MdlIlts, MdlIltMembers, MdlUsers, MdlSchools, MdlMeetings, \
-                    MdlIltMeetings, MdlRocks, MdlIlt_rocks, MdlIltMeetingResponses, MdlIltWhiteBoard
+                    MdlIltMeetings, MdlRocks, MdlIltMeetingResponses, MdlIltWhiteBoard
 from app.schemas.ilt_schemas import Ilt
 from app.services.ilt_meeting_response_service import IltMeetingResponceService
 from datetime import datetime, timezone
@@ -274,7 +274,7 @@ class IltService:
                     db.commit()
                     db.refresh(db_ilt_member)
             
-            if verified_new_member_ids:   
+            if verified_new_member_ids:
                 upcoming_meeting_list = db.query(MdlMeetings)\
                     .join(MdlIltMeetings, MdlMeetings.id == MdlIltMeetings.ilt_meeting_id)\
                     .filter(MdlIltMeetings.ilt_id == ilt_id)\

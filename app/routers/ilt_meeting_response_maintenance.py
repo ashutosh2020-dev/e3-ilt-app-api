@@ -117,109 +117,12 @@ async def update_meeting_response(ilt_data: MeetingResponse, db: Session = Depen
     return IltMeetingResponceService.update_ilt_meeting_responses(data=ilt_data, db=db)
 
 
-@router.get("/api/v1/ilts/{iltId}/meeting/{meetingId}/rocks", response_model=List[RockOutput])
-async def read_rocks(meetingId:int, iltId: int, userId: int = Header(convert_underscores=False), db: Session = Depends(get_db)):
-    # return IltMeetingResponceService.read_ilt_rock( user_id= userId, ilt_id=iltId, meeting_id=meetingId, db=db)
-    return [{
-        "rockId": 723,
-        "iltId": iltId,
-        "name": "forward",
-        "description": "Quasi architecto excepturi fuga sint.",
-        "onTrack": True,
-        "rockOwner": {
-            "userId": 456,
-            "firstName": "John",
-            "lastName": "Doe"
-        },
-        "rockMembers": [
-            {
-                "userId": 789,
-                "firstName": "Alice",
-                "lastName": "Smith"
-            },
-            {
-                "userId": 234,
-                "firstName": "Bob",
-                "lastName": "Johnson"
-            }
-        ],
-        "isComplete": False
-    },
-        {
-        "rockId": 723,
-        "iltId": iltId,
-        "name": "forward",
-        "description": "Quasi architecto excepturi fuga sint.",
-        "onTrack": True,
-        "rockOwner": {
-            "userId": 456,
-            "firstName": "John",
-            "lastName": "Doe"
-        },
-        "rockMembers": [
-            {
-                "userId": 789,
-                "firstName": "Alice",
-                "lastName": "Smith"
-            },
-            {
-                "userId": 234,
-                "firstName": "Bob",
-                "lastName": "Johnson"
-            }
-        ],
-        "isComplete": False
-    },
-        {
-        "rockId": 723,
-        "iltId": iltId,
-        "name": "forward",
-        "description": "Quasi architecto excepturi fuga sint.",
-        "onTrack": True,
-        "rockOwner": {
-            "userId": 456,
-            "firstName": "John",
-            "lastName": "Doe"
-        },
-        "rockMembers": [
-            {
-                "userId": 789,
-                "firstName": "Alice",
-                "lastName": "Smith"
-            },
-            {
-                "userId": 234,
-                "firstName": "Bob",
-                "lastName": "Johnson"
-            }
-        ],
-        "isComplete": False
-    },
-        {
-        "rockId": 723,
-        "iltId": iltId,
-        "name": "forward",
-        "description": "Quasi architecto excepturi fuga sint.",
-        "onTrack": True,
-        "rockOwner": {
-            "userId": 456,
-            "firstName": "John",
-            "lastName": "Doe"
-        },
-        "rockMembers": [
-            {
-                "userId": 789,
-                "firstName": "Alice",
-                "lastName": "Smith"
-            },
-            {
-                "userId": 234,
-                "firstName": "Bob",
-                "lastName": "Johnson"
-            }
-        ],
-        "isComplete": False
-    }]
+@router.get("/api/v1/ilts/{iltId}/meeting/{meetingId}/rocks")
+async def read_rocks(meetingId:int, iltId: int, 
+                     userId: int = Header(convert_underscores=False), 
+                     db: Session = Depends(get_db)):
+    return IltMeetingResponceService.read_ilt_rock(user_id= userId, ilt_id=iltId, meeting_id=meetingId, db=db)
+
 
 @router.post("/api/v1/ilts/{iltId}/meeting/{meetingId}/rocks")
 async def create_assign_update_ilt_rocks(rockData: RockInput, 
@@ -227,12 +130,7 @@ async def create_assign_update_ilt_rocks(rockData: RockInput,
                                          iltId:int,
                                          userId: int = Header(convert_underscores=False), 
                                          db: Session = Depends(get_db)):
-    # return IltMeetingResponceService.create_assign_update_rock(user_id=userId,
-    #                                                            meeting_id = meetingId,
-    #                                                            rockData=rockData, 
-    #                                                            db=db)
-    return {
-        "statusCode": 200,
-        "userMessage": "Rock added to the corresponding meetingRosponse id successfully"
-    }
-    
+    return IltMeetingResponceService.create_assign_update_rock(user_id=userId,
+                                                               meeting_id = meetingId,
+                                                               rockData=rockData, 
+                                                               db=db)

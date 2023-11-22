@@ -113,8 +113,7 @@ class MdlMeetingsResponse(Base):
     onTrack = Column(Boolean, nullable=True, default="")
 
 
-class \
-        MdlIltMeetingResponses(Base):
+class MdlIltMeetingResponses(Base):
     __tablename__ = "ilt_meeting_response_mapping"
     __table_args__ = (UniqueConstraint(
         'meeting_user_id', 'meeting_response_id'),)
@@ -134,31 +133,20 @@ class MdlRocks(Base):
     ilt_id = Column(Integer, ForeignKey("Ilts.id"), nullable=False, index=True)
     name = Column(String(255), nullable=False)
     description = Column(String(255), nullable=False)
-    owner_id = Column(Integer, ForeignKey("Ilt_rocks.id"),
-                      nullable=True, index=True, default=False)
-    # on_track_flag = Column(Boolean, nullable=False)
+    is_complete = Column(Boolean, default=False)
+    created_at = Column(DateTime, nullable=False)
+    updated_at = Column(DateTime, nullable=True)
+    on_track_flag = Column(Boolean, nullable=False)
 
 
-class MdlIlt_rocks(Base):
-    __tablename__ = "Ilt_user_rocks_mapping"
-    __table_args__ = (UniqueConstraint('ilt_id', 'user_id', 'ilt_rock_id'),)
+class MdlRocks_members(Base):
+    __tablename__ = "Rocks_member_mapping"
+    __table_args__ = (UniqueConstraint('user_id', 'ilt_rock_id'),)
     id = Column(Integer, primary_key=True, autoincrement=True)
-    ilt_id = Column(Integer, ForeignKey("Ilts.id"), nullable=False, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"),
-                     nullable=False, index=True)
-    ilt_rock_id = Column(Integer, ForeignKey(
-        "Ilt_rocks.id"), nullable=False, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"),nullable=False, index=True)
+    ilt_rock_id = Column(Integer, ForeignKey("Ilt_rocks.id"), nullable=False, index=True)
     is_rock_owner = Column(Boolean, nullable=False, default=False)
-
-
-class MdlMeeting_rocks(Base):
-    __tablename__ = "Ilt_meeting_rocks_maping"
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    ilt_meeting_response_id = Column(Integer, ForeignKey(
-        "meeting_response.id"), nullable=False, index=True)
-    # rock_id = Column(Integer, ForeignKey("Ilt_rocks.id"), nullable=False, index=True)
-    name = Column(String(255), nullable=True, default=None)
-    on_track_flag = Column(Boolean, nullable=True, default=None)
+    is_rock_member = Column(Boolean, nullable=False, default=False)
 
 
 class MdlIlt_ToDoTask(Base):

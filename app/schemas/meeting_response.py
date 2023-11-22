@@ -100,12 +100,6 @@ class singleIssue(BaseModel):
 class IssueList(BaseModel):
     issues: List[singleIssue]
 
-# class Rock():
-#     def __init__(self) -> None:
-#         iltId: int = 
-#         name: str
-#         discription: str
-#         onTrack: bool
 
 class RockInput(BaseModel):
     rockId: Optional[int]=None
@@ -118,13 +112,12 @@ class RockInput(BaseModel):
     isComplete: Optional[bool] = None
 
 
-
-class RockOutput(BaseModel):
+class RockOutput():
     rockId: int
     iltId: int
     name: str
     description: str
     onTrack: bool
-    rockOwner: Member
-    rockMembers: List[Member]
+    rockOwner: List[Member]
+    rockMembers: Optional[List[Member]] = []
     isComplete: bool

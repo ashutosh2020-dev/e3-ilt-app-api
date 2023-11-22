@@ -1,6 +1,6 @@
 from sqlalchemy import and_, func
 from sqlalchemy.orm import Session
-from app.models import MdlUsers, MdlIltMeetings, MdlMeetings, MdlMeeting_rocks,\
+from app.models import MdlUsers, MdlIltMeetings, MdlMeetings,\
     MdlIltMembers, MdlIltMeetingResponses, MdlMeetingsResponse, MdlIltissue,\
     Mdl_issue, MdlIlt_ToDoTask, MdlIlts, MdlSchools, MdlDistrictMember, MdlDistrict
 from app.schemas.dashboard_schemas import SummaryData, PercentageData, DashboardFilterParamaters, TimeFilterParameter
