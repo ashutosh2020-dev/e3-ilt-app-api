@@ -440,6 +440,7 @@ class IltMeetingService:
 
     def pending_issue_todo_raw(self, meeting_id ,db):
             num_of_attand_members = 0
+            num_of_feedback_in_attand_members = 0
             ## check pending- issue, todo, 
             member_meeting_response_id_list = [map_record.meeting_response_id 
                                                 for map_record in db.query(MdlIltMeetingResponses)
@@ -454,6 +455,7 @@ class IltMeetingService:
             for responceRecord in member_meeting_responce_records:
                 meeting_response_id = responceRecord.id
                 num_of_attand_members += 1 if responceRecord.attendance_flag else 0
+                num_of_feedback_in_attand_members += 1 if responceRecord.rating and responceRecord.attendance_flag else 0
                 ##issue
                 list_of_issue_records = (db.query(MdlIltissue)
                                             .filter(MdlIltissue.meeting_response_id==meeting_response_id)
@@ -491,7 +493,8 @@ class IltMeetingService:
                                     "dueDate": todo_record.due_date,
                                     "status": todo_record.status
                                 })
-            return (num_of_attand_members, pending_issue_record_list, pending_to_do_record_list, len(member_meeting_responce_records))
+            return (num_of_attand_members,num_of_feedback_in_attand_members, pending_issue_record_list,
+                     pending_to_do_record_list, len(member_meeting_responce_records))
         
     def pending_issue_todo(self, UserId: int, meeting_id: int, ilt_id: int, db: Session):
         if db.query(MdlUsers).filter(MdlUsers.id == UserId).one_or_none() is None:
@@ -505,16 +508,20 @@ class IltMeetingService:
             raise CustomException(400,  "Meeting records is not available")
         
         num_of_attand_members,\
+        num_of_feedback_in_attand_members,\
         pending_issue_record_list,\
         pending_to_do_record_list, num_of_member = self.pending_issue_todo_raw(meeting_id, db)
         future_meetings_list = self.get_upcomming_Ilts_meeting_list(user_id=UserId, 
                                                                     statusId=0, 
                                                                     ilt_id=ilt_id, db=db)  # (here 0 is for meeting which are notStarted )
         attandancePercentage = (num_of_attand_members / num_of_member) * 100
+        attandiesFeedbackPercentage = (num_of_feedback_in_attand_members/num_of_attand_members)*100
+
         return {
                 "iltId": ilt_id,
                 "meetingId":meeting_id,
                 "attandancePercentage":attandancePercentage,
+                "attandiesFeedbackPercentage":attandiesFeedbackPercentage,
                 "issues":pending_issue_record_list,
                 "todoList":pending_to_do_record_list,
                 "futureMeetings":future_meetings_list
