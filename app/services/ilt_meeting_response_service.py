@@ -389,11 +389,11 @@ class IltMeetingResponceService:
         ]
         db.add_all(rock_objects)
         db.commit()
-        # db.refresh(rock_objects)
+        
 
         return {
             "statusCode": 200,
-            "userMessage": "Rock added to the corresponding meetingRosponse id successfully"
+            "userMessage": "Rock added"
         }
 
 
@@ -889,7 +889,7 @@ class IltMeetingResponceService:
             
             if user_id not in current_member_ids:
                 raise CustomException(404,  "Cannot edit, Member is not in current ILT.")
-            if user_id != mr_user_id or user_id != ilt_re.owner_id or user_id != meeting_re.note_taker_id :
+            if user_id not in [mr_user_id, ilt_re.owner_id , meeting_re.note_taker_id] :
                 raise CustomException(404,  "Cannot edit, Invalid member.")
         
         if meeting_re.start_at is None:
