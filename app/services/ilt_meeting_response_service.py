@@ -389,7 +389,7 @@ class IltMeetingResponceService:
         ]
         db.add_all(rock_objects)
         db.commit()
-        db.refresh(rock_objects)
+        # db.refresh(rock_objects)
 
         return {
             "statusCode": 200,
