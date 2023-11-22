@@ -440,6 +440,7 @@ class IltMeetingService:
 
     def pending_issue_todo_raw(self, meeting_id ,db):
             num_of_attand_members = 0
+            num_of_feedback_in_attand_members = 0
             ## check pending- issue, todo, 
             member_meeting_response_id_list = [map_record.meeting_response_id 
                                                 for map_record in db.query(MdlIltMeetingResponses)
@@ -454,7 +455,7 @@ class IltMeetingService:
             for responceRecord in member_meeting_responce_records:
                 meeting_response_id = responceRecord.id
                 num_of_attand_members += 1 if responceRecord.attendance_flag else 0
-                num_of_feedback_in_attand_members = 1 if responceRecord.rating and responceRecord.attendance_flag else 0
+                num_of_feedback_in_attand_members += 1 if responceRecord.rating and responceRecord.attendance_flag else 0
                 ##issue
                 list_of_issue_records = (db.query(MdlIltissue)
                                             .filter(MdlIltissue.meeting_response_id==meeting_response_id)
@@ -515,7 +516,7 @@ class IltMeetingService:
                                                                     ilt_id=ilt_id, db=db)  # (here 0 is for meeting which are notStarted )
         attandancePercentage = (num_of_attand_members / num_of_member) * 100
         attandiesFeedbackPercentage = (num_of_feedback_in_attand_members/num_of_attand_members)*100
-        
+
         return {
                 "iltId": ilt_id,
                 "meetingId":meeting_id,
