@@ -382,7 +382,7 @@ class IltMeetingService:
         ownerId, = db.query(MdlIlts.owner_id).filter(MdlIlts.id==ilt_id).one_or_none()
         db_meeting = db.query(MdlMeetings).filter(MdlMeetings.id == meeting_id).one_or_none()
         
-        if UserId != ownerId or UserId != db_meeting.note_taker_id:
+        if UserId not in [ownerId, db_meeting.note_taker_id]:
             raise CustomException(404,  "Only Ilt Owner or Note Taker can start the meeting.")
         
         difference = (db_meeting.schedule_start_at - datetime.utcnow()).total_seconds()
