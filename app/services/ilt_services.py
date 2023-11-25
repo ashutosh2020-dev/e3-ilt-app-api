@@ -1,7 +1,7 @@
 
 from sqlalchemy.orm import Session
 from app.models import MdlIlts, MdlIltMembers, MdlUsers, MdlSchools, MdlMeetings, \
-                    MdlIltMeetings, MdlRocks, MdlIltMeetingResponses, MdlIltWhiteBoard
+    MdlIltMeetings, MdlRocks, MdlIltMeetingResponses, MdlIltWhiteBoard, MdlRocks_members
 from app.schemas.ilt_schemas import Ilt
 from app.services.ilt_meeting_response_service import IltMeetingResponceService
 from datetime import datetime, timezone
@@ -273,15 +273,14 @@ class IltService:
                     db.add(db_ilt_member)
                     db.commit()
                     db.refresh(db_ilt_member)
-            
-            if verified_new_member_ids:
-                upcoming_meeting_list = db.query(MdlMeetings)\
+            upcoming_meeting_list = db.query(MdlMeetings)\
                     .join(MdlIltMeetings, MdlMeetings.id == MdlIltMeetings.ilt_meeting_id)\
                     .filter(MdlIltMeetings.ilt_id == ilt_id)\
                     .filter(and_(MdlMeetings.end_at == None, MdlMeetings.start_at==None))\
                     .all()
-                upcoming_meetingId_list = [record.id 
-                                        for record in upcoming_meeting_list]
+            upcoming_meetingId_list = [record.id 
+                                    for record in upcoming_meeting_list]
+            if verified_new_member_ids:
                 # creating meetingResponce for new members
                 flag, msg = IltMeetingResponceService().create_meeting_responses_empty_for_newMember_for_all_meetings(
                     meeting_ids=upcoming_meetingId_list, member_list=verified_new_member_ids, db=db
@@ -289,6 +288,37 @@ class IltService:
             # for removed_member_list: delete records
             if removed_member_list:
                 for user_id in removed_member_list:
+                    # disable memeber from rock 
+                    db_rock_m = (db.query(MdlRocks_members)
+                                    .join(MdlRocks, MdlRocks_members.ilt_rock_id==MdlRocks.id)
+                                    .filter(and_(MdlRocks.ilt_id==ilt_id, MdlRocks_members.user_id==user_id))
+                                    .all())
+                    
+                    for re in db_rock_m:
+                        num_of_rock_owners = (db.query(MdlRocks_members)
+                                                .filter(MdlRocks_members.ilt_rock_id==re.ilt_rock_id, 
+                                                        MdlRocks_members.is_rock_owner == True)
+                                                .count())
+                        if re.is_rock_owner == True and num_of_rock_owners < 2:
+                            db_rock_m2= (db.query(MdlRocks_members).filter(MdlRocks_members.ilt_rock_id==re.ilt_rock_id,
+                                                                MdlRocks_members.user_id == db_ilt.owner_id)
+                                                    .one_or_none())
+                            if db_rock_m2 is not None:
+                                db_rock_m2.is_rock_member = False
+                                db_rock_m2.is_rock_owner = True
+                                db.add(db_rock_m2)
+                            else:
+                                db_rock_owner = MdlRocks_members(user_id=db_ilt.owner_id,
+                                                    ilt_rock_id=re.ilt_rock_id,
+                                                    is_rock_owner=True,
+                                                    is_rock_member=False)
+                                db.add(db_rock_owner)
+                        re.is_rock_owner = False
+                        re.is_rock_member = False
+                        db.add(re)
+                        db.commit()
+                        
+                    # delete member record
                     db_member_map_re = ilt_record = ilt_query.filter(MdlIltMembers.ilt_id == ilt_id,
                                                 MdlIltMembers.member_id == user_id).one_or_none()
                     db.delete(db_member_map_re)
@@ -300,6 +330,7 @@ class IltService:
                                                             .one())
                         db.delete(db_member_map_re)
                         db.commit()
+                        
 
 
             if flag != True:

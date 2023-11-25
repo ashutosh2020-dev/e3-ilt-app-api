@@ -252,7 +252,7 @@ class IltMeetingResponceService:
         rock_name = rockData.name.strip().lower()
         check_title = (db.query(MdlRocks).filter(and_(MdlRocks.ilt_id == rockData.iltId,
                                                       func.lower(MdlRocks.name) == rock_name))
-                       .all())
+                       .first())
         if rockData.rockId:
             #update
             
@@ -297,7 +297,7 @@ class IltMeetingResponceService:
             
             if rockData.rockOwnerId != db_current_owner.user_id:
                 db_current_owner.is_rock_owner = False 
-                db_current_owner.is_rock_member = True 
+                db_current_owner.is_rock_member = False 
                 db.add(db_current_owner)
                 db.commit()
                 db.refresh(db_current_owner)
@@ -362,7 +362,7 @@ class IltMeetingResponceService:
         
         # create
         db_rock = MdlRocks(ilt_id=rockData.iltId, 
-                           name=rockData.name, 
+                           name=rock_name, 
                            description=rockData.description, 
                            is_complete =False,
                            created_at = meeting_re.schedule_start_at,
