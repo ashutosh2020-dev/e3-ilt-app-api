@@ -190,15 +190,15 @@ class IltMeetingService:
                 pending_issue_record_list, \
                 pending_to_do_record_list = self.get_pending_issue_todo_ids(meeting_id=latest_meeting_re.id,
                                                                             db=db)
-            
-                _success = self.transfer_ilt_meeting(meetingId=latest_meeting_re.id,ilt_id=ilt_id,
-                                        UserId=user_id,
-                                        listOfIssueIds= pending_issue_record_list, 
-                                        listOfToDoIds = pending_to_do_record_list, 
-                                        futureMeetingId= db_meeting.id, 
-                                        check_end_meeting_flag= False,
-                                        db=db)
-                msg = "with all Pending items from the last meeting." 
+                if pending_issue_record_list or pending_to_do_record_list:
+                    _success = self.transfer_ilt_meeting(meetingId=latest_meeting_re.id,ilt_id=ilt_id,
+                                            UserId=user_id,
+                                            listOfIssueIds= pending_issue_record_list, 
+                                            listOfToDoIds = pending_to_do_record_list, 
+                                            futureMeetingId= db_meeting.id, 
+                                            check_end_meeting_flag= False,
+                                            db=db)
+                    msg = "with all Pending items from the last meeting." 
             else:
                 pass
                          
@@ -241,7 +241,6 @@ class IltMeetingService:
             "userMessage": "meeting have successfully updated"
         }
         
-
     def get_meeting_info(self, User_id: int, iltId: int, meeting_id: int,  db: Session):
         try: 
             user = db.query(MdlUsers).filter(
@@ -545,9 +544,11 @@ class IltMeetingService:
             raise CustomException(404,  "Please Start the meeting first")
         if meeting_re.end_at and check_end_meeting_flag :
             raise CustomException(404,  "We can only transfer meeting's pendings when meeting is in-progress.")
-        
+        user_re = db.query(MdlUsers).filter(MdlUsers.id==UserId).one_or_none() 
+        if user_re is None:
+            raise CustomException(404, "User not found")
         ownerId, = db.query(MdlIlts.owner_id).filter(MdlIlts.id==ilt_id).one_or_none()
-        if UserId != meeting_re.note_taker_id and UserId != ownerId:
+        if (UserId not in [ meeting_re.note_taker_id, ownerId]) or user_re.role_id != 4:
             raise CustomException(404,  "Only Ilt owner and Note Taker can transfer meeting's pendings.")
             
         # transfering pending ilt
