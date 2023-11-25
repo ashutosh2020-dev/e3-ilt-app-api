@@ -105,8 +105,10 @@ def get_rock_aggegrates(list_of_ilt, db:Session):
     ontrack_count = db.query(MdlRocks).filter(MdlRocks.ilt_id.in_(list_of_ilt), MdlRocks.on_track_flag ==True).count()
     offtrack_count = db.query(MdlRocks).filter(MdlRocks.ilt_id.in_(list_of_ilt), MdlRocks.on_track_flag ==False).count()
     # total_rocks = db.query(MdlRocks).filter(MdlRocks.ilt_id.in_(list_of_ilt)).count()    
-    return PercentageData(percentage=round((ontrack_count/offtrack_count)*100, 1),
-                          total=offtrack_count)
+    total = ontrack_count+offtrack_count
+    return PercentageData(percentage=round((ontrack_count/total)*100, 1) if total !=0 else 0,
+                          total=total
+                          )
 
 class DashboardService:
     def get_ilt_Meetings_dashboard_info(self, user_id: int, FilterParamaters:TimeFilterParameter, ilt_id: int, db: Session):
