@@ -2,7 +2,7 @@ from sqlalchemy import and_, func
 from sqlalchemy.orm import Session
 from app.models import MdlUsers, MdlIltMeetings, MdlMeetings,\
     MdlIltMembers, MdlIltMeetingResponses, MdlMeetingsResponse, MdlIltissue,\
-    Mdl_issue, MdlIlt_ToDoTask, MdlIlts, MdlSchools, MdlDistrictMember, MdlDistrict
+    Mdl_issue, MdlIlt_ToDoTask, MdlIlts, MdlSchools, MdlDistrictMember, MdlDistrict, MdlRocks
 from app.schemas.dashboard_schemas import SummaryData, PercentageData, DashboardFilterParamaters, TimeFilterParameter
 from datetime import datetime, timezone
 from app.exceptions.customException import CustomException
@@ -100,7 +100,14 @@ def get_associated_schoolId_wrt_role(user_id:int, role_id:int, FilterParamaters:
 
         return list_of_school_id
 
- 
+def get_rock_aggegrates(list_of_ilt, db:Session):
+    
+    ontrack_count = db.query(MdlRocks).filter(MdlRocks.ilt_id.in_(list_of_ilt), MdlRocks.on_track_flag ==True).count()
+    offtrack_count = db.query(MdlRocks).filter(MdlRocks.ilt_id.in_(list_of_ilt), MdlRocks.on_track_flag ==False).count()
+    # total_rocks = db.query(MdlRocks).filter(MdlRocks.ilt_id.in_(list_of_ilt)).count()    
+    return PercentageData(percentage=round((ontrack_count/offtrack_count)*100, 1),
+                          total=offtrack_count)
+
 class DashboardService:
     def get_ilt_Meetings_dashboard_info(self, user_id: int, FilterParamaters:TimeFilterParameter, ilt_id: int, db: Session):
         # check user
@@ -532,7 +539,7 @@ class DashboardService:
                                            MdlMeetings.schedule_start_at<end_date))
 
             list_meeting_records = (subquery.order_by(MdlMeetings.schedule_start_at.asc()).all())
-            
+            SummaryDataObj.rockOnTrack = get_rock_aggegrates(list_of_ilt = list_of_ilt, db=db)
 
             for meeting_record in list_meeting_records:
                 status = calculate_meeting_status(
@@ -579,15 +586,15 @@ class DashboardService:
                 SummaryDataObj.avgRatings.total += 1
                 
             # rock_on_track
-                mid_rocks = [
-                    record.onTrack for record in member_meeting_responce_records if record.rockName]
-                avg_rock = 0
-                if mid_rocks:
-                    rock_nominator = sum(mid_rocks)
-                    rock_denominator = len(mid_rocks)
+                # mid_rocks = [
+                #     record.onTrack for record in member_meeting_responce_records if record.rockName]
+                # avg_rock = 0
+                # if mid_rocks:
+                #     rock_nominator = sum(mid_rocks)
+                #     rock_denominator = len(mid_rocks)
                     
-                    SummaryDataObj.rockOnTrack.percentage += (rock_nominator*100/rock_denominator)
-                SummaryDataObj.rockOnTrack.total += 1
+                #     SummaryDataObj.rockOnTrack.percentage += (rock_nominator*100/rock_denominator)
+                # SummaryDataObj.rockOnTrack.total += 1
 
             # issue
                 list_of_list_of_issue_records = [db.query(MdlIltissue)
@@ -683,7 +690,7 @@ class DashboardService:
                     SummaryDataObj.id = school_re.id
 
                 for key, value in vars(SummaryDataObj).items():
-                        if key in ["attendancePercentage", "rockOnTrack", "avgRatings", "avgtoDo", "issues"]:
+                        if key in ["attendancePercentage", "avgRatings", "avgtoDo", "issues"]:
                             if key == "issues":
                                 for key1, value1 in vars(SummaryDataObj.issues).items():
                                     if key1 =="avgIssueRepeat":
