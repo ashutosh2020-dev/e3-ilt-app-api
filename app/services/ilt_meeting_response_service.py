@@ -265,7 +265,7 @@ class IltMeetingResponceService:
                                         MdlRocks_members.is_rock_owner==True))
                                 .one_or_none())
             
-            if user_id not in [ilt_re.owner_id, meeting_re.note_taker_id] or user_id != db_current_owner.user_id:
+            if user_id not in [ilt_re.owner_id, meeting_re.note_taker_id] and user_id != db_current_owner.user_id:
                 raise CustomException(404, "User is not allowed to update the rock")
             if user_id == db_current_owner.user_id and user_id != ilt_re.owner_id and user_id != meeting_re.note_taker_id:
                 if db_rock.name != rockData.name or db_rock.is_complete!=rockData.isComplete or db_rock.description != rockData.description:
@@ -327,7 +327,7 @@ class IltMeetingResponceService:
                 remove_user = set(current_rock_member) - set(unique_user_ids)
                 if user_id == db_current_owner.user_id and user_id != ilt_re.owner_id and user_id != meeting_re.note_taker_id:
                     if len(new_user) != 0 or len(remove_user) != 0 or rockData.rockOwnerId != db_current_owner.user_id:
-                        raise CustomException("This user not allowed to update rock") 
+                        raise CustomException(500,"This user not allowed to update rock") 
                 new_user_records = []
                 for u_id in new_user:
                     db_rock_user = (db.query(MdlRocks_members)
