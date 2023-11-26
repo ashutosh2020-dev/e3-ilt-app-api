@@ -102,13 +102,36 @@ def get_associated_schoolId_wrt_role(user_id:int, role_id:int, FilterParamaters:
 
 def get_rock_aggegrates(list_of_ilt, db:Session):
     
-    ontrack_count = db.query(MdlRocks).filter(MdlRocks.ilt_id.in_(list_of_ilt), MdlRocks.on_track_flag ==True).count()
-    offtrack_count = db.query(MdlRocks).filter(MdlRocks.ilt_id.in_(list_of_ilt), MdlRocks.on_track_flag ==False).count()
+    ontrack_count = db.query(MdlRocks).filter(MdlRocks.ilt_id.in_(list_of_ilt), 
+                                              MdlRocks.on_track_flag ==True,
+                                              MdlRocks.is_complete == False).count()
+    offtrack_count = db.query(MdlRocks).filter(MdlRocks.ilt_id.in_(list_of_ilt), 
+                                               MdlRocks.on_track_flag ==False,
+                                               MdlRocks.is_complete == False).count()
     # total_rocks = db.query(MdlRocks).filter(MdlRocks.ilt_id.in_(list_of_ilt)).count()    
     total = ontrack_count+offtrack_count
     return PercentageData(percentage=round((ontrack_count/total)*100, 1) if total !=0 else 0,
                           total=total
                           )
+def get_rock_aggegrates_for_meeting(ilt_id, meeting_id, db:Session):
+    meeting_schedule_start_at, = db.query(MdlMeetings.schedule_start_at).filter(
+        MdlMeetings.id == meeting_id).one_or_none()
+
+    ontrack_count = (db.query(MdlRocks)
+                   .filter(and_(MdlRocks.ilt_id == ilt_id,
+                           MdlRocks.created_at <= meeting_schedule_start_at,
+                           MdlRocks.on_track_flag ==True, 
+                           MdlRocks.is_complete ==False))
+                   .count())
+    offtrack_count = (db.query(MdlRocks)
+                   .filter(and_(MdlRocks.ilt_id == ilt_id,
+                           MdlRocks.created_at <= meeting_schedule_start_at,
+                           MdlRocks.on_track_flag ==False, 
+                           MdlRocks.is_complete ==False))
+                   .count())
+    total = ontrack_count + offtrack_count
+    return PercentageData(percentage=round((ontrack_count/total)*100, 1) if total != 0 else 0,
+                          total=total)
 
 class DashboardService:
     def get_ilt_Meetings_dashboard_info(self, user_id: int, FilterParamaters:TimeFilterParameter, ilt_id: int, db: Session):
@@ -177,7 +200,7 @@ class DashboardService:
                         "total": attandence_denominator
                     }
 
-        # rating :
+        # rating:
             mid_ratings = [record.rating for record in member_meeting_responce_records if record.rating]
             avg_rating = 0
             if mid_ratings:
@@ -190,18 +213,8 @@ class DashboardService:
             else:
                 avg_rating = PercentageData()
         # rock_on_track
-            mid_rocks = [
-                record.onTrack for record in member_meeting_responce_records if record.rockName]
-            avg_rock = 0
-            if mid_rocks:
-                rock_nominator = sum(mid_rocks)
-                rock_denominator = len(mid_rocks)
-                avg_rock = {
-                        "percentage": (rock_nominator/rock_denominator)*100,
-                        "total": rock_denominator
-                    }
-            else:
-                avg_rock = PercentageData()
+            avg_rock = get_rock_aggegrates_for_meeting(ilt_id = ilt_id, meeting_id = mid, db=db)
+            
 
         # issue
             list_of_list_of_issue_records = [db.query(MdlIltissue)
@@ -401,18 +414,7 @@ class DashboardService:
             else:
                 avg_rating = PercentageData()
         # rock_on_track
-            mid_rocks = [
-                record.onTrack for record in member_meeting_responce_records if record.rockName]
-            avg_rock = 0
-            if mid_rocks:
-                rock_nominator = sum(mid_rocks)
-                rock_denominator = len(mid_rocks)
-                avg_rock = {
-                        "percentage": (rock_nominator/rock_denominator)*100,
-                        "total": rock_denominator
-                    }
-            else:
-                avg_rock = PercentageData()
+            avg_rock = get_rock_aggegrates_for_meeting(ilt_id = ilt_id, meeting_id = mid, db=db)
 
         # issue
             list_of_list_of_issue_records = [db.query(MdlIltissue)
@@ -541,6 +543,7 @@ class DashboardService:
                                            MdlMeetings.schedule_start_at<end_date))
 
             list_meeting_records = (subquery.order_by(MdlMeetings.schedule_start_at.asc()).all())
+            # rock
             SummaryDataObj.rockOnTrack = get_rock_aggegrates(list_of_ilt = list_of_ilt, db=db)
 
             for meeting_record in list_meeting_records:
@@ -586,17 +589,6 @@ class DashboardService:
 
                     SummaryDataObj.avgRatings.percentage += (rating_nominator/rating_denominator)
                 SummaryDataObj.avgRatings.total += 1
-                
-            # rock_on_track
-                # mid_rocks = [
-                #     record.onTrack for record in member_meeting_responce_records if record.rockName]
-                # avg_rock = 0
-                # if mid_rocks:
-                #     rock_nominator = sum(mid_rocks)
-                #     rock_denominator = len(mid_rocks)
-                    
-                #     SummaryDataObj.rockOnTrack.percentage += (rock_nominator*100/rock_denominator)
-                # SummaryDataObj.rockOnTrack.total += 1
 
             # issue
                 list_of_list_of_issue_records = [db.query(MdlIltissue)
@@ -715,4 +707,3 @@ class DashboardService:
             final_val["schools"] = list_of_Summary
 
         return final_val
-
