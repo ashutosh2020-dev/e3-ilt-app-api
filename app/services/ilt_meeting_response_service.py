@@ -238,6 +238,9 @@ class IltMeetingResponceService:
         user_re = db.query(MdlUsers).filter(MdlUsers.id == user_id).one_or_none()
         if user_re is None:
             raise CustomException(404,  "User not found")
+        ilt_re = db.query(MdlIlts).filter(MdlIlts.id==rockData.iltId).one_or_none()
+        if ilt_re is None:
+            raise CustomException(404,  "Ilt not found")
         #verify each member
         rockMembers = rockData.rockMembers
         rockMembers.append(rockData.rockOwnerId)
@@ -255,12 +258,23 @@ class IltMeetingResponceService:
                        .first())
         if rockData.rockId:
             #update
-            
             rock_id = rockData.rockId
             db_rock = db.query(MdlRocks).filter(and_(MdlRocks.id==rock_id, MdlRocks.ilt_id==rockData.iltId)).one_or_none()
+            db_current_owner = (db.query(MdlRocks_members)
+                                .filter(and_(MdlRocks_members.ilt_rock_id==rock_id,
+                                        MdlRocks_members.is_rock_owner==True))
+                                .one_or_none())
+            
+            if user_id not in [ilt_re.owner_id, meeting_re.note_taker_id] or user_id != db_current_owner.user_id:
+                raise CustomException(404, "User is not allowed to update the rock")
+            if user_id == db_current_owner.user_id and user_id != ilt_re.owner_id and user_id != meeting_re.note_taker_id:
+                if db_rock.name != rockData.name or db_rock.is_complete!=rockData.isComplete or db_rock.description != rockData.description:
+                    raise CustomException(404, "User can update only rock status.")
+
             if db_rock.name.lower() !=rockData.name.strip().lower(): 
                 if check_title:
                     raise CustomException(404, "Rock Already Exists, Please change Rock Name")
+            
             db_rock.name = rockData.name.strip()
             db_rock.description = rockData.description
             db_rock.is_complete = rockData.isComplete
@@ -289,12 +303,6 @@ class IltMeetingResponceService:
             #     db.commit()
             #     db.refresh(db_change_owner)
 
-            db_current_owner = (db.query(MdlRocks_members)
-                                .filter(and_(MdlRocks_members.ilt_rock_id==rock_id,
-                                        MdlRocks_members.is_rock_owner==True))
-                                .one_or_none())
-            
-            
             if rockData.rockOwnerId != db_current_owner.user_id:
                 db_current_owner.is_rock_owner = False 
                 db_current_owner.is_rock_member = False 
@@ -317,6 +325,9 @@ class IltMeetingResponceService:
             if len(unique_user_ids) != len(current_rock_member):
                 new_user = set(unique_user_ids)-set(current_rock_member)
                 remove_user = set(current_rock_member) - set(unique_user_ids)
+                if user_id == db_current_owner.user_id and user_id != ilt_re.owner_id and user_id != meeting_re.note_taker_id:
+                    if len(new_user) != 0 or len(remove_user) != 0 or rockData.rockOwnerId != db_current_owner.user_id:
+                        raise CustomException("This user not allowed to update rock") 
                 new_user_records = []
                 for u_id in new_user:
                     db_rock_user = (db.query(MdlRocks_members)
@@ -360,6 +371,9 @@ class IltMeetingResponceService:
         if check_title:
             raise CustomException(404, "Rock Already Exists, Please change Rock Name")
         
+        if user_id not in [ilt_re.owner_id, meeting_re.note_taker_id]:
+            raise CustomException(404, "User not allowed to create rock")
+
         # create
         db_rock = MdlRocks(ilt_id=rockData.iltId, 
                            name=rock_name, 

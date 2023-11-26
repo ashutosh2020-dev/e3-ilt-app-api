@@ -2,7 +2,7 @@ from sqlalchemy import and_
 from sqlalchemy.orm import Session
 from app.models import MdlIltMeetings, MdlMeetings, MdlUsers, MdlIlts, \
     MdlIltMembers, MdlIltMeetingResponses, MdlMeetingsResponse,  \
-    Mdl_updates, MdlIlt_ToDoTask, MdlIltissue, Mdl_issue, MdlIltMeetingWhiteBoard, MdlIltWhiteBoard
+    Mdl_updates, MdlIlt_ToDoTask, MdlIltissue, Mdl_issue, MdlIltMeetingWhiteBoard, MdlIltWhiteBoard, MdlRocks
 import sys
 from app.schemas.ilt_meeting_schemas import Status, whiteboardData, whiteboardDataInfo
 from app.services.ilt_meeting_response_service import IltMeetingResponceService
@@ -21,6 +21,16 @@ def calculate_meeting_status(schedule_start_at, start_at, end_at):
     else:
         return 2  # completed
 
+def update_rock(meeting_schedual_time, rock_created_time, db:Session):
+    list_of_rock = db.query(MdlRocks).filter(MdlRocks.created_at == meeting_schedual_time).all()
+    rock_records = []
+    for db_rock in list_of_rock:
+        db_rock.created_at = rock_created_time
+        rock_records.append(db_rock)
+    
+    if rock_records:
+        db.add_all(rock_records)
+        db.commit()
 
 class IltMeetingService:
     def get_upcomming_Ilts_meeting_list(self, user_id: int, statusId, ilt_id: int, db: Session):
@@ -107,6 +117,7 @@ class IltMeetingService:
             return ilt_list
         else:
             return []
+    
     def get_pending_issue_todo_ids(self, meeting_id, db:Session):
         ## check pending- issue, todo, 
         member_meeting_response_id_list = [map_record.meeting_response_id 
@@ -133,7 +144,6 @@ class IltMeetingService:
                                                      MdlIlt_ToDoTask.status == False))
                                         .all()]        
             return pending_issue_record_list, pending_to_do_record_list
-
 
     def create_ilts_meeting(self, ilt_id: int, user_id: int,  scheduledStartDate,
                              noteTakerId, db: Session, pastData_flag:bool, location: str):
@@ -222,13 +232,14 @@ class IltMeetingService:
             if scheduledStartDate < datetime(2020, 1, 1, 00, 00):
                 raise CustomException(
                     400,  "Please enter correct date, dates must be greater than currect data")
-
-        db_meeting = db.query(MdlMeetings).filter(
-            MdlMeetings.id == meeting_id).one_or_none()
+        db_meeting = db.query(MdlMeetings).filter(MdlMeetings.id == meeting_id).one_or_none()
         if db_meeting is None:
             raise CustomException(404,  "meeting records not found")
         if db_meeting.end_at:
             raise CustomException(404,  "Meeting has been ended, Can not update it")
+        if db_meeting.schedule_start_at != scheduledStartDate:
+            update_rock(meeting_schedual_time=db_meeting.schedule_start_at,
+                        rock_created_time=scheduledStartDate, db=db)
         if location:
             db_meeting.location = location
         if scheduledStartDate:

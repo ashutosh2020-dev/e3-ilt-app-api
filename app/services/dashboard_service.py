@@ -707,4 +707,3 @@ class DashboardService:
             final_val["schools"] = list_of_Summary
 
         return final_val
-
