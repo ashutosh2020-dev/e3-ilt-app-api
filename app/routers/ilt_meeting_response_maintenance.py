@@ -112,9 +112,9 @@ def create_update_ilt_meeting_issues(meetingResponseId: int,
     return responce
 
 
-@router.post("/api/v1/ilts/meetingResponses/{meetingResponseId}")
-async def update_meeting_response(ilt_data: MeetingResponse, db: Session = Depends(get_db)):
-    return IltMeetingResponceService.update_ilt_meeting_responses(data=ilt_data, db=db)
+# @router.post("/api/v1/ilts/meetingResponses/{meetingResponseId}")
+# async def update_meeting_response(ilt_data: MeetingResponse, db: Session = Depends(get_db)):
+#     return IltMeetingResponceService.update_ilt_meeting_responses(data=ilt_data, db=db)
 
 
 @router.get("/api/v1/ilts/{iltId}/meeting/{meetingId}/rocks")

@@ -190,7 +190,7 @@ class IltMeetingService:
         
         # pull all pending issue from the last end meeting 
         latest_meeting_re = (db.query(MdlMeetings)
-             .join(MdlIltMeetings, MdlIltMeetings.ilt_id==MdlMeetings.id)
+             .join(MdlIltMeetings, MdlIltMeetings.ilt_meeting_id==MdlMeetings.id)
                 .filter(MdlIltMeetings.ilt_id==ilt_id)
                 .order_by(MdlMeetings.schedule_start_at.desc())
                 .first())
@@ -215,7 +215,7 @@ class IltMeetingService:
 
         return {
             "statusCode": 200,
-            "userMessage": f"meeting has been created{msg}"
+            "userMessage": f"meeting has been created {msg}"
         }
 
     def update_ilt_meeting(self, UserId: int, meeting_id: int, ilt_id: int, location, scheduledStartDate, noteTakerId,  db: Session):
@@ -559,7 +559,7 @@ class IltMeetingService:
         if user_re is None:
             raise CustomException(404, "User not found")
         ownerId, = db.query(MdlIlts.owner_id).filter(MdlIlts.id==ilt_id).one_or_none()
-        if (UserId not in [ meeting_re.note_taker_id, ownerId]) or user_re.role_id != 4:
+        if (UserId not in [ meeting_re.note_taker_id, ownerId]) and user_re.role_id != 4:
             raise CustomException(404,  "Only Ilt owner and Note Taker can transfer meeting's pendings.")
             
         # transfering pending ilt
