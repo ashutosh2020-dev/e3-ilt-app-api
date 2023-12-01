@@ -197,23 +197,20 @@ class IltMeetingService:
                 .first())
         msg = "."
         if latest_meeting_re:
-            if latest_meeting_re.end_at is not None:
-                pending_issue_record_list, \
-                pending_to_do_record_list = self.get_pending_issue_todo_ids(meeting_id=latest_meeting_re.id,
-                                                                            db=db)
-                if pending_issue_record_list or pending_to_do_record_list:
-                    # _success = self.transfer_ilt_meeting(meetingId=latest_meeting_re.id,ilt_id=ilt_id,
-                    #                         UserId=user_id,
-                    #                         listOfIssueIds= pending_issue_record_list, 
-                    #                         listOfToDoIds = pending_to_do_record_list, 
-                    #                         futureMeetingId= db_meeting.id, 
-                    #                         check_end_meeting_flag= False,
-                    #                         db=db)
-                    # msg = "with all Pending items from the last meeting." 
-                    msg = "with all Pending items from the last meeting not tranferer." 
-            else:
-                pass
-                         
+            pending_issue_record_list, \
+            pending_to_do_record_list = self.get_pending_issue_todo_ids(meeting_id=latest_meeting_re.id,
+                                                                        db=db)
+            if pending_issue_record_list or pending_to_do_record_list:
+                _success = self.transfer_ilt_meeting(meetingId=latest_meeting_re.id,ilt_id=ilt_id,
+                                        UserId=user_id,
+                                        listOfIssueIds= pending_issue_record_list, 
+                                        listOfToDoIds = pending_to_do_record_list, 
+                                        futureMeetingId= db_meeting.id, 
+                                        check_end_meeting_flag= False,
+                                        db=db)
+                msg = "with all Pending items from the last meeting." 
+                # msg = "with all Pending items from the last meeting not tranferer."
+
 
         return {
             "statusCode": 200,
@@ -432,18 +429,23 @@ class IltMeetingService:
         
         if db_meeting.start_at is None:
             raise CustomException(400,  "Meeting has not started")
+        if db_meeting.end_at is not None:
+            raise CustomException(400,  "Meeting is ended successfully")
         ownerId, = db.query(MdlIlts.owner_id).filter(MdlIlts.id==ilt_id).one_or_none()
         if (UserId not in [ db_meeting.note_taker_id, ownerId]) and user_re.role_id != 4:
             raise CustomException(404,  "Only Ilt owner and Note Taker can transfer meeting's pendings.")
 
-        _,_,pending_issue_record_list,pending_to_do_record_list, _ = self.pending_issue_todo_raw(meeting_id=meeting_id ,db = db)
-        pending_issue_ids = [i["issueId"] for i in pending_issue_record_list]
-        pending_todo_ids = [i["todoListId"] for i in pending_to_do_record_list]
-        
-        msg = self.transfer_ilt_meeting(meetingId =meeting_id,ilt_id =ilt_id, UserId=UserId,
-                                        listOfIssueIds=pending_issue_ids, 
-                                        listOfToDoIds=pending_todo_ids, futureMeetingId=0,
-                             db=db)
+        pending_issue_record_list, \
+            pending_to_do_record_list = self.get_pending_issue_todo_ids(meeting_id=meeting_id,
+                                                                        db=db)
+        try:
+            msg = self.transfer_ilt_meeting(meetingId =meeting_id,ilt_id =ilt_id, UserId=UserId,
+                                            listOfIssueIds=pending_issue_record_list,
+                                            listOfToDoIds=pending_to_do_record_list, futureMeetingId=0,
+                                db=db)
+            print(msg)
+        except Exception as e:
+            raise CustomException(400, "unable to transefer pending Issues and TO-DO")
         if db_meeting.start_at:
             db_meeting.end_at = datetime.utcnow() if pastData_flag == False else db_meeting.schedule_start_at + timedelta(hours=1)
             db.commit()
@@ -574,8 +576,7 @@ class IltMeetingService:
         # if user_re is None:
         #     raise CustomException(404, "User not found")
         
-        
-        upcomming_meeting_ids = get_upcomming_meeting(ilt_id=ilt_id, db=db)
+        upcomming_meeting_ids = get_upcomming_meeting(ilt_id=ilt_id, db=db) if futureMeetingId == 0 else [futureMeetingId]
         # transfering pending ilt
         for id in listOfIssueIds:
             map_re = (db.query(MdlIltissue).filter(MdlIltissue.issue_id==id)
@@ -587,12 +588,22 @@ class IltMeetingService:
                             .filter(MdlIltMeetingResponses.meeting_response_id==parent_responce_id)
                             .one_or_none()
                             )
+            
             list_of_user_meetingResponce = [db.query(MdlIltMeetingResponses.meeting_response_id,)
                                             .filter(MdlIltMeetingResponses.meeting_id == mid,
                                                     MdlIltMeetingResponses.meeting_user_id == parent_user_id)
                                             .one()[0] for mid in upcomming_meeting_ids
                                             
                                             ]
+            # print(parent_responce_id)
+            # print(list_of_user_meetingResponce)
+            list_of_user_meetingResponce =[ upcoming_meetingResponce
+                                            for upcoming_meetingResponce in list_of_user_meetingResponce 
+                                            if db.query(MdlIltissue)
+                                                .filter(MdlIltissue.issue_id == id,
+                                                        MdlIltissue.meeting_response_id == upcoming_meetingResponce)
+                                                .one_or_none() is None ]
+            
             # create re with MdlIltissue
             db_issue_records = [MdlIltissue(
                 meeting_response_id=upcoming_meetingResponce,
@@ -608,6 +619,7 @@ class IltMeetingService:
                                 .one_or_none())
             if parent_todo_record is None:
                 raise CustomException(400,  "records is not available")
+            parent_to_do_id = parent_todo_record.parent_to_do_id if parent_todo_record.parent_to_do_id else parent_todo_record.id
             parent_user_id, = (db.query(MdlIltMeetingResponses.meeting_user_id)
                                 .filter(MdlIltMeetingResponses.meeting_response_id==parent_todo_record.meeting_response_id)
                                 .one_or_none()
@@ -617,6 +629,12 @@ class IltMeetingService:
                                                     MdlIltMeetingResponses.meeting_user_id == parent_user_id)
                                             .one()[0] for mid in upcomming_meeting_ids
                                             ]
+            list_of_user_meetingResponce = [upcoming_meetingResponce
+                                            for upcoming_meetingResponce in list_of_user_meetingResponce
+                                            if db.query(MdlIlt_ToDoTask)
+                                            .filter(MdlIlt_ToDoTask.parent_to_do_id == parent_to_do_id,
+                                                    MdlIlt_ToDoTask.meeting_response_id == upcoming_meetingResponce)
+                                            .one_or_none() is None]
             
             # create re with MdlIlt_ToDoTask 
             db_todo_records = [MdlIlt_ToDoTask(
@@ -658,7 +676,7 @@ class IltMeetingService:
             # if meeting is end- show snap of responces
             whiteB_meeting_re = (db.query(MdlIltMeetingWhiteBoard)
                                     .filter(MdlIltMeetingWhiteBoard.meetingId == whiteboard.meetingId)
-                                    .one_or_none())
+                                    .first())
             if whiteB_meeting_re is None:
                 raise CustomException(404,  "no whiteboard is available for this meeting") 
             whiteboardDataInfoObj.iltId= whiteboard.iltId
