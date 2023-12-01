@@ -151,7 +151,7 @@ class MdlRocks_members(Base):
 
 class MdlIlt_ToDoTask(Base):
     __tablename__ = "Ilt_to_do_task"
-    # put unique constrain
+    # __table_args__ = (UniqueConstraint('meeting_response_id', 'parent_to_do_id'),)
     id = Column(Integer, primary_key=True, autoincrement=True)
     meeting_response_id = Column(Integer, ForeignKey("meeting_response.id"), nullable=False, index=True)
     description = Column(String(255), nullable=False)
