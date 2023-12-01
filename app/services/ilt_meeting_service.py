@@ -202,14 +202,15 @@ class IltMeetingService:
                 pending_to_do_record_list = self.get_pending_issue_todo_ids(meeting_id=latest_meeting_re.id,
                                                                             db=db)
                 if pending_issue_record_list or pending_to_do_record_list:
-                    _success = self.transfer_ilt_meeting(meetingId=latest_meeting_re.id,ilt_id=ilt_id,
-                                            UserId=user_id,
-                                            listOfIssueIds= pending_issue_record_list, 
-                                            listOfToDoIds = pending_to_do_record_list, 
-                                            futureMeetingId= db_meeting.id, 
-                                            check_end_meeting_flag= False,
-                                            db=db)
-                    msg = "with all Pending items from the last meeting." 
+                    # _success = self.transfer_ilt_meeting(meetingId=latest_meeting_re.id,ilt_id=ilt_id,
+                    #                         UserId=user_id,
+                    #                         listOfIssueIds= pending_issue_record_list, 
+                    #                         listOfToDoIds = pending_to_do_record_list, 
+                    #                         futureMeetingId= db_meeting.id, 
+                    #                         check_end_meeting_flag= False,
+                    #                         db=db)
+                    # msg = "with all Pending items from the last meeting." 
+                    msg = "with all Pending items from the last meeting not tranferer." 
             else:
                 pass
                          
