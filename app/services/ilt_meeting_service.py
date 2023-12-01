@@ -439,11 +439,11 @@ class IltMeetingService:
         _,_,pending_issue_record_list,pending_to_do_record_list, _ = self.pending_issue_todo_raw(meeting_id=meeting_id ,db = db)
         pending_issue_ids = [i["issueId"] for i in pending_issue_record_list]
         pending_todo_ids = [i["todoListId"] for i in pending_to_do_record_list]
-        # print(pending_issue_ids, pending_todo_ids)
-        # msg = self.transfer_ilt_meeting(meetingId =meeting_id,ilt_id =ilt_id, UserId=UserId,
-        #                                 listOfIssueIds=pending_issue_ids, 
-        #                                 listOfToDoIds=pending_todo_ids, futureMeetingId=0,
-        #                      db=db)
+        
+        msg = self.transfer_ilt_meeting(meetingId =meeting_id,ilt_id =ilt_id, UserId=UserId,
+                                        listOfIssueIds=pending_issue_ids, 
+                                        listOfToDoIds=pending_todo_ids, futureMeetingId=0,
+                             db=db)
         if db_meeting.start_at:
             db_meeting.end_at = datetime.utcnow() if pastData_flag == False else db_meeting.schedule_start_at + timedelta(hours=1)
             db.commit()
