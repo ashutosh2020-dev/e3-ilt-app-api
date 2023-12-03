@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from app.models import MdlIltMeetings, MdlMeetings, MdlUsers, MdlIlts, \
     MdlIltMembers, MdlIltMeetingResponses, MdlMeetingsResponse,  \
     Mdl_updates, MdlIlt_ToDoTask, MdlIltissue, Mdl_issue, MdlIltMeetingWhiteBoard, MdlIltWhiteBoard, MdlRocks
-from app.services.utils import get_upcomming_meeting
+from app.services.utils import get_upcomming_meeting, get_completed_issue_todo_list, inactivate_all_completed_issue_todo_list
 import sys
 from app.schemas.ilt_meeting_schemas import Status, whiteboardData, whiteboardDataInfo
 from app.services.ilt_meeting_response_service import IltMeetingResponceService
@@ -137,12 +137,14 @@ class IltMeetingService:
                                         .join(MdlIltissue, Mdl_issue.id==MdlIltissue.issue_id )
                                         .filter(and_(MdlIltissue.meeting_response_id==meeting_response_id, 
                                                      Mdl_issue.resolves_flag==False, 
-                                                     Mdl_issue.priority !=4))
+                                                     Mdl_issue.priority !=4, 
+                                                     MdlIltissue.is_active==True))
                                         .all()])
             ##ToDo
             pending_to_do_record_list.extend([p_todo_id for p_todo_id, in db.query(MdlIlt_ToDoTask.id)
                                         .filter(and_(MdlIlt_ToDoTask.meeting_response_id==meeting_response_id,
-                                                     MdlIlt_ToDoTask.status == False))
+                                                     MdlIlt_ToDoTask.status == False, 
+                                                     MdlIlt_ToDoTask.is_active==True))
                                         .all()])        
         return pending_issue_record_list, pending_to_do_record_list
 
@@ -316,7 +318,8 @@ class IltMeetingService:
                     for record in update_records
                 ] if update_records else []
                 todo_task_records = db.query(MdlIlt_ToDoTask)\
-                    .filter(MdlIlt_ToDoTask.meeting_response_id == meeting_response_id)\
+                    .filter(MdlIlt_ToDoTask.meeting_response_id == meeting_response_id,
+                            MdlIlt_ToDoTask.is_active==True)\
                     .all()
                 user_todolist_record = [
                     {
@@ -328,8 +331,11 @@ class IltMeetingService:
                     for record in todo_task_records
                 ] if todo_task_records else []
 
-                issue_record = db.query(MdlIltissue)\
-                    .filter(MdlIltissue.meeting_response_id == meeting_response_id).order_by(MdlIltissue.id.desc()).all()
+                issue_record = (db.query(MdlIltissue)
+                    .filter(MdlIltissue.meeting_response_id == meeting_response_id,
+                            MdlIltissue.is_active==True)
+                    .order_by(MdlIltissue.id.desc())
+                    .all())
 
                 user_issues_record = [db.query(Mdl_issue)
                                       .filter(Mdl_issue.id == record.issue_id).one_or_none() for record in issue_record]  \
@@ -376,7 +382,8 @@ class IltMeetingService:
                                                         if (user_issues_single_record.resolves_flag == True and user_issues_single_record.issue_resolve_date)
                                                         else  (user_issues_single_record.due_date - datetime.utcnow()).days, 
                             "isRepeated": (True if db.query(MdlIltissue)
-                                                    .filter(MdlIltissue.issue_id==user_issues_single_record.id).count()>1 
+                                                .filter(MdlIltissue.issue_id == user_issues_single_record.id,
+                                                        MdlIltissue.is_active == True).count() > 1
                                                 else False)
                         } for user_issues_single_record in user_issues_record]
                         if user_issues_record else []
@@ -448,11 +455,20 @@ class IltMeetingService:
                                             listOfIssueIds=pending_issue_record_list,
                                             listOfToDoIds=pending_to_do_record_list, futureMeetingId=0,
                                 db=db)
-            print(msg)
         except Exception as e:
             raise CustomException(400, "unable to transefer pending Issues and TO-DO")
-        return msg
-    
+        (complete_issue_id_list,
+            complete_to_do_id_list) = get_completed_issue_todo_list(meeting_id=meeting_id, db=db)
+        
+        inactivate_all_completed_issue_todo_list(listOfIssueIds = complete_issue_id_list, 
+                                                         listOfToDoIds = complete_to_do_id_list,
+                                                         ilt_id = ilt_id, 
+                                                         db = db)
+       
+        
+        for i_id in complete_issue_id_list:
+            db_issue = db.query(MdlIltissue).filter(MdlIltissue.issue_id==i_id)
+
         if db_meeting.start_at:
             db_meeting.end_at = datetime.utcnow() if pastData_flag == False else db_meeting.schedule_start_at + timedelta(hours=1)
             db.commit()
@@ -538,10 +554,11 @@ class IltMeetingService:
         update both issueMap and todo table
         """
         upcomming_meeting_ids = get_upcomming_meeting(ilt_id=ilt_id, db=db) if futureMeetingId == 0 else [futureMeetingId]
-        print(listOfIssueIds, listOfToDoIds)
+        
         # transfering pending ilt
         for id in listOfIssueIds:
-            map_re = (db.query(MdlIltissue).filter(MdlIltissue.issue_id==id)
+            map_re = (db.query(MdlIltissue).filter(MdlIltissue.issue_id==id, 
+                                                   MdlIltissue.is_active==True)
                     .order_by(MdlIltissue.id.desc())
                     .first())        
             parent_responce_id= map_re.meeting_response_id 
@@ -559,7 +576,8 @@ class IltMeetingService:
                                             for upcoming_meetingResponce in list_of_user_meetingResponce 
                                             if db.query(MdlIltissue)
                                                 .filter(MdlIltissue.issue_id == id,
-                                                        MdlIltissue.meeting_response_id == upcoming_meetingResponce)
+                                                        MdlIltissue.meeting_response_id == upcoming_meetingResponce,
+                                                        MdlIltissue.is_active==True)
                                                 .one_or_none() is None ]
             db_issue_records = [MdlIltissue(
                 meeting_response_id=upcoming_meetingResponce,
@@ -571,7 +589,8 @@ class IltMeetingService:
         # transfering pending todo
         for todoid in listOfToDoIds:
             parent_todo_record = (db.query(MdlIlt_ToDoTask)
-                                  .filter(MdlIlt_ToDoTask.id == todoid)
+                                  .filter(MdlIlt_ToDoTask.id == todoid,
+                                          MdlIlt_ToDoTask.is_active==True)
                                 .one_or_none())
             if parent_todo_record is None:
                 raise CustomException(400,  "records is not available")
@@ -590,7 +609,8 @@ class IltMeetingService:
                                             for upcoming_meetingResponce in list_of_user_meetingResponce
                                             if db.query(MdlIlt_ToDoTask)
                                             .filter(and_(MdlIlt_ToDoTask.parent_to_do_id == parent_to_do_id,
-                                                    MdlIlt_ToDoTask.meeting_response_id == upcoming_meetingResponce))
+                                                    MdlIlt_ToDoTask.meeting_response_id == upcoming_meetingResponce,
+                                                    MdlIlt_ToDoTask.is_active==True))
                                             .one_or_none() is None]
             
             db_todo_records = [MdlIlt_ToDoTask(

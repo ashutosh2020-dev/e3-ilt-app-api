@@ -54,10 +54,13 @@ class IltMeetingResponceService:
                 "dueDate": record.due_date,
                 "status": record.status
             } for record in db.query(MdlIlt_ToDoTask)
-            .filter(MdlIlt_ToDoTask.meeting_response_id == meetingResponseId).all()]
+            .filter(MdlIlt_ToDoTask.meeting_response_id == meetingResponseId,
+                    MdlIlt_ToDoTask.is_active==True).all()]
 
-        issue_record = db.query(MdlIltissue)\
-            .filter(MdlIltissue.meeting_response_id == meetingResponseId).all()
+        issue_record = (db.query(MdlIltissue)
+                            .filter(MdlIltissue.meeting_response_id == meetingResponseId, 
+                                    MdlIltissue.is_active==True)
+                            .all())
 
         user_issues_record = [db.query(Mdl_issue)
                               .filter(Mdl_issue.id == record.id).one_or_none()
@@ -430,7 +433,8 @@ class IltMeetingResponceService:
         if id > 0:
             user_todo_record = (db.query(MdlIlt_ToDoTask)
                                 .filter(MdlIlt_ToDoTask.meeting_response_id == meetingResponseId,
-                                        MdlIlt_ToDoTask.id == id)
+                                        MdlIlt_ToDoTask.id == id,
+                                        MdlIlt_ToDoTask.is_active==True)
                                 .one())
             user_todo_record.description = description
             user_todo_record.due_date = dueDate
@@ -453,7 +457,8 @@ class IltMeetingResponceService:
                 "dueDate": record.due_date,
                 "status": record.status
             } for record in db.query(MdlIlt_ToDoTask)
-            .filter(MdlIlt_ToDoTask.meeting_response_id == meetingResponseId).all()]
+            .filter(MdlIlt_ToDoTask.meeting_response_id == meetingResponseId, 
+                    MdlIlt_ToDoTask.is_active==True).all()]
 
         return {
 
@@ -559,7 +564,9 @@ class IltMeetingResponceService:
                 # print("----------",meeting_responcesId_list)
                 db_issue_latest_re = (db.query(MdlIltissue)
                                       .filter(and_(MdlIltissue.issue_id == id,
-                                                   MdlIltissue.meeting_response_id.in_(meeting_responcesId_list)))).one_or_none()
+                                                   MdlIltissue.meeting_response_id.in_(meeting_responcesId_list),
+                                                   MdlIltissue.is_active==True))
+                                        .one_or_none())
                 # print(db_issue_latest_re.meeting_response_id, assign_to_responce_id)
                 if db_issue_latest_re.meeting_response_id != assign_to_responce_id:
                     db_issue_latest_re.meeting_response_id = assign_to_responce_id
@@ -568,7 +575,8 @@ class IltMeetingResponceService:
 
             issue_map_re = (db.query(MdlIltissue)
                             .filter(and_(MdlIltissue.meeting_response_id == db_issue_latest_re.meeting_response_id,
-                                    MdlIltissue.issue_id == id))
+                                    MdlIltissue.issue_id == id, 
+                                    MdlIltissue.is_active==True))
                             .one())
             
             user_issue_record = (db.query(Mdl_issue)
@@ -620,8 +628,11 @@ class IltMeetingResponceService:
             db.commit()
             db.refresh(db_meeting_issue)
 
-        issue_records = db.query(MdlIltissue)\
-            .filter(MdlIltissue.meeting_response_id == responce_id.id).order_by(MdlIltissue.id.desc()).all()
+        issue_records = (db.query(MdlIltissue)
+                            .filter(MdlIltissue.meeting_response_id == responce_id.id,
+                                    MdlIltissue.is_active==True)
+                            .order_by(MdlIltissue.id.desc())
+                            .all())
 
         user_issue_records = [db.query(Mdl_issue)
                             .filter(Mdl_issue.id == record.issue_id).one_or_none() for record in issue_records]  \
