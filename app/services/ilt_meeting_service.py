@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from app.models import MdlIltMeetings, MdlMeetings, MdlUsers, MdlIlts, \
     MdlIltMembers, MdlIltMeetingResponses, MdlMeetingsResponse,  \
     Mdl_updates, MdlIlt_ToDoTask, MdlIltissue, Mdl_issue, MdlIltMeetingWhiteBoard, MdlIltWhiteBoard, MdlRocks
-from app.services.utils import get_upcomming_meeting
+from app.services.utils import get_upcomming_meeting, get_completed_issue_todo_list, inactivate_all_completed_issue_todo_list
 import sys
 from app.schemas.ilt_meeting_schemas import Status, whiteboardData, whiteboardDataInfo
 from app.services.ilt_meeting_response_service import IltMeetingResponceService
@@ -121,8 +121,8 @@ class IltMeetingService:
     
     def get_pending_issue_todo_ids(self, meeting_id, db:Session):
         ## check pending- issue, todo, 
-        member_meeting_response_id_list = [map_record.meeting_response_id 
-                                            for map_record in db.query(MdlIltMeetingResponses)
+        member_meeting_response_id_list = [meeting_response_id
+                                           for meeting_response_id, in db.query(MdlIltMeetingResponses.meeting_response_id)
                                             .filter(MdlIltMeetingResponses.meeting_id==meeting_id)
                                             .all()]
         member_meeting_responce_records = [db.query(MdlMeetingsResponse)
@@ -133,18 +133,20 @@ class IltMeetingService:
         for responceRecord in member_meeting_responce_records:
             meeting_response_id = responceRecord.id
             ##issue
-            pending_issue_record_list = set([id for id, in db.query(Mdl_issue.id)
+            pending_issue_record_list.extend([id for id, in db.query(Mdl_issue.id)
                                         .join(MdlIltissue, Mdl_issue.id==MdlIltissue.issue_id )
                                         .filter(and_(MdlIltissue.meeting_response_id==meeting_response_id, 
                                                      Mdl_issue.resolves_flag==False, 
-                                                     Mdl_issue.priority !=4))
+                                                     Mdl_issue.priority !=4, 
+                                                     MdlIltissue.is_active==True))
                                         .all()])
             ##ToDo
-            pending_to_do_record_list = [p_todo_id for p_todo_id, in db.query(MdlIlt_ToDoTask.id)
+            pending_to_do_record_list.extend([p_todo_id for p_todo_id, in db.query(MdlIlt_ToDoTask.id)
                                         .filter(and_(MdlIlt_ToDoTask.meeting_response_id==meeting_response_id,
-                                                     MdlIlt_ToDoTask.status == False))
-                                        .all()]        
-            return pending_issue_record_list, pending_to_do_record_list
+                                                     MdlIlt_ToDoTask.status == False, 
+                                                     MdlIlt_ToDoTask.is_active==True))
+                                        .all()])        
+        return pending_issue_record_list, pending_to_do_record_list
 
     def create_ilts_meeting(self, ilt_id: int, user_id: int,  scheduledStartDate,
                              noteTakerId, db: Session, pastData_flag:bool, location: str):
@@ -192,12 +194,14 @@ class IltMeetingService:
         # pull all pending issue from the last end meeting 
         latest_meeting_re = (db.query(MdlMeetings)
              .join(MdlIltMeetings, MdlIltMeetings.ilt_meeting_id==MdlMeetings.id)
-                .filter(MdlIltMeetings.ilt_id==ilt_id)
-                .order_by(MdlMeetings.schedule_start_at.desc())
+                .filter(MdlIltMeetings.ilt_id==ilt_id, MdlMeetings.end_at != None)
+                .order_by(MdlMeetings.end_at.desc())
                 .first())
         msg = "."
         if latest_meeting_re:
             if latest_meeting_re.end_at:
+                print(latest_meeting_re.id)
+
                 pending_issue_record_list, \
                 pending_to_do_record_list = self.get_pending_issue_todo_ids(meeting_id=latest_meeting_re.id,
                                                                             db=db)
@@ -209,7 +213,7 @@ class IltMeetingService:
                                             futureMeetingId= db_meeting.id, 
                                             check_end_meeting_flag= False,
                                             db=db)
-                    msg = "with all Pending items from the last meeting." 
+                    msg = "with all Pending items from the last end meeting." 
                     # msg = "with all Pending items from the last meeting not tranferer."
             else:
                 pass
@@ -314,7 +318,8 @@ class IltMeetingService:
                     for record in update_records
                 ] if update_records else []
                 todo_task_records = db.query(MdlIlt_ToDoTask)\
-                    .filter(MdlIlt_ToDoTask.meeting_response_id == meeting_response_id)\
+                    .filter(MdlIlt_ToDoTask.meeting_response_id == meeting_response_id,
+                            MdlIlt_ToDoTask.is_active==True)\
                     .all()
                 user_todolist_record = [
                     {
@@ -326,8 +331,11 @@ class IltMeetingService:
                     for record in todo_task_records
                 ] if todo_task_records else []
 
-                issue_record = db.query(MdlIltissue)\
-                    .filter(MdlIltissue.meeting_response_id == meeting_response_id).order_by(MdlIltissue.id.desc()).all()
+                issue_record = (db.query(MdlIltissue)
+                    .filter(MdlIltissue.meeting_response_id == meeting_response_id,
+                            MdlIltissue.is_active==True)
+                    .order_by(MdlIltissue.id.desc())
+                    .all())
 
                 user_issues_record = [db.query(Mdl_issue)
                                       .filter(Mdl_issue.id == record.issue_id).one_or_none() for record in issue_record]  \
@@ -374,7 +382,8 @@ class IltMeetingService:
                                                         if (user_issues_single_record.resolves_flag == True and user_issues_single_record.issue_resolve_date)
                                                         else  (user_issues_single_record.due_date - datetime.utcnow()).days, 
                             "isRepeated": (True if db.query(MdlIltissue)
-                                                    .filter(MdlIltissue.issue_id==user_issues_single_record.id).count()>1 
+                                                .filter(MdlIltissue.issue_id == user_issues_single_record.id,
+                                                        MdlIltissue.is_active == True).count() > 1
                                                 else False)
                         } for user_issues_single_record in user_issues_record]
                         if user_issues_record else []
@@ -446,9 +455,20 @@ class IltMeetingService:
                                             listOfIssueIds=pending_issue_record_list,
                                             listOfToDoIds=pending_to_do_record_list, futureMeetingId=0,
                                 db=db)
-            print(msg)
         except Exception as e:
             raise CustomException(400, "unable to transefer pending Issues and TO-DO")
+        (complete_issue_id_list,
+            complete_to_do_id_list) = get_completed_issue_todo_list(meeting_id=meeting_id, db=db)
+        
+        inactivate_all_completed_issue_todo_list(listOfIssueIds = complete_issue_id_list, 
+                                                         listOfToDoIds = complete_to_do_id_list,
+                                                         ilt_id = ilt_id, 
+                                                         db = db)
+       
+        
+        for i_id in complete_issue_id_list:
+            db_issue = db.query(MdlIltissue).filter(MdlIltissue.issue_id==i_id)
+
         if db_meeting.start_at:
             db_meeting.end_at = datetime.utcnow() if pastData_flag == False else db_meeting.schedule_start_at + timedelta(hours=1)
             db.commit()
@@ -484,45 +504,9 @@ class IltMeetingService:
                 meeting_response_id = responceRecord.id
                 num_of_attand_members += 1 if responceRecord.attendance_flag else 0
                 num_of_feedback_in_attand_members += 1 if responceRecord.rating and responceRecord.attendance_flag else 0
-                ##issue
-                list_of_issue_records = (db.query(MdlIltissue)
-                                            .filter(MdlIltissue.meeting_response_id==meeting_response_id)
-                                            .all())
-                                                    
-                issue_id_list = [record.issue_id for record in list_of_issue_records] if  list_of_issue_records else []
-
-                if issue_id_list:
-                    for issue_id in issue_id_list:
-                            issue_record = db.query(Mdl_issue).get(issue_id)
-                            if issue_record.resolves_flag == False and issue_record.priority !=4:
-                                pending_issue_record_list.append({
-                                    "issueId": issue_record.id,
-                                    "issue": issue_record.issue,
-                                    "priorityId": issue_record.priority,
-                                    "date": issue_record.created_at,
-                                    "resolvedFlag": issue_record.resolves_flag,
-                                    "recognizePerformanceFlag": issue_record.recognize_performance_flag,
-                                    "teacherSupportFlag": issue_record.teacher_support_flag,
-                                    "leaderSupportFlag": issue_record.leader_support_flag,
-                                    "advanceEquityFlag": issue_record.advance_equality_flag,
-                                    "othersFlag": issue_record.others_flag
-                                })
-
-                ##ToDo
-                list_of_toDo_records = (db.query(MdlIlt_ToDoTask)
-                                            .filter(MdlIlt_ToDoTask.meeting_response_id==meeting_response_id)
-                                            .all())
-                if list_of_toDo_records:
-                    for todo_record in list_of_toDo_records:
-                            if todo_record.status == False:
-                                pending_to_do_record_list.append({
-                                    "todoListId": todo_record.id,
-                                    "description": todo_record.description,
-                                    "dueDate": todo_record.due_date,
-                                    "status": todo_record.status
-                                })
-            return (num_of_attand_members,num_of_feedback_in_attand_members, pending_issue_record_list,
-                     pending_to_do_record_list, len(member_meeting_responce_records))
+            
+            return (num_of_attand_members,num_of_feedback_in_attand_members, [],
+                     [], len(member_meeting_responce_records))
         
     def pending_issue_todo(self, UserId: int, meeting_id: int, ilt_id: int, db: Session):
         if db.query(MdlUsers).filter(MdlUsers.id == UserId).one_or_none() is None:
@@ -569,23 +553,14 @@ class IltMeetingService:
         extract meetingResID 
         update both issueMap and todo table
         """
-        
-        # meeting_re = db.query(MdlMeetings).filter(MdlMeetings.id==meetingId).one_or_none()
-        # if meeting_re.start_at is None:
-        #     raise CustomException(404,  "Please Start the meeting first")
-        # if meeting_re.end_at and check_end_meeting_flag :
-        #     raise CustomException(404,  "We can only transfer meeting's pendings when meeting is in-progress.")
-        # user_re = db.query(MdlUsers).filter(MdlUsers.id==UserId).one_or_none() 
-        # if user_re is None:
-        #     raise CustomException(404, "User not found")
-        
         upcomming_meeting_ids = get_upcomming_meeting(ilt_id=ilt_id, db=db) if futureMeetingId == 0 else [futureMeetingId]
+        
         # transfering pending ilt
         for id in listOfIssueIds:
-            map_re = (db.query(MdlIltissue).filter(MdlIltissue.issue_id==id)
-                    .order_by(MdlIltissue.id.desc()).first())
-            
-            # = map_re.parent_meeting_responce_id 
+            map_re = (db.query(MdlIltissue).filter(MdlIltissue.issue_id==id, 
+                                                   MdlIltissue.is_active==True)
+                    .order_by(MdlIltissue.id.desc())
+                    .first())        
             parent_responce_id= map_re.meeting_response_id 
             parent_user_id, = (db.query(MdlIltMeetingResponses.meeting_user_id)
                             .filter(MdlIltMeetingResponses.meeting_response_id==parent_responce_id)
@@ -596,18 +571,14 @@ class IltMeetingService:
                                             .filter(MdlIltMeetingResponses.meeting_id == mid,
                                                     MdlIltMeetingResponses.meeting_user_id == parent_user_id)
                                             .one()[0] for mid in upcomming_meeting_ids
-                                            
                                             ]
-            # print(parent_responce_id)
-            # print(list_of_user_meetingResponce)
             list_of_user_meetingResponce =[ upcoming_meetingResponce
                                             for upcoming_meetingResponce in list_of_user_meetingResponce 
                                             if db.query(MdlIltissue)
                                                 .filter(MdlIltissue.issue_id == id,
-                                                        MdlIltissue.meeting_response_id == upcoming_meetingResponce)
+                                                        MdlIltissue.meeting_response_id == upcoming_meetingResponce,
+                                                        MdlIltissue.is_active==True)
                                                 .one_or_none() is None ]
-            
-            # create re with MdlIltissue
             db_issue_records = [MdlIltissue(
                 meeting_response_id=upcoming_meetingResponce,
                 issue_id = id, 
@@ -618,11 +589,13 @@ class IltMeetingService:
         # transfering pending todo
         for todoid in listOfToDoIds:
             parent_todo_record = (db.query(MdlIlt_ToDoTask)
-                                  .filter(MdlIlt_ToDoTask.id == todoid)
+                                  .filter(MdlIlt_ToDoTask.id == todoid,
+                                          MdlIlt_ToDoTask.is_active==True)
                                 .one_or_none())
             if parent_todo_record is None:
                 raise CustomException(400,  "records is not available")
             parent_to_do_id = parent_todo_record.parent_to_do_id if parent_todo_record.parent_to_do_id else parent_todo_record.id
+            print(todoid, parent_to_do_id)
             parent_user_id, = (db.query(MdlIltMeetingResponses.meeting_user_id)
                                 .filter(MdlIltMeetingResponses.meeting_response_id==parent_todo_record.meeting_response_id)
                                 .one_or_none()
@@ -635,18 +608,18 @@ class IltMeetingService:
             list_of_user_meetingResponce = [upcoming_meetingResponce
                                             for upcoming_meetingResponce in list_of_user_meetingResponce
                                             if db.query(MdlIlt_ToDoTask)
-                                            .filter(MdlIlt_ToDoTask.parent_to_do_id == parent_to_do_id,
-                                                    MdlIlt_ToDoTask.meeting_response_id == upcoming_meetingResponce)
+                                            .filter(and_(MdlIlt_ToDoTask.parent_to_do_id == parent_to_do_id,
+                                                    MdlIlt_ToDoTask.meeting_response_id == upcoming_meetingResponce,
+                                                    MdlIlt_ToDoTask.is_active==True))
                                             .one_or_none() is None]
             
-            # create re with MdlIlt_ToDoTask 
             db_todo_records = [MdlIlt_ToDoTask(
                                 meeting_response_id=upcomming_m_re,
                                 description=parent_todo_record.description, 
                                 due_date=parent_todo_record.due_date, 
                                 created_at= datetime.utcnow(),
                                 status=parent_todo_record.status, 
-                                parent_to_do_id=parent_todo_record.id) 
+                                parent_to_do_id=parent_to_do_id) 
                                 for upcomming_m_re in list_of_user_meetingResponce]                            
             db.add_all(db_todo_records)
             db.commit()

@@ -218,12 +218,14 @@ class DashboardService:
 
         # issue
             list_of_list_of_issue_records = [db.query(MdlIltissue)
-                                             .filter(MdlIltissue.meeting_response_id == m_r_id)
+                                             .filter(MdlIltissue.meeting_response_id == m_r_id, 
+                                                     MdlIltissue.is_active==True)
                                              .all()
                                              for m_r_id in member_meeting_response_id_list]
             num_of_issue_raised =  sum(db.query(MdlIltissue.issue_id)
                                              .filter(and_(MdlIltissue.meeting_response_id == m_r_id,
-                                                          MdlIltissue.parent_meeting_responce_id == m_r_id))
+                                                          MdlIltissue.parent_meeting_responce_id == m_r_id,
+                                                          MdlIltissue.is_active==True))
                                              .count()
                                              for m_r_id in member_meeting_response_id_list)
             num_of_issue_resolved = 0
@@ -254,7 +256,8 @@ class DashboardService:
                 #                                .resolves_flag
                 #                                for issue_id in issue_id_list]
                 for issue_id in issue_id_list:
-                    numOfIssueRepeat += len([record.meeting_response_id for record in db.query(MdlIltissue).filter(MdlIltissue.issue_id==issue_id).all()])
+                    numOfIssueRepeat += len([record.meeting_response_id for record in db.query(MdlIltissue)
+                                             .filter(MdlIltissue.issue_id == issue_id, MdlIltissue.is_active == True).all()])
                     issue_re = db.query(Mdl_issue).get(issue_id)
                     issue_nominators['resolve'] += int(issue_re.resolves_flag)
                     issue_nominators['recognizePerformance'] += int(issue_re.recognize_performance_flag)
@@ -287,7 +290,8 @@ class DashboardService:
             avg_issueObj["numIssueResolved"] = num_of_issue_resolved
             # To-Do
             list_list_of_toDo_records = (db.query(MdlIlt_ToDoTask)
-                                         .filter(MdlIlt_ToDoTask.meeting_response_id == m_r_id)
+                                         .filter(MdlIlt_ToDoTask.meeting_response_id == m_r_id,
+                                                 MdlIlt_ToDoTask.is_active==True)
                                          .all()
                                          for m_r_id in member_meeting_response_id_list)
             meeting_todo_record_list = []
@@ -418,7 +422,7 @@ class DashboardService:
 
         # issue
             list_of_list_of_issue_records = [db.query(MdlIltissue)
-                                             .filter(MdlIltissue.meeting_response_id == m_r_id)
+                                             .filter(MdlIltissue.meeting_response_id == m_r_id, MdlIltissue.is_active == True)
                                              .all()
                                              for m_r_id in member_meeting_response_id_list]
             issue_id_list = []
@@ -447,7 +451,8 @@ class DashboardService:
                                                .resolves_flag
                                                for issue_id in issue_id_list]
                 for issue_id in issue_id_list:
-                    numOfIssueRepeat += len([record.meeting_response_id for record in db.query(MdlIltissue).filter(MdlIltissue.issue_id==issue_id).all()])
+                    numOfIssueRepeat += len([record.meeting_response_id for record in db.query(MdlIltissue)
+                                             .filter(MdlIltissue.issue_id==issue_id, MdlIltissue.is_active==True).all()])
                     issue_re = db.query(Mdl_issue).get(issue_id)
                     issue_nominators['resolve'] += int(issue_re.resolves_flag)
                     issue_nominators['recognizePerformance'] += int(issue_re.recognize_performance_flag)
@@ -467,7 +472,8 @@ class DashboardService:
 
             # To-Do
             list_list_of_toDo_records = (db.query(MdlIlt_ToDoTask)
-                                         .filter(MdlIlt_ToDoTask.meeting_response_id == m_r_id)
+                                         .filter(MdlIlt_ToDoTask.meeting_response_id == m_r_id,
+                                                 MdlIlt_ToDoTask.is_active==True)
                                          .all()
                                          for m_r_id in member_meeting_response_id_list)
             meeting_todo_record_list = []
@@ -592,7 +598,8 @@ class DashboardService:
 
             # issue
                 list_of_list_of_issue_records = [db.query(MdlIltissue)
-                                                .filter(MdlIltissue.meeting_response_id == m_r_id)
+                                                .filter(MdlIltissue.meeting_response_id == m_r_id
+                                                        , MdlIltissue.is_active==True)
                                                 .all()
                                                 for m_r_id in member_meeting_response_id_list]
                 issue_id_list = []
@@ -622,7 +629,9 @@ class DashboardService:
                     #                             .resolves_flag
                     #                             for issue_id in issue_id_list]
                     for issue_id in issue_id_list:
-                        issue_nominators['avgIssueRepeat'] += db.query(func.count(MdlIltissue.id)).filter(MdlIltissue.issue_id==issue_id).scalar()
+                        issue_nominators['avgIssueRepeat'] += (db.query(func.count(MdlIltissue.id))
+                                                                .filter(MdlIltissue.issue_id==issue_id)
+                                                                .scalar())
                         issue_re = db.query(Mdl_issue).get(issue_id)
                         issue_nominators['resolve'] += int(issue_re.resolves_flag)
                         issue_nominators['recognizePerformance'] += int(issue_re.recognize_performance_flag)
@@ -640,7 +649,8 @@ class DashboardService:
 
                 # To-Do
                 list_list_of_toDo_records = (db.query(MdlIlt_ToDoTask)
-                                            .filter(MdlIlt_ToDoTask.meeting_response_id == m_r_id)
+                                            .filter(MdlIlt_ToDoTask.meeting_response_id == m_r_id,
+                                                    MdlIlt_ToDoTask.is_active==True)
                                             .all()
                                             for m_r_id in member_meeting_response_id_list)
                 meeting_todo_record_list = []
