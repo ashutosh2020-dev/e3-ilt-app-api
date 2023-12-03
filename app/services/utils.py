@@ -33,9 +33,9 @@ def get_completed_issue_todo_list(meeting_id, db):
         ##issue
         issue_record_list.extend([id for id, in db.query(Mdl_issue.id)
                                     .join(MdlIltissue, Mdl_issue.id==MdlIltissue.issue_id )
-                                    .filter((MdlIltissue.meeting_response_id==meeting_response_id) 
-                                            & (MdlIltissue.is_active == True )
-                                            & (Mdl_issue.resolves_flag==True | Mdl_issue.priority == 4))
+                                    .filter(and_((MdlIltissue.meeting_response_id==meeting_response_id) 
+                                            , (MdlIltissue.is_active == True )
+                                            , or_(Mdl_issue.resolves_flag==True, Mdl_issue.priority == 4)))
                                     .all()
                                     ])
         ##ToDo
@@ -50,7 +50,7 @@ def inactivate_all_completed_issue_todo_list(listOfIssueIds, listOfToDoIds,
                                              ilt_id, db:Session ):
 
     upcomming_meeting_ids = get_upcomming_meeting(ilt_id, db)
-
+        
     for id in listOfIssueIds:
         map_re = (db.query(MdlIltissue).filter(MdlIltissue.issue_id==id, 
                                             MdlIltissue.is_active==True)
