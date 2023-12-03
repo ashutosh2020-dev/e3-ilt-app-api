@@ -366,8 +366,6 @@ class IltMeetingService:
                         "rating": meeting_response_record.rating,
                         "feedback": meeting_response_record.feedback,
                         "notes": meeting_response_record.notes,
-                        "rockName": meeting_response_record.rockName,
-                        "onTrack": meeting_response_record.onTrack,
                         "updates": user_update_record,
                         "todoList": user_todolist_record,
                         "issues":

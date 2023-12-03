@@ -29,7 +29,7 @@ class IltMeetingResponceService:
                      MdlIltMeetingResponses.is_active==True).one()
         ilt_meet_id = ilt_meet_re.meeting_id
         user_meetingResponse_record = db.query(MdlMeetingsResponse)\
-            .filter(MdlMeetingsResponse.id == meetingResponseId).first()
+            .filter(MdlMeetingsResponse.id == meetingResponseId).one_or_none()
         user_record = db.query(MdlUsers).filter(
             MdlUsers.id == ilt_meet_re.meeting_user_id).one()
 
@@ -93,8 +93,6 @@ class IltMeetingResponceService:
             "rating": user_meetingResponse_record.rating if user_meetingResponse_record.rating else 0,
             "feedback": user_meetingResponse_record.feedback,
             "notes": user_meetingResponse_record.notes,
-            "rockName": user_meetingResponse_record.rockName,
-            "onTrack": user_meetingResponse_record.onTrack,
             "updates": user_update_record,
             "todoList": user_todolist_record,
             "issues": iltMeetingResponse_issues
@@ -105,7 +103,7 @@ class IltMeetingResponceService:
             for uid in member_list:
                 db_meeting_response = MdlMeetingsResponse(attendance_flag=False, checkin_personal_best=None,
                                                           checkin_professional_best=None, rating=None,
-                                                          feedback=None, notes=None, rockName=None, onTrack=False)
+                                                          feedback=None, notes=None)
                 db.add(db_meeting_response)
                 db.commit()
                 db.refresh(db_meeting_response)
@@ -157,7 +155,7 @@ class IltMeetingResponceService:
                 for uid in member_list:
                     db_meeting_response = MdlMeetingsResponse(attendance_flag=None,
                                                               checkin_personal_best=None, checkin_professional_best=None,
-                                                              rating=None, feedback=None, notes=None, rockName=None, onTrack=False)
+                                                              rating=None, feedback=None, notes=None)
                     db.add(db_meeting_response)
                     db.commit()
                     db.refresh(db_meeting_response)
@@ -177,7 +175,7 @@ class IltMeetingResponceService:
                                  checkin_professional_best: str, ratings: int, feedback: str, notes: str, db: Session):
         db_metting_response = MdlMeetingsResponse(attendance_flag=is_attand,
                                                   checkin_personal_best=checkin_personal_best, checkin_professional_best=checkin_professional_best,
-                                                  rating=ratings, feedback=feedback, notes=notes, rockName=None, onTrack=False)
+                                                  rating=ratings, feedback=feedback, notes=notes)
         db.add(db_metting_response)
         db.commit()
         db.refresh(db_metting_response)
@@ -678,192 +676,46 @@ class IltMeetingResponceService:
             "data": issues_records
         }
 
-    # def update_ilt_meeting_responses(self, data: MeetingResponse, db: Session
-    #                                  ):
-    #     """
-    #         these are the keys inside 'data' object
-    #             iltMeetingResponseId: int 
-    #             iltMeetingId ==> 
-    #             member: members ==>
-    #             attendance: bool,
-    #             personalBest: str,
-    #             professionalBest: str
-    #             rating: int
-    #             feedback: str
-    #             notes: str
-    #             rocks: List[Rock]
-    #             updates: List[str]
-    #             todoList: List[todoItem]
-    #             issues: List[Issue],
-    #     """
-    #     try:
-    #         try:
-    #             notUse = True
-    #             if notUse:
-    #                 raise CustomException(404,  "Not in use")
-    #             meetingResponse = db.query(MdlMeetingsResponse).filter(
-    #                 MdlMeetingsResponse.id == data.iltMeetingResponseId).one_or_none()
-    #             if meetingResponse is None:
-    #                 raise CustomException(
-    #                     404,  "MeetingsResponse record did not found")
-                
-    #             # checking - is meeting stated
-    #             ilt_meeting_record = (db.query(MdlMeetings)
-    #                                   .filter(MdlMeetings.id == data.iltMeetingId).one_or_none())
-    #             if ilt_meeting_record is None:
-    #                 raise CustomException(404,  "meeting record did not found")
-    #             # datetime.strptime(ilt_meeting_start_time, '%Y-%m-%d %H:%M:%S.%f')
-    #             start_meeting_time = ilt_meeting_record.schedule_start_at
-    #             end_meeting_time = ilt_meeting_record.end_at
-    #             current_time = datetime.now()
-    #             if current_time >= start_meeting_time and current_time <= end_meeting_time:
-    #                 raise CustomException(
-    #                     400,  "meeting has started, unable to process your requests")
 
-    #             meetingResponseId = data.iltMeetingResponseId
-    #             if (data.attendance != None) or data.personalBest or data.professionalBest or data.rating or data.feedback or data.notes:
-    #                 user_meetingResponse_record = db.query(MdlMeetingsResponse)\
-    #                     .filter(MdlMeetingsResponse.id == meetingResponseId).one()
-    #                 if data.attendance != None:
-    #                     user_meetingResponse_record.attendance_flag = data.attendance
-    #                 if data.personalBest:
-    #                     user_meetingResponse_record.checkin_personal_best = data.personalBest
-    #                 if data.professionalBest:
-    #                     user_meetingResponse_record.checkin_professional_best = data.professionalBest
-    #                 if data.rating:
-    #                     user_meetingResponse_record.rating = data.rating
-    #                 if data.feedback:
-    #                     user_meetingResponse_record.feedback = data.feedback
-    #                 if data.notes:
-    #                     user_meetingResponse_record.notes = data.notes
-    #                 db.commit()
-    #                 db.refresh(user_meetingResponse_record)
+    # def update_meetingResponce_rocks(self, user_id: int,
+    #                                  meetingResponseId: int,
+    #                                  name: str,
+    #                                  onTrack: bool,
+    #                                  db: Session):
+    #     if db.query(MdlUsers).filter(MdlUsers.id == user_id).one_or_none() is None:
+    #         raise CustomException(400,  f"invaild users")
 
-    #             if data.member:
-    #                 if data.member.userId:
-    #                     user_record = (db.query(MdlUsers)
-    #                                    .filter(MdlUsers.id == data.member.userId)
-    #                                    .one())
-    #                     user_record.fname = data.member.firstName
-    #                     user_record.lname = data.member.lastName
-    #                     db.commit()
-    #                     db.refresh(user_record)
+    #     user_meetingResponse_record = (db.query(MdlMeetingsResponse)
+    #                                    .filter(MdlMeetingsResponse.id == meetingResponseId)
+    #                                    .one_or_none())
+    #     if user_meetingResponse_record is None:
+    #         raise CustomException(404,  "MeetingsResponse record did not found")
+    #     meeting_id,  = (db.query(MdlIltMeetingResponses.meeting_id)
+    #                     .filter(MdlIltMeetingResponses.meeting_response_id==meetingResponseId,
+    #                             MdlIltMeetingResponses.is_active==True)
+    #                     .one())
+    #     meeting_re = db.query(MdlMeetings).filter(MdlMeetings.id==meeting_id).one_or_none()
+    #     if meeting_re.start_at and meeting_re.end_at is None:
+    #         iltId, = db.query(MdlIltMeetings.ilt_id).filter(MdlIltMeetings.ilt_meeting_id==meeting_id).one_or_none()
+    #         ownerId, = db.query(MdlIlts.owner_id).filter(MdlIlts.id==iltId).one_or_none()
+    #         if user_id != meeting_re.note_taker_id and user_id != ownerId:
+    #             raise CustomException(404,  "Only Ilt owner and Note Taker can edit the data.")
+    #     if meeting_re.end_at:
+    #         raise CustomException(404,  "This meeting has been end, We can not update it.")
 
-    #             if data.rocks:
-    #                 for i in range(len(data.rocks)):
-    #                     if not data.rocks[i].rockId:
-    #                         continue
-    #                     user_rock = (db.query(MdlMeeting_rocks)
-    #                                  .filter(MdlMeeting_rocks.ilt_meeting_response_id == meetingResponseId,
-    #                                          MdlMeeting_rocks.rock_id == data.rocks[i].rockId)
-    #                                  .one())
-    #                     user_rock.on_track_flag = data.rocks[i].onTrack
-    #                     db.commit()
-    #                     db.refresh(user_rock)
-    #             if data.updates:
-    #                 for i in range(len(data.updates)):
-    #                     if not data.updates[i].id:
-    #                         continue
-    #                     user_update_record = (db.query(Mdl_updates)
-    #                                           .filter(Mdl_updates.meeting_response_id == meetingResponseId,
-    #                                                   Mdl_updates.id == data.updates[i].id)
-    #                                           .one())
-    #                     user_update_record.description = data.updates[i].description
-    #                     db.commit()
-    #                     db.refresh(user_update_record)
+    #     if name:
+    #         user_meetingResponse_record.rockName = name
+    #     if onTrack != True:
+    #         onTrack = False
+    #     user_meetingResponse_record.onTrack = onTrack
 
-    #             if data.todoList:
-    #                 for i in range(len(data.todoList)):
-    #                     if not data.todoList[i].id:
-    #                         continue
-    #                     user_todo_record = (db.query(MdlIlt_ToDoTask)
-    #                                         .filter(MdlIlt_ToDoTask.meeting_response_id == meetingResponseId,
-    #                                                 MdlIlt_ToDoTask.id == data.todoList[i].id)
-    #                                         .one())
-    #                     user_todo_record.description = data.todoList[i].description
-    #                     user_todo_record.due_date = data.todoList[i].dueDate
-    #                     user_todo_record.status = data.todoList[i].status
-    #                     db.commit()
-    #                     db.refresh(user_todo_record)
+    #     db.commit()
+    #     db.refresh(user_meetingResponse_record)
 
-    #             if data.issues:
-    #                 for i in range(len(data.updates)):
-    #                     if not data.issues[i].issueid:
-    #                         continue
-    #                     issue_map_re = (db.query(MdlIltissue)
-    #                                     .filter(MdlIltissue.meeting_response_id == meetingResponseId,
-    #                                             MdlIltissue.issue_id == data.issues[i].issueid)
-    #                                     .one())
-    #                     user_issue_record = (db.query(Mdl_issue)
-    #                                          .filter(Mdl_issue.id == issue_map_re.issue_id).one())
-
-    #                     user_issue_record.id = data.issues[i].issueid
-    #                     user_issue_record.issue = data.issues[i].issue
-    #                     user_issue_record.priority = data.issues[i].priorityId
-    #                     user_issue_record.created_at = datetime.utcnow()
-    #                     user_issue_record.due_date = data.issues[i].created_at
-    #                     user_issue_record.resolves_flag = data.issues[i].resolvedFlag
-    #                     user_issue_record.recognize_performance_flag = data.issues[
-    #                         i].recognizePerformanceFlag
-    #                     user_issue_record.teacher_support_flag = data.issues[i].teacherSupportFlag
-    #                     user_issue_record.leader_support_flag = data.issues[i].leaderSupportFlag
-    #                     user_issue_record.advance_equality_flag = data.issues[i].advanceEquityFlag
-    #                     user_issue_record.others_flag = data.issues[i].othersFlag
-    #                     db.commit()
-    #                     db.refresh(user_issue_record)
-
-    #         except Exception as e:
-    #             raise CustomException(
-    #                 404,  f"all details with corresponding meeting responceId is not found, error - {str(e)}")
-
-    #         return {
-
-    #             "statusCode": 200,
-    #             "userMessage": "we have successfully added all records"
-    #         }
-    #     except Exception as e:
-    #         raise CustomException(500,  f"Internal Server Error = {str(e)}")
-
-    def update_meetingResponce_rocks(self, user_id: int,
-                                     meetingResponseId: int,
-                                     name: str,
-                                     onTrack: bool,
-                                     db: Session):
-        if db.query(MdlUsers).filter(MdlUsers.id == user_id).one_or_none() is None:
-            raise CustomException(400,  f"invaild users")
-
-        user_meetingResponse_record = (db.query(MdlMeetingsResponse)
-                                       .filter(MdlMeetingsResponse.id == meetingResponseId)
-                                       .one_or_none())
-        if user_meetingResponse_record is None:
-            raise CustomException(
-                404,  "MeetingsResponse record did not found")
-        meeting_id,  = (db.query(MdlIltMeetingResponses.meeting_id)
-                        .filter(MdlIltMeetingResponses.meeting_response_id==meetingResponseId,
-                                MdlIltMeetingResponses.is_active==True)
-                        .one())
-        meeting_re = db.query(MdlMeetings).filter(MdlMeetings.id==meeting_id).one_or_none()
-        if meeting_re.start_at and meeting_re.end_at is None:
-            iltId, = db.query(MdlIltMeetings.ilt_id).filter(MdlIltMeetings.ilt_meeting_id==meeting_id).one_or_none()
-            ownerId, = db.query(MdlIlts.owner_id).filter(MdlIlts.id==iltId).one_or_none()
-            if user_id != meeting_re.note_taker_id and user_id != ownerId:
-                raise CustomException(404,  "Only Ilt owner and Note Taker can edit the data.")
-        if meeting_re.end_at:
-            raise CustomException(404,  "This meeting has been end, We can not update it.")
-
-        if name:
-            user_meetingResponse_record.rockName = name
-        if onTrack != True:
-            onTrack = False
-        user_meetingResponse_record.onTrack = onTrack
-
-        db.commit()
-        db.refresh(user_meetingResponse_record)
-
-        return {
-            "statusCode": 200,
-            "userMessage": "Rock Updated successfully"
-        }
+    #     return {
+    #         "statusCode": 200,
+    #         "userMessage": "Rock Updated successfully"
+    #     }
 
     def update_meetingResponce_checkin(self, user_id: int,
                                        meetingResponseId: int,
