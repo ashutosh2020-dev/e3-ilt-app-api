@@ -105,8 +105,8 @@ class MdlMeetingsResponse(Base):
     __tablename__ = "meeting_response"
     id = Column(Integer, primary_key=True, autoincrement=True)
     attendance_flag = Column(Boolean, nullable=True, default=False)
-    checkin_personal_best = Column(String(255), nullable=True, default=None)
-    checkin_professional_best = Column(String(255), nullable=True, default=None)
+    checkin_personal_best = Column(Text, nullable=True, default=None)
+    checkin_professional_best = Column(Text, nullable=True, default=None)
     rating = Column(Integer,  nullable=True, default=None)
     feedback = Column(Text, nullable=True, default="")
     notes = Column(Text, nullable=True, default="")
