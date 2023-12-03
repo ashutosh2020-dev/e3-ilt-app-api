@@ -25,7 +25,8 @@ class IltMeetingResponceService:
             raise CustomException(
                 404,  "MeetingsResponse record not found")
         ilt_meet_re = db.query(MdlIltMeetingResponses)\
-            .filter(MdlIltMeetingResponses.meeting_response_id == meetingResponseId).one()
+            .filter(MdlIltMeetingResponses.meeting_response_id == meetingResponseId,
+                     MdlIltMeetingResponses.is_active==True).one()
         ilt_meet_id = ilt_meet_re.meeting_id
         user_meetingResponse_record = db.query(MdlMeetingsResponse)\
             .filter(MdlMeetingsResponse.id == meetingResponseId).first()
@@ -109,7 +110,9 @@ class IltMeetingResponceService:
                 db.commit()
                 db.refresh(db_meeting_response)
                 map_record = MdlIltMeetingResponses(meeting_id=meeting_id,
-                                                    meeting_response_id=db_meeting_response.id, meeting_user_id=uid)
+                                                    meeting_response_id=db_meeting_response.id, 
+                                                    meeting_user_id=uid,
+                                                    is_active=True)
                 db.add(map_record)
                 db.commit()
                 db.refresh(map_record)
@@ -159,7 +162,9 @@ class IltMeetingResponceService:
                     db.commit()
                     db.refresh(db_meeting_response)
                     map_record = MdlIltMeetingResponses(meeting_id=mid,
-                                                        meeting_response_id=db_meeting_response.id, meeting_user_id=uid)
+                                                        meeting_response_id=db_meeting_response.id, 
+                                                        meeting_user_id=uid,
+                                                        is_active=True)
                     db.add(map_record)
                     db.commit()
                     db.refresh(map_record)
@@ -177,7 +182,7 @@ class IltMeetingResponceService:
         db.commit()
         db.refresh(db_metting_response)
         map_record = MdlIltMeetingResponses(
-            meeting_id=meeting_id, meeting_response_id=db_metting_response.id)
+            meeting_id=meeting_id, meeting_response_id=db_metting_response.id, is_active=True)
         db.add(map_record)
         db.commit()
         db.refresh(map_record)
@@ -232,7 +237,9 @@ class IltMeetingResponceService:
 
         if db.query(MdlIlts).filter(MdlIlts.id == rockData.iltId).one_or_none() is None:
             raise CustomException(404,  "ilt not found")
-        if db.query(MdlIltMembers).filter(and_(MdlIltMembers.ilt_id==rockData.iltId,MdlIltMembers.member_id == rockData.rockOwnerId)
+        if db.query(MdlIltMembers).filter(and_(MdlIltMembers.ilt_id==rockData.iltId,
+                                               MdlIltMembers.member_id == rockData.rockOwnerId,
+                                               MdlIltMembers.is_active==True)
                                           ).one_or_none() is None:
             raise CustomException(400,  "Rock owner not found.")
         meeting_re = db.query(MdlMeetings).filter(MdlMeetings.id ==meeting_id).one_or_none()
@@ -250,7 +257,8 @@ class IltMeetingResponceService:
         unique_user_ids = list(set(rockMembers))
 
         ilt_member_count = (db.query(MdlIltMembers)
-                            .filter(MdlIltMembers.ilt_id == rockData.iltId, MdlIltMembers.member_id.in_(unique_user_ids))
+                            .filter(MdlIltMembers.ilt_id == rockData.iltId, MdlIltMembers.member_id.in_(unique_user_ids),
+                                    MdlIltMembers.is_active==True)
                             .count())
         if ilt_member_count != len(unique_user_ids):
             raise CustomException(
@@ -421,7 +429,10 @@ class IltMeetingResponceService:
             raise CustomException(400,  f" userId is not valid")
         if db.query(MdlMeetingsResponse).filter(MdlMeetingsResponse.id == meetingResponseId).one_or_none() is None:
             raise CustomException(400,  f" meetingResponseId is not valid")
-        meeting_id,  = db.query(MdlIltMeetingResponses.meeting_id).filter(MdlIltMeetingResponses.meeting_response_id==meetingResponseId).one()
+        meeting_id,  = (db.query(MdlIltMeetingResponses.meeting_id)
+                        .filter(MdlIltMeetingResponses.meeting_response_id==meetingResponseId,
+                                MdlIltMeetingResponses.is_active==True)
+                        .one())
         meeting_re = db.query(MdlMeetings).filter(MdlMeetings.id==meeting_id).one_or_none()
         if meeting_re.start_at and meeting_re.end_at is None:
             iltId, = db.query(MdlIltMeetings.ilt_id).filter(MdlIltMeetings.ilt_meeting_id==meeting_id).one_or_none()
@@ -445,7 +456,7 @@ class IltMeetingResponceService:
             # check if user_id is inside MdlIltMembers
             db_meeting_todo = MdlIlt_ToDoTask(
                 meeting_response_id=meetingResponseId, description=description, due_date=dueDate, status=status, 
-                created_at= datetime.utcnow())
+                created_at= datetime.utcnow(), is_active = True)
             db.add(db_meeting_todo)
             db.commit()
             db.refresh(db_meeting_todo)
@@ -476,7 +487,10 @@ class IltMeetingResponceService:
                 raise CustomException(404,  "User not found")
             if db.query(MdlMeetingsResponse).filter(MdlMeetingsResponse.id == meetingResponseId).one_or_none() is None:
                 raise CustomException(400,  f" meetingResponseId is not valid")
-            meeting_id,  = db.query(MdlIltMeetingResponses.meeting_id).filter(MdlIltMeetingResponses.meeting_response_id==meetingResponseId).one()
+            meeting_id,  = (db.query(MdlIltMeetingResponses.meeting_id)
+                            .filter(MdlIltMeetingResponses.meeting_response_id==meetingResponseId,
+                                    MdlIltMeetingResponses.is_active==True)
+                            .one())
             meeting_re = db.query(MdlMeetings).filter(MdlMeetings.id==meeting_id).one_or_none()
             if meeting_re.start_at and meeting_re.end_at is None:
                 iltId, = db.query(MdlIltMeetings.ilt_id).filter(MdlIltMeetings.ilt_meeting_id==meeting_id).one_or_none()
@@ -539,11 +553,15 @@ class IltMeetingResponceService:
         if responce_id is None:
             raise CustomException(404,  "responce_id not found")
         check_assign_to_responce_id = db.query(MdlIltMeetingResponses).filter(and_(MdlIltMeetingResponses.meeting_id==meeting_id,
-                                                                                   MdlIltMeetingResponses.meeting_response_id==assign_to_responce_id)).one_or_none()
+                                                                                   MdlIltMeetingResponses.meeting_response_id==assign_to_responce_id,
+                                                                                   MdlIltMeetingResponses.is_active==True)).one_or_none()
         if check_assign_to_responce_id is None:
-            raise CustomException(404,  "This responce_id is not associated with This Meeting.")
+            raise CustomException(404,  "This responce_id is noo longer associated with This Meeting.")
         
-        meeting_id_,  = db.query(MdlIltMeetingResponses.meeting_id).filter(MdlIltMeetingResponses.meeting_response_id==meetingResponseId).one()
+        meeting_id_,  = (db.query(MdlIltMeetingResponses.meeting_id)
+                        .filter(MdlIltMeetingResponses.meeting_response_id==meetingResponseId,
+                                MdlIltMeetingResponses.is_active==True)
+                        .one())
         if meeting_id_ != meeting_id:
              raise CustomException(404,  "invalid Meeting Id")
         meeting_re = db.query(MdlMeetings).filter(MdlMeetings.id==meeting_id).one_or_none()
@@ -559,7 +577,8 @@ class IltMeetingResponceService:
             if assign_to_responce_id:
 
                 meeting_responcesId_list = [r_id for r_id, in db.query(MdlIltMeetingResponses.meeting_response_id)
-                                            .filter(MdlIltMeetingResponses.meeting_id == meeting_id)
+                                            .filter(MdlIltMeetingResponses.meeting_id == meeting_id,
+                                                    MdlIltMeetingResponses.is_active==True)
                                             .all()]
                 # print("----------",meeting_responcesId_list)
                 db_issue_latest_re = (db.query(MdlIltissue)
@@ -623,7 +642,9 @@ class IltMeetingResponceService:
             #                          )
 
             db_meeting_issue = MdlIltissue(
-                meeting_response_id=assign_to_responce_id, issue_id=db_issue.id, parent_meeting_responce_id=assign_to_responce_id)
+                meeting_response_id=assign_to_responce_id, issue_id=db_issue.id, 
+                parent_meeting_responce_id=assign_to_responce_id,
+                is_active=True)
             db.add(db_meeting_issue)
             db.commit()
             db.refresh(db_meeting_issue)
@@ -817,7 +838,10 @@ class IltMeetingResponceService:
         if user_meetingResponse_record is None:
             raise CustomException(
                 404,  "MeetingsResponse record did not found")
-        meeting_id,  = db.query(MdlIltMeetingResponses.meeting_id).filter(MdlIltMeetingResponses.meeting_response_id==meetingResponseId).one()
+        meeting_id,  = (db.query(MdlIltMeetingResponses.meeting_id)
+                        .filter(MdlIltMeetingResponses.meeting_response_id==meetingResponseId,
+                                MdlIltMeetingResponses.is_active==True)
+                        .one())
         meeting_re = db.query(MdlMeetings).filter(MdlMeetings.id==meeting_id).one_or_none()
         if meeting_re.start_at and meeting_re.end_at is None:
             iltId, = db.query(MdlIltMeetings.ilt_id).filter(MdlIltMeetings.ilt_meeting_id==meeting_id).one_or_none()
@@ -860,7 +884,10 @@ class IltMeetingResponceService:
             raise CustomException(
                 404,  "MeetingsResponse record did not found")
 
-        meeting_id,  = db.query(MdlIltMeetingResponses.meeting_id).filter(MdlIltMeetingResponses.meeting_response_id==meetingResponseId).one()
+        meeting_id,  = (db.query(MdlIltMeetingResponses.meeting_id)
+                        .filter(MdlIltMeetingResponses.meeting_response_id==meetingResponseId,
+                                MdlIltMeetingResponses.is_active==True)
+                        .one())
         meeting_re = db.query(MdlMeetings).filter(MdlMeetings.id==meeting_id).one_or_none()
         if meeting_re.start_at and meeting_re.end_at is None:
             iltId, = db.query(MdlIltMeetings.ilt_id).filter(MdlIltMeetings.ilt_meeting_id==meeting_id).one_or_none()
@@ -901,16 +928,21 @@ class IltMeetingResponceService:
         if user_meetingResponse_record is None:
             raise CustomException(
                 404,  "MeetingsResponse record did not found")
-        meeting_id,  = db.query(MdlIltMeetingResponses.meeting_id).filter(MdlIltMeetingResponses.meeting_response_id==meetingResponseId).one()
+        meeting_id,  = (db.query(MdlIltMeetingResponses.meeting_id)
+                        .filter(MdlIltMeetingResponses.meeting_response_id==meetingResponseId,
+                                MdlIltMeetingResponses.is_active==True)
+                        .one())
         meeting_re = db.query(MdlMeetings).filter(MdlMeetings.id==meeting_id).one_or_none()
         
 
         if meeting_re.start_at and meeting_re.end_at is None:
             iltId, = db.query(MdlIltMeetings.ilt_id).filter(MdlIltMeetings.ilt_meeting_id == meeting_id).one_or_none()
             ilt_re = db.query(MdlIlts).filter(MdlIlts.id==iltId).one_or_none()
-            current_member_ids = [mid for mid, in db.query(MdlIltMembers.member_id).filter(MdlIltMembers.ilt_id == iltId).all()]
+            current_member_ids = [mid for mid, in db.query(MdlIltMembers.member_id).filter(MdlIltMembers.ilt_id == iltId,
+                                                                                           MdlIltMembers.is_active==True).all()]
             mr_user_id, = db.query(MdlIltMeetingResponses.meeting_user_id).filter(
-                MdlIltMeetingResponses.meeting_response_id==meetingResponseId).one_or_none()
+                MdlIltMeetingResponses.meeting_response_id==meetingResponseId,
+                MdlIltMeetingResponses.is_active==True).one_or_none()
             
             if user_id not in current_member_ids:
                 raise CustomException(404,  "Cannot edit, Member is not in current ILT.")

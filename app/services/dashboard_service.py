@@ -73,7 +73,8 @@ def get_associated_schoolId_wrt_role(user_id:int, role_id:int, FilterParamaters:
             user_id_list = list(set(user_id_list))
             # get all ilt where user_id is member
             list_ilts.extend([record.ilt_id for record in db.query(
-                                            MdlIltMembers).filter(MdlIltMembers.member_id == user_id).all()])
+                                            MdlIltMembers).filter(MdlIltMembers.member_id == user_id, 
+                                                                  MdlIltMembers.is_active==True).all()])
             for  uid in user_id_list:
                 list_ilts.extend([record.id for record in db.query(
                     MdlIlts).filter(MdlIlts.owner_id == uid).all()])
@@ -173,13 +174,15 @@ class DashboardService:
                     elif status == 0:
                         num_of_notStarted_meeting += 1
 
-        num_of_current_member_in_ilt = db.query(MdlIltMembers.member_id).filter(MdlIltMembers.ilt_id == ilt_id).count()
+        num_of_current_member_in_ilt = db.query(MdlIltMembers.member_id).filter(MdlIltMembers.ilt_id == ilt_id, 
+                                                                                MdlIltMembers.is_active==True).count()
 
         for mid in list_of_ended_meeting_ids:
 
             member_meeting_response_id_list = [map_record.meeting_response_id
                                                for map_record in db.query(MdlIltMeetingResponses)
-                                               .filter(MdlIltMeetingResponses.meeting_id == mid)
+                                               .filter(MdlIltMeetingResponses.meeting_id == mid,
+                                                       MdlIltMeetingResponses.is_active==True)
                                                .all()
                                                ]
 
@@ -377,7 +380,7 @@ class DashboardService:
 
         members_list = [map_record.member_id
                         for map_record in db.query(MdlIltMembers)
-                        .filter(MdlIltMembers.ilt_id == ilt_id)
+                        .filter(MdlIltMembers.ilt_id == ilt_id, MdlIltMembers.is_active==True)
                         .all()]
         num_of_current_member_in_ilt = len(members_list)
         print("num_of_current_member_in_ilt", num_of_current_member_in_ilt)
@@ -385,7 +388,8 @@ class DashboardService:
 
             member_meeting_response_id_list = [map_record.meeting_response_id
                                                for map_record in db.query(MdlIltMeetingResponses)
-                                               .filter(MdlIltMeetingResponses.meeting_id == mid)
+                                               .filter(MdlIltMeetingResponses.meeting_id == mid,
+                                                       MdlIltMeetingResponses.is_active==True)
                                                .all()
                                                ]
 
@@ -571,7 +575,8 @@ class DashboardService:
 
                 member_meeting_response_id_list = [map_record.meeting_response_id
                                                 for map_record in db.query(MdlIltMeetingResponses)
-                                                .filter(MdlIltMeetingResponses.meeting_id == mid)
+                                                .filter(MdlIltMeetingResponses.meeting_id == mid,
+                                                        MdlIltMeetingResponses.is_active==True)
                                                 .all()
                                                 ]
                 member_meeting_responce_records = (db.query(MdlMeetingsResponse)
@@ -682,7 +687,8 @@ class DashboardService:
                 SummaryDataObj.numOfInprogressMeeting = num_of_inprogress_meeting
                 SummaryDataObj.numOfNotStartedMeeting = num_of_notStarted_meeting
                 
-                SummaryDataObj.numOfMembers = db.query(MdlIltMembers).filter(MdlIltMembers.ilt_id.in_(list_of_ilt)).count()
+                SummaryDataObj.numOfMembers = db.query(MdlIltMembers).filter(MdlIltMembers.ilt_id.in_(list_of_ilt), 
+                                                                             MdlIltMembers.is_active==True).count()
                 if FilterParamaters.districtAggregateFlag ==True:
                    dis_id, = db.query(MdlSchools.district).filter(MdlSchools.id == s_id[0]).one()   
                    SummaryDataObj.id = dis_id
