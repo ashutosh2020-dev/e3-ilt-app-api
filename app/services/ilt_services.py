@@ -50,12 +50,14 @@ class IltService:
         # ILT LIST
         if logged_user_record.role_id<=2:
             list_ilts.extend([record.ilt_id for record in db.query(
-                                            MdlIltMembers).filter(MdlIltMembers.member_id == user_id).all()])
+                                            MdlIltMembers).filter(MdlIltMembers.member_id == user_id,
+                                                                  MdlIltMembers.is_active == True).all()])
         elif logged_user_record.role_id>=3:
             user_id_list = list(set(user_id_list))
             # get all ilt where user_id is member
             list_ilts.extend([record.ilt_id for record in db.query(
-                                            MdlIltMembers).filter(MdlIltMembers.member_id == user_id).all()])
+                                            MdlIltMembers).filter(MdlIltMembers.member_id == user_id,
+                                                                  MdlIltMembers.is_active == True).all()])
             for  uid in user_id_list:
                 list_ilts.extend([record.id for record in db.query(
                     MdlIlts).filter(MdlIlts.owner_id == uid).all()])
@@ -90,7 +92,8 @@ class IltService:
             raise CustomException(400,  "ILT records Not found")
 
         members_id_list = [record.member_id for record in db.query(
-            MdlIltMembers).filter(MdlIltMembers.ilt_id == ilt_id).all()]
+            MdlIltMembers).filter(MdlIltMembers.ilt_id == ilt_id,
+                                  MdlIltMembers.is_active==True).all()]
         school_record = db.query(MdlSchools).filter(
             MdlSchools.id == ilt_record.school_id).one()
         owner_record = db.query(MdlUsers).filter(
@@ -193,7 +196,7 @@ class IltService:
 
         for m_id in valid_member_id_list:
             # flag = self.is_user_exist(user_id = m_id, db=db)
-            db_ilt_member = MdlIltMembers(ilt_id=db_ilt.id, member_id=m_id)
+            db_ilt_member = MdlIltMembers(ilt_id=db_ilt.id, member_id=m_id, is_active=True)
             db.add(db_ilt_member)
             db.commit()
             db.refresh(db_ilt_member)
@@ -241,7 +244,8 @@ class IltService:
             # update tables - ilt, iltMember, upcoming_meetings_responce, and all ilt_user_maping
             db_ilt.owner_id = ilt_data.ownerId
             check_user_exist_in_ilt = (db.query(MdlIltMembers).filter(MdlIltMembers.ilt_id==ilt_data.iltId, 
-                                                           MdlIltMembers.member_id==ilt_data.ownerId)
+                                                           MdlIltMembers.member_id==ilt_data.ownerId,
+                                                                      MdlIltMembers.is_active == True)
                                                             .one_or_none())
             if check_user_exist_in_ilt is None:
                 if ilt_data.ownerId not in ilt_data.memberIds:
@@ -257,19 +261,20 @@ class IltService:
             msg, count = ("", 0)
             ilt_query = db.query(MdlIltMembers)
             # filtering user
-            current_ilt_member_list= [re.member_id for re in ilt_query.filter(MdlIltMembers.ilt_id == ilt_id).all()]
+            current_ilt_member_list= [re.member_id for re in ilt_query.filter(MdlIltMembers.ilt_id == ilt_id,
+                                                                              MdlIltMembers.is_active == True).all()]
             new_member_list=   set(ilt_data.memberIds) - set(current_ilt_member_list)
             removed_member_list = (set(current_ilt_member_list) - set(ilt_data.memberIds)) - set([db_ilt.owner_id])
             
             for m_re in list(new_member_list):
-                ilt_record = ilt_query.filter(MdlIltMembers.ilt_id == ilt_id,
+                ilt_record = ilt_query.filter(MdlIltMembers.ilt_id == ilt_id,MdlIltMembers.is_active==True,
                                               MdlIltMembers.member_id == m_re).one_or_none()
                 if ilt_record is not None:
                     count += 1
                 else:
                     verified_new_member_ids.append(m_re)
                     db_ilt_member = MdlIltMembers(
-                        ilt_id=ilt_id, member_id=m_re)  # adding to ilt_user_map
+                        ilt_id=ilt_id, member_id=m_re, is_active=True)  # adding to ilt_user_map
                     db.add(db_ilt_member)
                     db.commit()
                     db.refresh(db_ilt_member)
@@ -319,17 +324,21 @@ class IltService:
                         db.commit()
                         
                     # delete member record
-                    db_member_map_re = ilt_record = ilt_query.filter(MdlIltMembers.ilt_id == ilt_id,
+                    db_member_map_re = ilt_record = ilt_query.filter(MdlIltMembers.ilt_id == ilt_id, 
+                                                                     MdlIltMembers.is_active==True,
                                                 MdlIltMembers.member_id == user_id).one_or_none()
-                    db.delete(db_member_map_re)
+                    db_member_map_re.is_active = False
+                    db.add(db_member_map_re)
                     db.commit()
+                    db.refresh(db_member_map_re)
 
                     for mid in upcoming_meetingId_list:
                         db_member_map_re =  (db.query(MdlIltMeetingResponses).filter(MdlIltMeetingResponses.meeting_id==mid,
                                                             MdlIltMeetingResponses.meeting_user_id==user_id)
                                                             .one())
-                        db.delete(db_member_map_re)
-                        db.commit()
+                        db_member_map_re.is_active = False
+                        db.add(db_member_map_re)
+                    db.commit()
                         
 
 

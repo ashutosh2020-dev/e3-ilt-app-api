@@ -11,7 +11,10 @@ DATABASE_URL = "sqlite:///ilt_db.db"
 # query = """ ALTER TABLE Ilt_meetings ADD CONSTRAINT fk_note_taker_id FOREIGN KEY (note_taker_id) REFERENCES users(id);"""
 # query = """ ALTER TABLE Ilt_meetings ADD COLUMN note_taker_id INT NULL DEFAULT NULL;"""
 # ALTER TABLE ilt_meeting_response_mapping ADD is_active boolean NULL DEFAULT true;
-
+# ALTER TABLE ilt_meeting_response_mapping MODIFY is_active boolean NOT NULL default true;
+# ALTER TABLE Ilt_members_maping ADD is_active boolean NOT NULL DEFAULT true;
+# ALTER TABLE Ilt_members_maping ALTER COLUMN is_active SET DEFAULT true;
+# CREATE INDEX idx_is_active ON Ilt_members_maping (is_active);
 
 query = """
   ALTER TABLE ilt_meeting_response_mapping ADD CONSTRAINT uq_ilt__mapping UNIQUE('meeting_user_id',  'meeting_user_id');

@@ -95,7 +95,7 @@ class SharedService:
                 "schools":school_details,
                 "rocks": rock_details}
         
-            # ilts_record = db.query(MdlIltMembers).filter(MdlIltMembers.member_id == user_id).all()
+            # ilts_record = db.query(MdlIltMembers).filter(MdlIltMembers.member_id == user_id,MdlIltMembers.is_active==True).all()
             # school_id_list = []
             # for record in ilts_record:
             #     ilt_school_id = db.query(MdlIlts).filter(MdlIlts.id == record.ilt_id).one().school_id

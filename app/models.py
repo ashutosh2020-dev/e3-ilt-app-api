@@ -68,6 +68,7 @@ class MdlIltMembers(Base):
     ilt_id = Column(Integer, ForeignKey("Ilts.id"), nullable=False, index=True)
     member_id = Column(Integer, ForeignKey(
         "users.id"), nullable=False, index=True)
+    is_active = Column(Boolean, nullable=False, index=True)
 
 
 class MdlMeetings(Base):
@@ -124,7 +125,7 @@ class MdlIltMeetingResponses(Base):
         "users.id"), nullable=False, index=True)
     meeting_response_id = Column(Integer, ForeignKey(
         "meeting_response.id"), nullable=False, index=True)
-    # is_active = Column(Boolean, nullable=True, default=True)
+    is_active = Column(Boolean, nullable=False)
 
 class MdlRocks(Base):
     __tablename__ = "Ilt_rocks"
@@ -159,7 +160,7 @@ class MdlIlt_ToDoTask(Base):
     due_date = Column(DateTime, nullable=True)
     status = Column(Boolean, nullable=False, default=False)
     parent_to_do_id = Column(Integer, nullable=True, default=None)
-    is_active = Column(Boolean, nullable=True, default=True)
+    is_active = Column(Boolean, nullable=False)
 
 
 class Mdl_updates(Base):
@@ -201,7 +202,7 @@ class MdlIltissue(Base):
     meeting_response_id = Column(Integer, ForeignKey("meeting_response.id"), nullable=False, index=True)
     issue_id = Column(Integer, ForeignKey("issue.id"), nullable=False, index=True)
     parent_meeting_responce_id = Column(Integer, ForeignKey("meeting_response.id"), nullable=False, index=True)
-    is_active = Column(Boolean, nullable=True, default=True)
+    is_active = Column(Boolean, nullable=False)
 
 class MdlIltPriorities(Base):
     __tablename__ = "Ilt_issue_priorities_mapping"
