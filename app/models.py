@@ -108,19 +108,17 @@ class MdlMeetingsResponse(Base):
     checkin_personal_best = Column(String(255), nullable=True, default=None)
     checkin_professional_best = Column(String(255), nullable=True, default=None)
     rating = Column(Integer,  nullable=True, default=None)
-    feedback = Column(String(255), nullable=True, default="")
-    notes = Column(String(255), nullable=True, default="")
-    rockName = Column(String(255), nullable=True, default="")
-    onTrack = Column(Boolean, nullable=True, default="")
+    feedback = Column(Text, nullable=True, default="")
+    notes = Column(Text, nullable=True, default="")
+    # rockName = Column(String(255), nullable=True, default="")
+    # onTrack = Column(Boolean, nullable=True, default="")
 
 
 class MdlIltMeetingResponses(Base):
     __tablename__ = "ilt_meeting_response_mapping"
-    __table_args__ = (UniqueConstraint(
-        'meeting_user_id', 'meeting_response_id'),)
+    __table_args__ = (UniqueConstraint('meeting_user_id', 'meeting_response_id'),)
     id = Column(Integer, primary_key=True, autoincrement=True)
-    meeting_id = Column(Integer, ForeignKey(
-        "Ilt_meetings.id"), nullable=False, index=True)
+    meeting_id = Column(Integer, ForeignKey("Ilt_meetings.id"), nullable=False, index=True)
     meeting_user_id = Column(Integer, ForeignKey(
         "users.id"), nullable=False, index=True)
     meeting_response_id = Column(Integer, ForeignKey(
@@ -133,7 +131,7 @@ class MdlRocks(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     ilt_id = Column(Integer, ForeignKey("Ilts.id"), nullable=False, index=True)
     name = Column(String(255), nullable=False)
-    description = Column(String(255), nullable=False)
+    description = Column(Text, nullable=False)
     is_complete = Column(Boolean, default=False)
     created_at = Column(DateTime, nullable=False)
     updated_at = Column(DateTime, nullable=True)
@@ -152,10 +150,10 @@ class MdlRocks_members(Base):
 
 class MdlIlt_ToDoTask(Base):
     __tablename__ = "Ilt_to_do_task"
-    # __table_args__ = (UniqueConstraint('meeting_response_id', 'parent_to_do_id'),)
+    __table_args__ = (UniqueConstraint('meeting_response_id', 'parent_to_do_id'),)
     id = Column(Integer, primary_key=True, autoincrement=True)
     meeting_response_id = Column(Integer, ForeignKey("meeting_response.id"), nullable=False, index=True)
-    description = Column(String(255), nullable=False)
+    description = Column(Text, nullable=False)
     created_at = Column(DateTime, nullable=False)
     due_date = Column(DateTime, nullable=True)
     status = Column(Boolean, nullable=False, default=False)
@@ -168,7 +166,7 @@ class Mdl_updates(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     meeting_response_id = Column(Integer, ForeignKey(
         "meeting_response.id"), nullable=False, index=True)
-    description = Column(String(255), nullable=False)
+    description = Column(Text, nullable=False)
 
 
 class MdlPriorities(Base):
@@ -181,9 +179,8 @@ class MdlPriorities(Base):
 class Mdl_issue(Base):
     __tablename__ = "issue"
     id = Column(Integer, primary_key=True, autoincrement=True)
-    issue = Column(String(255), nullable=True)
-    priority = Column(Integer, ForeignKey(
-        "Ilt_priorities.id"), nullable=True, index=True)
+    issue = Column(Text, nullable=False)
+    priority = Column(Integer, ForeignKey("Ilt_priorities.id"), nullable=True, index=True)
     created_at = Column(DateTime, nullable=False) 
     due_date = Column(DateTime, nullable=True)
     issue_resolve_date = Column(DateTime, nullable=True)

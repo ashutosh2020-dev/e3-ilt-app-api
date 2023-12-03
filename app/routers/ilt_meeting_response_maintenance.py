@@ -17,15 +17,11 @@ def read_meeting_responce_details(meetingResponseId: int, UserId: int = Header(c
     return IltMeetingResponceService.get_Ilts_meeting_list(user_id=UserId, meetingResponseId=meetingResponseId, db=db)
 
 
-@router.post("/api/v1/ilts/meetingResponses/{meetingResponseId}/rocks")
-def update_rocks_for_meetingResponse(meetingResponseId: int,
-                                     rock: meetingReasponceRock, UserId: int = Header(convert_underscores=False),
-                                     db: Session = Depends(get_db)):
-    return IltMeetingResponceService.update_meetingResponce_rocks(user_id=UserId,
-                                                                  meetingResponseId=meetingResponseId,
-                                                                  name=rock.rockName,
-                                                                  onTrack=rock.onTrack,
-                                                                  db=db)
+# @router.post("/api/v1/ilts/meetingResponses/{meetingResponseId}/rocks")
+# def update_rocks_for_meetingResponse(meetingResponseId: int,
+#                                      rock: meetingReasponceRock, UserId: int = Header(convert_underscores=False),
+#                                      db: Session = Depends(get_db)):
+#     return "none"
 
 
 @router.post("/api/v1/ilts/meetingResponses/{meetingResponseId}/checkin")
