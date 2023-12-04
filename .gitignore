@@ -20,7 +20,7 @@ site_build
 venv
 docs.zip
 archive.zip
-
+other_codes
 # vim temporary files
 *~
 .*.sw?
