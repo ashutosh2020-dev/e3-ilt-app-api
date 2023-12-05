@@ -259,8 +259,9 @@ class DashboardService:
                 #                                .resolves_flag
                 #                                for issue_id in issue_id_list]
                 for issue_id in issue_id_list:
-                    numOfIssueRepeat += len([record.meeting_response_id for record in db.query(MdlIltissue)
-                                             .filter(MdlIltissue.issue_id == issue_id, MdlIltissue.is_active == True).all()])
+                    numOfIssueRepeat += (db.query(MdlIltissue)
+                                             .filter(MdlIltissue.issue_id == issue_id, MdlIltissue.is_active == True)
+                                             .count())
                     issue_re = db.query(Mdl_issue).get(issue_id)
                     issue_nominators['resolve'] += int(issue_re.resolves_flag)
                     issue_nominators['recognizePerformance'] += int(issue_re.recognize_performance_flag)
@@ -455,8 +456,9 @@ class DashboardService:
                                                .resolves_flag
                                                for issue_id in issue_id_list]
                 for issue_id in issue_id_list:
-                    numOfIssueRepeat += len([record.meeting_response_id for record in db.query(MdlIltissue)
-                                             .filter(MdlIltissue.issue_id==issue_id, MdlIltissue.is_active==True).all()])
+                    numOfIssueRepeat += (db.query(MdlIltissue)
+                                         .filter(MdlIltissue.issue_id == issue_id, MdlIltissue.is_active == True)
+                                         .count())
                     issue_re = db.query(Mdl_issue).get(issue_id)
                     issue_nominators['resolve'] += int(issue_re.resolves_flag)
                     issue_nominators['recognizePerformance'] += int(issue_re.recognize_performance_flag)
@@ -695,7 +697,7 @@ class DashboardService:
                    SummaryDataObj.name, = db.query(MdlDistrict.name).filter(MdlDistrict.id==dis_id).one()
                    
                 else:
-                    school_re = db.query(MdlSchools).filter(MdlSchools.id == s_id).one()
+                    school_re = db.query(MdlSchools).filter(MdlSchools.id == s_id[0]).one()
                     SummaryDataObj.name = school_re.name
                     SummaryDataObj.id = school_re.id
 

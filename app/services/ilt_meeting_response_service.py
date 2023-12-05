@@ -578,15 +578,17 @@ class IltMeetingResponceService:
                                             .filter(MdlIltMeetingResponses.meeting_id == meeting_id,
                                                     MdlIltMeetingResponses.is_active==True)
                                             .all()]
-                # print("----------",meeting_responcesId_list)
                 db_issue_latest_re = (db.query(MdlIltissue)
                                       .filter(and_(MdlIltissue.issue_id == id,
                                                    MdlIltissue.meeting_response_id.in_(meeting_responcesId_list),
                                                    MdlIltissue.is_active==True))
                                         .one_or_none())
-                # print(db_issue_latest_re.meeting_response_id, assign_to_responce_id)
                 if db_issue_latest_re.meeting_response_id != assign_to_responce_id:
-                    db_issue_latest_re.meeting_response_id = assign_to_responce_id
+                    if db_issue_latest_re.meeting_response_id == db_issue_latest_re.parent_meeting_responce_id:
+                        db_issue_latest_re.meeting_response_id = assign_to_responce_id
+                        db_issue_latest_re.parent_meeting_responce_id = assign_to_responce_id
+                    else:
+                        db_issue_latest_re.meeting_response_id = assign_to_responce_id
                     db.commit()
                     db.refresh(db_issue_latest_re)
 
