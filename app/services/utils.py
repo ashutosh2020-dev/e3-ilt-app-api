@@ -17,14 +17,18 @@ def get_upcomming_meeting(ilt_id, db):
                             ]
 
 
-def get_completed_issue_todo_list(meeting_id, db):
+def get_completed_issue_todo_list(meeting_id, db, user_id=None):
     ## check pending- issue, todo, 
+    sub_query = (db.query(MdlIltMeetingResponses.meeting_response_id)
+                        .filter(MdlIltMeetingResponses.meeting_id==meeting_id, 
+                                MdlIltMeetingResponses.is_active==True))
+    if user_id:
+        sub_query = sub_query.filter(MdlIltMeetingResponses.meeting_user_id==user_id)
+    sub_query = sub_query.all()
     member_meeting_response_id_list = [meeting_response_id
-                                        for meeting_response_id, in db.query(MdlIltMeetingResponses.meeting_response_id)
-                                        .filter(MdlIltMeetingResponses.meeting_id==meeting_id)
-                                        .all()]
+                                        for meeting_response_id, in sub_query]
     member_meeting_responce_records = [db.query(MdlMeetingsResponse)
-                                            .filter(MdlMeetingsResponse.id==m_r_id).one() 
+                                            .filter(MdlMeetingsResponse.id==m_r_id).one()
                                             for m_r_id in member_meeting_response_id_list]
     issue_record_list = []
     to_do_record_list = []
@@ -108,3 +112,26 @@ def inactivate_all_completed_issue_todo_list(listOfIssueIds, listOfToDoIds,
                     db.add(db_todo)
             db.commit()
 
+def replacing_ownership_of_issue_todo_for(associated_responceId_list, default_owner_responceId_list, db:Session):
+    
+    for responce_id, defult_responce_id in zip(associated_responceId_list, default_owner_responceId_list):
+        get_all_issue_re = (db.query(MdlIltissue)
+                                .filter(and_(MdlIltissue.meeting_response_id==responce_id,
+                                        MdlIltissue.is_active==True))
+                                .all())
+        for db_re in get_all_issue_re: 
+                db_re.meeting_response_id = defult_responce_id
+                if db_re.parent_meeting_responce_id ==responce_id:
+                    db_re.parent_meeting_responce_id = defult_responce_id
+                db.add(db_re)
+        db.commit()
+                
+        get_all_todo_id = (db.query(MdlIlt_ToDoTask)
+                           .filter(MdlIlt_ToDoTask.meeting_response_id == responce_id,
+                                   MdlIlt_ToDoTask.is_active==True).all()
+                                )
+        for db_re in get_all_todo_id:
+                db_re.meeting_response_id = defult_responce_id
+                db.add(db_re)
+        db.commit()
+    pass

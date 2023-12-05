@@ -1,7 +1,9 @@
 
 from sqlalchemy.orm import Session
 from app.models import MdlIlts, MdlIltMembers, MdlUsers, MdlSchools, MdlMeetings, \
-    MdlIltMeetings, MdlRocks, MdlIltMeetingResponses, MdlIltWhiteBoard, MdlRocks_members
+    MdlIltMeetings, MdlRocks, MdlIltMeetingResponses, MdlIltWhiteBoard, MdlRocks_members,\
+    MdlIltissue, Mdl_issue, MdlIlt_ToDoTask
+from app.services.utils import get_upcomming_meeting, replacing_ownership_of_issue_todo_for
 from app.schemas.ilt_schemas import Ilt
 from app.services.ilt_meeting_response_service import IltMeetingResponceService
 from datetime import datetime, timezone
@@ -322,8 +324,29 @@ class IltService:
                         re.is_rock_member = False
                         db.add(re)
                         db.commit()
-                        
-                    # delete member record
+
+                    # change ownership of completed ToDo and issue, and inactive status for complete one
+                    #get pending and complte issue id, replace with default ownership  
+                    # get_completed_issue_todo_list(meeting_id, db, user_id=None)
+                    ongoing_upcoming_meeting_ids = get_upcomming_meeting(ilt_id=ilt_id, db=db)
+                    all_upcomming_responce_id = [db.query(MdlIltMeetingResponses.meeting_response_id)
+                                                    .filter(and_(MdlIltMeetingResponses.meeting_id ==mid),
+                                                            MdlIltMeetingResponses.meeting_user_id==user_id, 
+                                                            MdlIltMeetingResponses.is_active==True)
+                                                    .one()[0] 
+                                            for mid in ongoing_upcoming_meeting_ids]
+                    
+                    all_upcomming_owner_responce_id = [db.query(MdlIltMeetingResponses.meeting_response_id)
+                                                    .filter(and_(MdlIltMeetingResponses.meeting_id ==mid),
+                                                            MdlIltMeetingResponses.meeting_user_id==db_ilt.owner_id, 
+                                                            MdlIltMeetingResponses.is_active==True)
+                                                    .one()[0]
+                                            for mid in ongoing_upcoming_meeting_ids]
+                    
+                    replacing_ownership_of_issue_todo_for(associated_responceId_list=all_upcomming_responce_id,
+                                                          default_owner_responceId_list =all_upcomming_owner_responce_id, db=db)
+
+                    # inactive member record
                     db_member_map_re = ilt_record = ilt_query.filter(MdlIltMembers.ilt_id == ilt_id, 
                                                                      MdlIltMembers.is_active==True,
                                                 MdlIltMembers.member_id == user_id).one_or_none()

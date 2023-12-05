@@ -3,13 +3,14 @@ import json
 import pandas as pd
 
 # host_url = "http://middle-ilt-app.us-east-1.elasticbeanstalk.com/" 
-host_url = "https://127.0.0.1/"
+host_url = "http://127.0.0.1/"
 
 def create_root_user():
     
     url = host_url+"api/v1/other/root_user/"
     
-    csv_file = pd.read_excel("director_cred.xlsx")
+    csv_file = pd.read_excel(
+        r"C:\ashutosh_tiwari\sortingHat\middle-ilt-app-api\other_codes\run_api\director_cred.xlsx")
     for _, user in csv_file.iterrows():
         payload = json.dumps(  {
                     "firstName": user["firstName"],
@@ -43,7 +44,7 @@ def create_school():
     d = 1
     district = ['Colonial', 'Decatur', 'Gainesville', 'Marion', 'Rio Grande', 'Roanoke', 'Pike', 'York']
     # school_name_list = ["school_A", "school_B", "school_C", "school_D"]
-    school_name_df = pd.read_csv("temp_dis.csv")
+    school_name_df = pd.read_csv(r"C:\ashutosh_tiwari\sortingHat\middle-ilt-app-api\other_codes\run_api\temp_dis.csv")
     school_name_df = school_name_df.T
 
     payload = {}
