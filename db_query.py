@@ -15,6 +15,27 @@ DATABASE_URL = "sqlite:///ilt_db.db"
 # ALTER TABLE Ilt_members_maping ADD is_active boolean NOT NULL DEFAULT true;
 # ALTER TABLE Ilt_members_maping ALTER COLUMN is_active SET DEFAULT true;
 # CREATE INDEX idx_is_active ON Ilt_members_maping (is_active);
+# -- ALTER TABLE meeting_response MODIFY feedback text NULL default null;
+# -- ALTER TABLE meeting_response MODIFY notes text NULL default null;
+# -- ALTER TABLE Ilt_rocks MODIFY description text NOT NULL;
+# -- ALTER TABLE Ilt_to_do_task MODIFY description text NOT NULL;
+# -- ALTER TABLE meeting_updates MODIFY description text NOT NULL;
+# -- ALTER TABLE issue MODIFY issue text NOT NULL;
+# -- ALTER TABLE Ilt_priorities MODIFY description text NOT NULL;
+# -- ALTER TABLE meeting_updates MODIFY description text NOT NULL;
+# -- ALTER TABLE meeting_response MODIFY notes text NULL default null;
+# -- ALTER TABLE Ilt_rocks MODIFY description text NOT NULL;
+# -- ALTER TABLE Ilt_to_do_task MODIFY description text NOT NULL;
+# -- ALTER TABLE meeting_updates MODIFY description text NOT NULL;
+# -- ALTER TABLE issue MODIFY issue text NOT NULL;
+# -- ALTER TABLE Ilt_priorities MODIFY description text NOT NULL;
+# -- ALTER TABLE meeting_updates MODIFY description text NOT NULL;
+# -- ALTER TABLE meeting_response DROP rockName;
+# -- ALTER TABLE meeting_response DROP onTrack;
+# -- drop table meeting_issue_mapping;
+# -- drop table Ilt_issue_priorities_mapping;
+# -- drop table issue;
+# -- ALTER TABLE meeting_response MODIFY checkin_professional_best text NULL default null;
 
 query = """
   ALTER TABLE ilt_meeting_response_mapping ADD CONSTRAINT uq_ilt__mapping UNIQUE('meeting_user_id',  'meeting_user_id');

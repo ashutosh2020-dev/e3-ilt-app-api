@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, Header
 from sqlalchemy.orm import Session
 from app.config.database import get_db
 from app.services.user_service import UserService
-from app.schemas.user_schemas import UserRequest, UpdateUserRequest
+from app.schemas.user_schemas import UserRequest, UpdateUserRequest, UpdateUserPasswordRequest
 router = APIRouter()
 user_service = UserService()
 
@@ -55,7 +55,14 @@ def fn_update_user(id:int, user:UpdateUserRequest, UserId: int=Header(convert_un
                                     role_id=user.roleId,
                                     districts=user.districts,
                                     db=db)
-
+@router.post("/api/v1/users/{id}/password")
+def fn_update_user_password(id:int, user:UpdateUserPasswordRequest, UserId: int=Header(convert_underscores=False), 
+                   db: Session = Depends(get_db)):
+   return user_service.update_password(old_password= user.oldPassword, 
+                                       new_password = user.newPassword,
+                                       loginUserId = UserId, 
+                                       id = id,
+                                       db=db)
 
 @router.post("/api/v1/users/{id}/delete")
 def fn_delete_user(UserId: int=Header(convert_underscores=False), db: Session = Depends(get_db)):

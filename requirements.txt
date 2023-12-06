@@ -7,3 +7,4 @@ passlib==1.7.4
 uvicorn==0.22.0
 alembic==1.11.1
 mysqlclient==2.2.0
+bcrypt==4.1.1
