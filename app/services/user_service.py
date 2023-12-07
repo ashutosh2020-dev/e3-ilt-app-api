@@ -381,8 +381,8 @@ class UserService:
             raise CustomException(404,  "Cannot change this password. Please contact the administrator.")
         existing_password, saltKey = db_user_re.password, db_user_re.saltKey
         is_match = verify_password(input_password=old_password,
-                        hpass=existing_password, 
-                        saltKey=saltKey)
+                                   hashed_password=existing_password,
+                                   salt=saltKey)
         if is_match:
             hpass, saltKey = hash_password(new_password)
             db_user_re.password = hpass
