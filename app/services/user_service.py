@@ -6,7 +6,18 @@ import sys, re
 from app.schemas.ilt_schemas import Ilt_scheema
 from app.exceptions.customException import CustomException
 from app.schemas.user_schemas import UserAccount
+import bcrypt
 
+def hash_password(password, salt_rounds=12):
+    salt = bcrypt.gensalt(salt_rounds)
+    hashed_password = bcrypt.hashpw(password.encode('utf-8'), salt)
+    return [hashed_password.decode('utf-8'), salt.decode('utf-8')]
+
+
+def verify_password(input_password, hashed_password, salt):
+    hashed_input_password = bcrypt.hashpw(
+        input_password.encode('utf-8'), salt.encode('utf-8'))
+    return hashed_input_password == hashed_password.encode('utf-8')
 
 class UserService:
     def get_user(self, user_id: int, db: Session):
@@ -21,7 +32,7 @@ class UserService:
                      "lastName": u_record.lname,
                      "emailId": u_record.email,
                      "phoneNumber": u_record.number,
-                     "password": u_record.password,
+                     "password": "*******",
                      "active": u_record.is_active,
                      "roleId": u_record.role_id,
                      "parentUserId": u_record.parent_user_id}]
@@ -37,7 +48,7 @@ class UserService:
                                    "lastName": user_record.lname,
                                    "emailId": user_record.email,
                                    "phoneNumber": user_record.number,
-                                   "password": user_record.password,
+                                   "password": "*******",
                                    "active": user_record.is_active,
                                    "roleId": user_record.role_id,
                                    "parentUserId": user_record.parent_user_id})
@@ -50,7 +61,7 @@ class UserService:
                                         "lastName": record.lname,
                                         "emailId": record.email,
                                         "phoneNumber": record.number,
-                                        "password": record.password,
+                                        "password": "*******",
                                         "active": record.is_active,
                                         "roleId": record.role_id,
                                         "parentUserId": record.parent_user_id
@@ -76,7 +87,7 @@ class UserService:
                 "lastName": u_record.lname,
                 "emailId": u_record.email,
                 "phoneNumber": u_record.number,
-                "password": u_record.password,
+                "password": "*******",
                 "active": u_record.is_active,
                 "roleId": u_record.role_id,
                 "parentUserId": u_record.parent_user_id,
@@ -215,9 +226,11 @@ class UserService:
             districts = [re.id for re in db.query(MdlDistrict).all()]
 
         # district_list.extend([dis.name for dis in db.query(MdlDistrict).all()]) #cal parent access area & append
+        hashPassword, saltKey = hash_password(password)
         if districts:
             db_user = MdlUsers(fname=fname, lname=lname, email=email,
-                               password=password, is_active=is_active, role_id=role_id, parent_user_id=parent_user_id)
+                               password=hashPassword, saltKey=saltKey,
+                               is_active=is_active, role_id=role_id, parent_user_id=parent_user_id)
             if number:
                 db_user.number = number
             db.add(db_user)
@@ -305,8 +318,6 @@ class UserService:
             db_user.email = email
         if number:
             db_user.number = number
-        if password:
-            db_user.password = password
         if is_active is not None:
             db_user.is_active = is_active
 
@@ -319,7 +330,6 @@ class UserService:
         input_new_district = set(districts)
         new_districts_list = input_new_district - old_districts
         remove_districts_list = old_districts - input_new_district
-        print("--------------------:",old_districts, input_new_district)
         #existing_districts_list = old_districts.intersection(input_new_district)
         all_district_list = old_districts.union(input_new_district)
         for dis_id in all_district_list:
@@ -359,3 +369,30 @@ class UserService:
             "statusCode": 200,
             "userMessage": "User deleted successfully."
         }
+
+    def update_password(self, loginUserId, id, old_password, new_password, db:Session):
+
+        db_user_re = (db.query(MdlUsers).filter(MdlUsers.id == id).one_or_none())
+        if db_user_re is None:
+            raise CustomException(404,  "Record not found.")
+        if db.query(MdlUsers.password).filter(MdlUsers.id == loginUserId).one_or_none() is None:
+            raise CustomException(404,  "Record not found.")
+        if not db_user_re.saltKey:
+            raise CustomException(404,  "Cannot change this password. Please contact the administrator.")
+        existing_password, saltKey = db_user_re.password, db_user_re.saltKey
+        is_match = verify_password(input_password=old_password,
+                        hpass=existing_password, 
+                        saltKey=saltKey)
+        if is_match:
+            hpass, saltKey = hash_password(new_password)
+            db_user_re.password = hpass
+            db_user_re.saltKey = saltKey
+            db.add(db_user_re)
+            db.commit()
+        else:
+            raise CustomException(404, "Incorrect Password!")
+        return {
+            "statusCode": 200,
+            "userMessage": "Password updated successfully"
+        }
+        

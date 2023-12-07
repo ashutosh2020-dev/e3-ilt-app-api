@@ -24,6 +24,10 @@ class UpdateUserRequest(BaseModel):
     roleId: Optional[int]=0
     districts:Optional[List[int]]=[]
     
+class UpdateUserPasswordRequest(BaseModel):
+    oldPassword: int
+    newPassword: int
+
 
 class loginCredential(BaseModel):
     userName:str
