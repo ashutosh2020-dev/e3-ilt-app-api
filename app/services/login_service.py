@@ -4,15 +4,26 @@ from fastapi.responses import JSONResponse
 from app.exceptions.customException import CustomException
 from app.models import  MdlUsers
 from app.exceptions.customException import CustomException
+import bcrypt
+
+def verify_password(input_password, hashed_password, salt):
+    hashed_input_password = bcrypt.hashpw(
+        input_password.encode('utf-8'), salt.encode('utf-8'))
+    return hashed_input_password == hashed_password.encode('utf-8')
 
 class loginService:
-    def check_login(self, userName:str, password:str, db:Session):
+    def check_login(self, userName:str, password:str, db:Session, is_reset=False):
+
+        if is_reset:
+            return {
+                "statusCode": 200,
+                "userMessage": "Please contact your administrator for reseting password!"
+            }
         user_re = db.query(MdlUsers).filter(MdlUsers.email==userName).one_or_none()
-        if user_re is None: 
+        if user_re is None:     
             raise CustomException(400, "Invaild userName/password")
 
-        actual_password = user_re.password
-        if password.strip() == actual_password:
+        if verify_password(input_password=password, hashed_password=user_re.password, salt = user_re.saltKey):
             return {
                         "userId": user_re.id,	
                         "emailId":user_re.email,

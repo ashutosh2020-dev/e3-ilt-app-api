@@ -226,10 +226,11 @@ class UserService:
             districts = [re.id for re in db.query(MdlDistrict).all()]
 
         # district_list.extend([dis.name for dis in db.query(MdlDistrict).all()]) #cal parent access area & append
-        hashPassword = "  ".join(hash_password(password))
+        hashPassword, saltKey = hash_password(password)
         if districts:
             db_user = MdlUsers(fname=fname, lname=lname, email=email,
-                               password=hashPassword, is_active=is_active, role_id=role_id, parent_user_id=parent_user_id)
+                               password=hashPassword, saltKey=saltKey,
+                               is_active=is_active, role_id=role_id, parent_user_id=parent_user_id)
             if number:
                 db_user.number = number
             db.add(db_user)
@@ -376,23 +377,21 @@ class UserService:
             raise CustomException(404,  "Record not found.")
         if db.query(MdlUsers.password).filter(MdlUsers.id == loginUserId).one_or_none() is None:
             raise CustomException(404,  "Record not found.")
-        
-        existing_password = db_user_re.password.split("  ")
-        if len(existing_password)==2:
-            existing_password, saltKey = existing_password
-            # hpass, saltKey = hash_password("12345")
-            is_match = verify_password(input_password=old_password,
-                            hpass=existing_password, 
-                            saltKey=saltKey)
-            if is_match:
-                db_user_re.password = "  ".join(hash_password(new_password))
+        if not db_user_re.saltKey:
+            raise CustomException(404,  "Cannot change this password. Please contact the administrator.")
+        existing_password, saltKey = db_user_re.password, db_user_re.saltKey
+        is_match = verify_password(input_password=old_password,
+                        hpass=existing_password, 
+                        saltKey=saltKey)
+        if is_match:
+            hpass, saltKey = hash_password(new_password)
+            db_user_re.password = hpass
+            db_user_re.saltKey = saltKey
             db.add(db_user_re)
             db.commit()
         else:
-            raise CustomException(400,  "Unable to update password, Please contacts administrator.")
-        
+            raise CustomException(404, "Incorrect Password!")
         return {
-
             "statusCode": 200,
             "userMessage": "Password updated successfully"
         }

@@ -18,6 +18,7 @@ class MdlUsers(Base):
     email = Column(String(255), unique=True, nullable=False)
     number = Column(Integer, nullable=True)
     password = Column(String(255), nullable=False)
+    saltKey = Column(String(255), nullable=False)
     is_active = Column(Boolean, default=False, nullable=False)
     role_id = Column(Integer, ForeignKey("roles.id"),
                      nullable=False, index=True)

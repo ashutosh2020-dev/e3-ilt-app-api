@@ -8,4 +8,4 @@ login_service = loginService()
 
 @router.post("/api/v1/login")
 def login( creadential:loginCredential, db:Session=Depends(get_db)):
-    return login_service.check_login(userName=creadential.userName, password=creadential.password, db= db)
+    return login_service.check_login(userName=creadential.userName, password=creadential.password, is_reset=False, db=db)
