@@ -393,6 +393,6 @@ class UserService:
             raise CustomException(404, "Incorrect Password!")
         return {
             "statusCode": 200,
-            "userMessage": "Password updated successfully1"
+            "userMessage": "Password updated successfully"
         }
         
