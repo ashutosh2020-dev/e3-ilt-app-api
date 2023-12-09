@@ -229,7 +229,7 @@ class UserService:
         hashPassword, saltKey = hash_password(password)
         if districts:
             db_user = MdlUsers(fname=fname, lname=lname, email=email,
-                               password=hashPassword, saltKey=saltKey,
+                               password=hashPassword, salt_key=saltKey,
                                is_active=is_active, role_id=role_id, parent_user_id=parent_user_id)
             if number:
                 db_user.number = number
@@ -377,16 +377,16 @@ class UserService:
             raise CustomException(404,  "Record not found.")
         if db.query(MdlUsers.password).filter(MdlUsers.id == loginUserId).one_or_none() is None:
             raise CustomException(404,  "Record not found.")
-        if not db_user_re.saltKey:
+        if not db_user_re.salt_key:
             raise CustomException(404,  "Cannot change this password. Please contact the administrator.")
-        existing_password, saltKey = db_user_re.password, db_user_re.saltKey
+        existing_password, saltKey = db_user_re.password, db_user_re.salt_key
         is_match = verify_password(input_password=old_password,
                                    hashed_password=existing_password,
                                    salt=saltKey)
         if is_match:
             hpass, saltKey = hash_password(new_password)
             db_user_re.password = hpass
-            db_user_re.saltKey = saltKey
+            db_user_re.salt_key = saltKey
             db.add(db_user_re)
             db.commit()
         else:
