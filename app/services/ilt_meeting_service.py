@@ -330,7 +330,10 @@ class IltMeetingService:
                         "todoListId": record.id,
                         "description": record.description,
                         "dueDate": record.due_date,
-                        "status": record.status
+                        "status": record.status,
+                        "isRepeat": True if (db.query(MdlIlt_ToDoTask)
+                                             .filter(MdlIlt_ToDoTask.parent_to_do_id == record.id)
+                                             .count() >= 1) else False
                     }
                     for record in todo_task_records
                 ] if todo_task_records else []
