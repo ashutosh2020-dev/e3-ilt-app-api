@@ -23,7 +23,7 @@ class loginService:
         if user_re is None:     
             raise CustomException(400, "Invaild userName/password")
 
-        if verify_password(input_password=password, hashed_password=user_re.password, salt = user_re.saltKey):
+        if verify_password(input_password=password, hashed_password=user_re.password, salt=user_re.salt_key):
             return {
                         "userId": user_re.id,	
                         "emailId":user_re.email,
