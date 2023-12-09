@@ -2,6 +2,18 @@ from sqlalchemy.orm import Session
 from app.models import MdlRoles, MdlUsers, MdlSchools, MdlPriorities, MdlDistrict, MdlDistrictMember
 import sys
 from app.exceptions.customException import CustomException
+import bcrypt
+
+def hash_password(password, salt_rounds=12):
+    salt = bcrypt.gensalt(salt_rounds)
+    hashed_password = bcrypt.hashpw(password.encode('utf-8'), salt)
+    return [hashed_password.decode('utf-8'), salt.decode('utf-8')]
+
+
+def verify_password(input_password, hashed_password, salt):
+    hashed_input_password = bcrypt.hashpw(
+        input_password.encode('utf-8'), salt.encode('utf-8'))
+    return hashed_input_password == hashed_password.encode('utf-8')
 
 class Create_otherService:
     def create_root_user(self,  fname, lname, email, number, password, is_active, role_id, districts, db: Session):
@@ -59,10 +71,10 @@ class Create_otherService:
             #district_list.extend([dis.name for dis in db.query(MdlDistrict).all()]) #cal parent access area & append                
         if role_id ==4 and len(districts)==0:
             districts = [re.id for re in db.query(MdlDistrict).all()]
-
+        hashPassword, saltKey = hash_password(password)
         if districts:
             db_user = MdlUsers(fname=fname, lname=lname, email=email,
-                            password=password, is_active=is_active, role_id=role_id, parent_user_id=0)
+                               password=hashPassword, salt_key=saltKey, is_active=is_active, role_id=role_id, parent_user_id=0)
             if number:
                 db_user.number=number
             db.add(db_user)
