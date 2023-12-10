@@ -99,15 +99,15 @@ async def Request_Validation_handler(request: Request, exc: RequestValidationErr
     )
 
 Base.metadata.create_all(bind=engine)
-origins = []
+# origins = ["http://localhost:8080"]
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
-    allow_methods=["POST"],
-    allow_headers=["*"],
-)
+# app.add_middleware(
+#     CORSMiddleware,
+#     allow_origins=origins,
+#     allow_credentials=False,
+#     allow_methods=["POST"],
+#     allow_headers=["HTTPS"],
+# )
     
 app.include_router(ilt_maintenance.router, tags=["ILT Maintenance"])
 app.include_router(dashboard_maintenance.router, tags=["User Dashboard"])
