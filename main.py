@@ -99,13 +99,13 @@ async def Request_Validation_handler(request: Request, exc: RequestValidationErr
     )
 
 Base.metadata.create_all(bind=engine)
-origins = ["http://e3-ilt-app-ui.us-east-1.elasticbeanstalk.com"]
+origins = []
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["POST"],
     allow_headers=["*"],
 )
     
