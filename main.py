@@ -107,8 +107,8 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
     allow_credentials=True,
-    allow_methods=["POST"],
-    allow_headers=["HTTPS"],
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 # app.add_middleware(TrustedHostMiddleware, 
 #                    allowed_hosts=["http://middle-ilt-app-ui-env.eba-3gvras9p.us-east-1.elasticbeanstalk.com", "127.0.0.1"])
