@@ -103,15 +103,15 @@ async def Request_Validation_handler(request: Request, exc: RequestValidationErr
 Base.metadata.create_all(bind=engine)
 # origins = ["http://localhost:8080"]
 
-# app.add_middleware(
-#     CORSMiddleware,
-#     allow_origins=["http://e3-ilt-app-ui.us-east-1.elasticbeanstalk.com"],
-#     # allow_credentials=False,
-#     # allow_methods=["POST"],
-#     # allow_headers=["HTTPS"],
-# )
-app.add_middleware(TrustedHostMiddleware, 
-                   allowed_hosts=["http://middle-ilt-app-ui-env.eba-3gvras9p.us-east-1.elasticbeanstalk.com", "127.0.0.1"])
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://middle-ilt-app-ui-env.eba-3gvras9p.us-east-1.elasticbeanstalk.com"],
+    allow_credentials=True,
+    allow_methods=["POST"],
+    allow_headers=["HTTPS"],
+)
+# app.add_middleware(TrustedHostMiddleware, 
+#                    allowed_hosts=["http://middle-ilt-app-ui-env.eba-3gvras9p.us-east-1.elasticbeanstalk.com", "127.0.0.1"])
 
 app.include_router(ilt_maintenance.router, tags=["ILT Maintenance"])
 app.include_router(dashboard_maintenance.router, tags=["User Dashboard"])
