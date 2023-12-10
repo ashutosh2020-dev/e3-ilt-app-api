@@ -1,3 +1,5 @@
+import json
+import requests
 from sqlalchemy import create_engine, text
 
 DATABASE_URL = "sqlite:///ilt_db.db"
@@ -37,18 +39,36 @@ DATABASE_URL = "sqlite:///ilt_db.db"
 # -- drop table issue;
 # -- ALTER TABLE meeting_response MODIFY checkin_professional_best text NULL default null;
 
-query = """
-  ALTER TABLE ilt_meeting_response_mapping ADD CONSTRAINT uq_ilt__mapping UNIQUE('meeting_user_id',  'meeting_user_id');
-        """
+# query = """
+#   ALTER TABLE ilt_meeting_response_mapping ADD CONSTRAINT uq_ilt__mapping UNIQUE('meeting_user_id',  'meeting_user_id');
+#         """
 ## meeting_note_taker_id  INT NULL DEFAULT NULL;
 
 # query2= """
 #         ALTER TABLE ilt_to_do_task ADD parent_to_do_id INT NULL DEFAULT NULL;
 #         """
 
-engine = create_engine(DATABASE_URL)
-with engine.connect() as conn:
-    user_cset_record = conn.execute(text(query))
-#     for i in user_cset_record:
-#         print(i)
-print("success")
+# engine = create_engine(DATABASE_URL)
+# with engine.connect() as conn:
+#     user_cset_record = conn.execute(text(query))
+# #     for i in user_cset_record:
+# #         print(i)
+# print("success")
+
+
+payload = json.dumps({
+    "oldPassword": "123456",
+    "newPassword": "123456"
+})
+num_of_user = 36
+for i in range(3,num_of_user+1):
+  url = f"http://127.0.0.1/api/v1/users/{i}/password"
+  headers = {
+      'accept': 'application/json',
+      'UserId': '1',
+      'Content-Type': 'application/json'
+  }
+  
+  response = requests.request("POST", url, headers=headers, data=payload)
+
+  print(i," - ",response.text)
