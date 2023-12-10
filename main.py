@@ -105,7 +105,7 @@ Base.metadata.create_all(bind=engine)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://middle-ilt-app-ui-env.eba-3gvras9p.us-east-1.elasticbeanstalk.com"],
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["POST"],
     allow_headers=["HTTPS"],
