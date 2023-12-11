@@ -7,6 +7,8 @@ from app.schemas.ilt_schemas import Ilt_scheema
 from app.exceptions.customException import CustomException
 from app.schemas.user_schemas import UserAccount
 import bcrypt
+import random
+import string
 
 def hash_password(password, salt_rounds=12):
     salt = bcrypt.gensalt(salt_rounds)
@@ -18,6 +20,11 @@ def verify_password(input_password, hashed_password, salt):
     hashed_input_password = bcrypt.hashpw(
         input_password.encode('utf-8'), salt.encode('utf-8'))
     return hashed_input_password == hashed_password.encode('utf-8')
+
+def generate_random_alphanumeric_string(length):
+    characters = string.ascii_letters + string.digits
+    random_string = ''.join(random.choice(characters) for _ in range(length))
+    return random_string
 
 class UserService:
     def get_user(self, user_id: int, db: Session):
@@ -252,7 +259,7 @@ class UserService:
             raise CustomException(400,  "Please choose district")
 
     def update_user(self, user_id: int, id: int, fname, lname, email, number, password, is_active, districts, role_id, db: Session):
-        email = email.strip().lower()
+        
         fname = fname.strip()
         lname = lname.strip()
         user_id_re = db.query(MdlUsers).filter(
@@ -264,18 +271,19 @@ class UserService:
             MdlUsers.parent_user_id == id).all()
         check_iltOwner_record = db.query(
             MdlIlts).filter(MdlIlts.owner_id == id).all()
-        is_valid_email = re.match(r'^[\w\.-]+@[\w\.-]+\.\w+$', email)
-        if not is_valid_email:
-            raise CustomException(400,  "Invalid Email format")
-        
-        if db_user.email != email:
-
-            check_user_detail = (db.query(MdlUsers)
-                                 .filter(MdlUsers.email == email)
-                                 .one_or_none())
-            if check_user_detail is not None:
-                raise CustomException(
-                    400,  "This email id already exists, Please change your email id.")
+        if email:
+            email = email.strip().lower()
+            is_valid_email = re.match(r'^[\w\.-]+@[\w\.-]+\.\w+$', email)
+            if not is_valid_email:
+                raise CustomException(400,  "Invalid Email format")
+            # check is email duplicate
+            if db_user.email != email:
+                check_user_detail = (db.query(MdlUsers)
+                                    .filter(MdlUsers.email == email)
+                                    .one_or_none())
+                if check_user_detail is not None:
+                    raise CustomException(
+                        400,  "This email id already exists, Please change your email id.")
 
         if role_id:
             check_role_id = db.query(MdlRoles).filter(
@@ -324,26 +332,26 @@ class UserService:
         db_user.parent_user_id = user_id
         db.commit()
         db.refresh(db_user)
-
-        # update district
-        old_districts = set([re.district_id for re in db.query(MdlDistrictMember).filter(MdlDistrictMember.user_id==id).all()])
-        input_new_district = set(districts)
-        new_districts_list = input_new_district - old_districts
-        remove_districts_list = old_districts - input_new_district
-        #existing_districts_list = old_districts.intersection(input_new_district)
-        all_district_list = old_districts.union(input_new_district)
-        for dis_id in all_district_list:
-            if dis_id in new_districts_list:
-                distr_map_record= MdlDistrictMember(district_id=dis_id, user_id=id)
-                db.add(distr_map_record)
-                db.commit()
-            elif dis_id in remove_districts_list:
-                distr_map_record = db.query(MdlDistrictMember).filter(MdlDistrictMember.district_id==dis_id,
-                                                                       MdlDistrictMember.user_id==id).one()
-                db.delete(distr_map_record)
-                db.commit()
-            else:
-                pass
+        if districts:
+            # update district
+            old_districts = set([re.district_id for re in db.query(MdlDistrictMember).filter(MdlDistrictMember.user_id==id).all()])
+            input_new_district = set(districts)
+            new_districts_list = input_new_district - old_districts
+            remove_districts_list = old_districts - input_new_district
+            #existing_districts_list = old_districts.intersection(input_new_district)
+            all_district_list = old_districts.union(input_new_district)
+            for dis_id in all_district_list:
+                if dis_id in new_districts_list:
+                    distr_map_record= MdlDistrictMember(district_id=dis_id, user_id=id)
+                    db.add(distr_map_record)
+                    db.commit()
+                elif dis_id in remove_districts_list:
+                    distr_map_record = db.query(MdlDistrictMember).filter(MdlDistrictMember.district_id==dis_id,
+                                                                        MdlDistrictMember.user_id==id).one()
+                    db.delete(distr_map_record)
+                    db.commit()
+                else:
+                    pass
 
         return {
             "statusCode": 200,
@@ -396,3 +404,20 @@ class UserService:
             "userMessage": "Password updated successfully"
         }
         
+    def reset_password(self, email_id, db):
+        emailId = email_id.strip()
+        db_user_re = db.query(MdlUsers).filter(MdlUsers.email ==emailId).one_or_none()
+        if db_user_re is None:
+            raise CustomException(404, "Invalid Email id!")
+        newPassword = generate_random_alphanumeric_string(length=16)
+        hpass, salt_key = hash_password(password=newPassword)
+
+        db_user_re.password = hpass
+        db_user_re.salt_key = salt_key
+        db.commit()
+        db.refresh(db_user_re)
+
+        return {
+            "statusCode": 200,
+            "userMessage": f"Password has been reset to default one '{newPassword}'. Please update password once login!"
+        }

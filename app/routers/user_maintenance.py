@@ -64,6 +64,13 @@ def fn_update_user_password(id:int, user:UpdateUserPasswordRequest, UserId: int=
                                        id = id,
                                        db=db)
 
+
+@router.post("/api/v1/users/{emailId}/reset/password")
+def fn_reset_user_password(emailId: str, 
+                            db: Session = Depends(get_db)):
+   
+   return user_service.reset_password(email_id=emailId, db = db)
+
 @router.post("/api/v1/users/{id}/delete")
 def fn_delete_user(UserId: int=Header(convert_underscores=False), db: Session = Depends(get_db)):
-    return "functionality is commented"#user_service.delete_user(UserId, db=db)
+    return "functionality is commented" #user_service.delete_user(UserId, db=db)
