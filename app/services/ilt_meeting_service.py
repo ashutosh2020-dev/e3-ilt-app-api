@@ -356,6 +356,8 @@ class IltMeetingService:
                     {
                         "iltMeetingResponseId": meeting_response_id,
                         "iltMeetingId": meeting_id,
+                        "iltMeetingLocation":ilt_meeting_record.location,
+                        "meetingScheduleTime":ilt_meeting_record.schedule_start_at,
                         "noteTakerId":noteTakerId,
                         "member": {
                             "userId": user_record.id,
