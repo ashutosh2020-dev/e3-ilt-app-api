@@ -7,11 +7,11 @@ router = APIRouter()
 user_service = UserService()
 
 @router.get("/api/v1/users/")
-def fn_read_users(keyword:str = "", UserId: int=Header(convert_underscores=False),  db: Session = Depends(get_db)):
+def fn_read_users(keyword:str = "", UserId: int=Header(convert_underscores=False), minRole=0,  db: Session = Depends(get_db)):
     if not keyword:
         return user_service.get_user(UserId, db =db)
     else:
-        return user_service.search_user(UserId, keyword, db =db)
+        return user_service.search_user(UserId, keyword=keyword, min_role=minRole, db=db)
     
 @router.get("/api/v1/users/{userId}")
 def fn_read_users(userId: int,  db: Session = Depends(get_db)):

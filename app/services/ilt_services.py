@@ -155,6 +155,8 @@ class IltService:
             MdlUsers.id == owner_id).one_or_none()
         if owner_re is None:
             raise CustomException(404,  "User not found")
+        if owner_re.role_id ==1:
+            raise CustomException(404,  "This user's role is member, unable to make him ILT Owner!")
         logged_user_re = db.query(MdlUsers).filter(
             MdlUsers.id == user_id).one_or_none()
         if logged_user_re is None:
@@ -243,6 +245,9 @@ class IltService:
         db_ilt.update_by = user_id
         if ilt_data.ownerId and ilt_data.ownerId != db_ilt.owner_id:
             common_msg = "owner updated"
+            owner_re = db.query(MdlUsers).filter(MdlUsers.id == ilt_data.ownerId).one_or_none()
+            if owner_re.role_id ==1:
+                raise CustomException(404, "This user's role is member, unable to make him ILT Owner!")
             # update tables - ilt, iltMember, upcoming_meetings_responce, and all ilt_user_maping
             db_ilt.owner_id = ilt_data.ownerId
             check_user_exist_in_ilt = (db.query(MdlIltMembers).filter(MdlIltMembers.ilt_id==ilt_data.iltId, 

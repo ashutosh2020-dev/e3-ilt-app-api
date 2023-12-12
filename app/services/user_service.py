@@ -100,7 +100,7 @@ class UserService:
                 "parentUserId": u_record.parent_user_id,
                 "districts": district_list}
 
-    def search_user(self, user_id: int, keyword: str, db: Session):
+    def search_user(self, user_id: int, keyword: str, db: Session, min_role=0):
         u_record = db.query(MdlUsers).filter(
             MdlUsers.id == user_id).one_or_none()
         if u_record is None:
@@ -117,9 +117,10 @@ class UserService:
                         )
             if keyword:
                 user_query = user_query.filter(MdlDistrictMember.district_id.in_(district_id_list),
-                                               and_(MdlUsers.fname.like(f"%{keyword}%")
-                                               | MdlUsers.lname.like(f"%{keyword}%")
-                                               | MdlUsers.email.like(f"%{keyword}%")))
+                                               MdlUsers.role_id>=min_role,
+                                               and_(MdlUsers.fname.ilike(f"%{keyword}%")
+                                               | MdlUsers.lname.ilike(f"%{keyword}%")
+                                               | MdlUsers.email.ilike(f"%{keyword}%")))
             associated_users_record = [UserAccount(record.id, record.fname, record.lname, record.role_id, record.email)
                                        for record in user_query.order_by(MdlUsers.id).all()]
             return associated_users_record
