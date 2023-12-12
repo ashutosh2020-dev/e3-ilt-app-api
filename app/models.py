@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, Boolean, DateTime, UniqueConstraint, Text
+from sqlalchemy import Column, Integer, String, ForeignKey, Boolean, DateTime, UniqueConstraint, Text, BigInteger
 import datetime
 from app.config.database import Base
 
@@ -16,7 +16,7 @@ class MdlUsers(Base):
     fname = Column(String(255), nullable=False)
     lname = Column(String(255), nullable=False)
     email = Column(String(255), unique=True, nullable=False)
-    number = Column(Integer, nullable=True)
+    number = Column(BigInteger, nullable=True)
     password = Column(String(255), nullable=False)
     salt_key = Column(String(255), nullable=False)
     is_active = Column(Boolean, default=False, nullable=False)
