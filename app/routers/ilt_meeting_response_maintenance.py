@@ -61,11 +61,11 @@ def create_update_ilt_meeting_todolist(meetingResponseId: int, toDoData: TodoLis
                                                                           description=toDoData.todoItem[i].description,
                                                                           dueDate=toDoData.todoItem[i].dueDate,
                                                                           status=toDoData.todoItem[i].status,
+                                                                          toDoMemeberIds = toDoData.todoItem[i].toDoMemeberIds,
                                                                           db=db)
         return responce
     except Exception as e:
-        raise CustomException(
-            500,  f"unable to process your request: {str(e)}")
+        raise CustomException(500,  f"unable to process your request: {str(e)}")
 
 
 @router.post("/api/v1/ilts/meetingResponses/{meetingResponseId}/updates")

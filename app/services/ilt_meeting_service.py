@@ -1,7 +1,7 @@
 from sqlalchemy import and_
 from sqlalchemy.orm import Session
 from app.models import MdlIltMeetings, MdlMeetings, MdlUsers, MdlIlts, \
-    MdlIltMembers, MdlIltMeetingResponses, MdlMeetingsResponse,  \
+    MdlIltMembers, MdlIltMeetingResponses, MdlMeetingsResponse,  MdlIlt_ToDoTask_map,\
     Mdl_updates, MdlIlt_ToDoTask, MdlIltissue, Mdl_issue, MdlIltMeetingWhiteBoard, MdlIltWhiteBoard, MdlRocks
 from app.services.utils import get_upcomming_meeting, get_completed_issue_todo_list, inactivate_all_completed_issue_todo_list
 import sys
@@ -9,7 +9,7 @@ from app.schemas.ilt_meeting_schemas import Status, whiteboardData, whiteboardDa
 from app.services.ilt_meeting_response_service import IltMeetingResponceService
 from datetime import datetime, timezone, timedelta
 from app.exceptions.customException import CustomException
-
+from app.services.utils import get_user_info
 
 def calculate_meeting_status(schedule_start_at, start_at, end_at):
     current_datetime = datetime.now()
@@ -333,7 +333,13 @@ class IltMeetingService:
                         "status": record.status,
                         "isRepeat": True if (db.query(MdlIlt_ToDoTask)
                                              .filter(MdlIlt_ToDoTask.parent_to_do_id == record.id)
-                                             .count() >= 1) else False
+                                             .count() >= 1) else False,
+                        "todoMemebers": [get_user_info(userId=map_re.user_id, db=db)
+                                         for map_re in db.query(MdlIlt_ToDoTask_map)
+                                         .filter(MdlIlt_ToDoTask_map.parent_to_do_id == (record.parent_to_do_id
+                                                                                         if record.parent_to_do_id else record.id), 
+                                                MdlIlt_ToDoTask_map.is_todo_member == True)
+                                         .all()]
                     }
                     for record in todo_task_records
                 ] if todo_task_records else []
