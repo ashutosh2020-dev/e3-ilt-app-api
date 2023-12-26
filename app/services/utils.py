@@ -140,7 +140,7 @@ def replacing_ownership_of_issue_todo_for(associated_responceId_list, default_ow
 def get_user_info(userId, db):
     record = db.query(MdlUsers).filter(MdlUsers.id == userId).one()
     return {
-        "id": record.id,
+        "userId": record.id,
         "firstName": record.fname,
         "lastName": record.lname
     }
