@@ -141,6 +141,6 @@ def get_user_info(userId, db):
     record = db.query(MdlUsers).filter(MdlUsers.id == userId).one()
     return {
         "id": record.id,
-        "fname": record.fname,
-        "lname": record.lname
+        "firstName": record.fname,
+        "lastName": record.lname
     }
