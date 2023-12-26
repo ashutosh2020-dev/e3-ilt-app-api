@@ -161,6 +161,14 @@ class MdlIlt_ToDoTask(Base):
     parent_to_do_id = Column(Integer, nullable=True, default=None)
     is_active = Column(Boolean, nullable=False)
 
+class MdlIlt_ToDoTask_map(Base):
+    __tablename__ = "Ilt_to_do_mapping"
+    __table_args__ = (UniqueConstraint('parent_to_do_id', 'user_id'),)
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    parent_to_do_id = Column(Integer, ForeignKey("Ilt_to_do_task.id"), nullable=False, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"),nullable=False, index=True)
+    is_todo_member = Column(Boolean, nullable=False, default=True)
+    # is_todo_owner = Column(Boolean, nullable=False, default=False)
 
 class Mdl_updates(Base):
     __tablename__ = "meeting_updates"

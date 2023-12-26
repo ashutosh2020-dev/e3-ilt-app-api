@@ -58,6 +58,7 @@ class TodoData(BaseModel):
     description: str
     dueDate:datetime
     status: bool
+    toDoMemeberIds:Optional[List]=[]
 
 class TodoList(BaseModel):
     todoItem: List[TodoData]

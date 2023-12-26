@@ -1,6 +1,6 @@
 
 from app.models import MdlMeetings, MdlIltMeetings, MdlIltMeetingResponses, MdlIltissue, \
-    MdlMeetingsResponse, Mdl_issue, MdlIlt_ToDoTask
+    MdlMeetingsResponse, Mdl_issue, MdlIlt_ToDoTask, MdlUsers
 from sqlalchemy import and_, or_
 from sqlalchemy.orm import Session
 from app.exceptions.customException import CustomException
@@ -51,7 +51,7 @@ def get_completed_issue_todo_list(meeting_id, db, user_id=None):
     return issue_record_list, to_do_record_list
 
 def inactivate_all_completed_issue_todo_list(listOfIssueIds, listOfToDoIds, 
-                                             ilt_id, db:Session ):
+                                             ilt_id, db:Session):
 
     upcomming_meeting_ids = get_upcomming_meeting(ilt_id, db)
         
@@ -135,3 +135,12 @@ def replacing_ownership_of_issue_todo_for(associated_responceId_list, default_ow
                 db.add(db_re)
         db.commit()
     pass
+
+
+def get_user_info(userId, db):
+    record = db.query(MdlUsers).filter(MdlUsers.id == userId).one()
+    return {
+        "id": record.id,
+        "fname": record.fname,
+        "lname": record.lname
+    }

@@ -1,8 +1,7 @@
 
 from sqlalchemy.orm import Session
 from app.models import MdlIlts, MdlIltMembers, MdlUsers, MdlSchools, MdlMeetings, \
-    MdlIltMeetings, MdlRocks, MdlIltMeetingResponses, MdlIltWhiteBoard, MdlRocks_members,\
-    MdlIltissue, Mdl_issue, MdlIlt_ToDoTask
+    MdlIltMeetings, MdlRocks, MdlIltMeetingResponses, MdlIltWhiteBoard, MdlRocks_members
 from app.services.utils import get_upcomming_meeting, replacing_ownership_of_issue_todo_for
 from app.schemas.ilt_schemas import Ilt
 from app.services.ilt_meeting_response_service import IltMeetingResponceService

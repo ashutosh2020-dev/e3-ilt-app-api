@@ -3,14 +3,14 @@ from sqlalchemy.orm import Session
 from app.models import MdlIlt_ToDoTask, Mdl_updates, \
     MdlMeetingsResponse, MdlIltMeetingResponses, MdlRocks, \
     Mdl_issue, MdlUsers, MdlIltissue, MdlMeetings, MdlIlts, \
-    MdlRocks_members, MdlIltMembers, MdlIltMeetings, MdlPriorities
+    MdlRocks_members, MdlIltMembers, MdlIltMeetings, MdlPriorities, MdlIlt_ToDoTask_map
 from sqlalchemy import desc, join
 from typing import List, Optional
 from app.schemas.meeting_response import MeetingResponse, Duedate, RockInput, RockOutput, Member
 from datetime import datetime, timezone
 from typing import Annotated, Union
 from app.exceptions.customException import CustomException
-
+from app.services.utils import get_user_info
 
 class IltMeetingResponceService:
     def get_Ilts_meeting_list(self, user_id: int, meetingResponseId: int, db: Session):
@@ -56,7 +56,13 @@ class IltMeetingResponceService:
                 "status": record.status,
                 "isRepeat": True if (db.query(MdlIlt_ToDoTask)
                                      .filter(MdlIlt_ToDoTask.parent_to_do_id == record.id)
-                                     .count() >= 1) else False
+                                     .count() >= 1) else False,
+                "todoMemebers": [get_user_info(userId=map_re.user_id, db=db)
+                                    for map_re in  db.query(MdlIlt_ToDoTask_map)
+                                     .filter(MdlIlt_ToDoTask_map.parent_to_do_id == (record.parent_to_do_id 
+                                                        if record.parent_to_do_id else record.id)
+                                            , MdlIlt_ToDoTask_map.is_todo_member==True)
+                                     .all()]
             } for record in db.query(MdlIlt_ToDoTask)
             .filter(MdlIlt_ToDoTask.meeting_response_id == meetingResponseId,
                     MdlIlt_ToDoTask.is_active==True).all()]
@@ -424,12 +430,15 @@ class IltMeetingResponceService:
 
 
     def create_update_to_do_list(self, user_id: int, id: int, meetingResponseId: int, description: str,
-                                 dueDate: Duedate, status: bool, db: Session):
-
-        if db.query(MdlUsers).filter(MdlUsers.id == user_id).one_or_none() is None:
+                                 dueDate: Duedate, status: bool, toDoMemeberIds:List, db: Session):
+        user_re = db.query(MdlUsers).filter(MdlUsers.id == user_id).one_or_none()
+        if user_re is None:
             raise CustomException(400,  f" userId is not valid")
         if db.query(MdlMeetingsResponse).filter(MdlMeetingsResponse.id == meetingResponseId).one_or_none() is None:
             raise CustomException(400,  f" meetingResponseId is not valid")
+        if toDoMemeberIds:
+            if db.query(MdlUsers.id).filter(MdlUsers.id.in_(toDoMemeberIds)).count() != len(toDoMemeberIds):
+                raise CustomException(404, "invalid members list!")
         meeting_id,  = (db.query(MdlIltMeetingResponses.meeting_id)
                         .filter(MdlIltMeetingResponses.meeting_response_id==meetingResponseId,
                                 MdlIltMeetingResponses.is_active==True)
@@ -438,8 +447,8 @@ class IltMeetingResponceService:
         if meeting_re.start_at and meeting_re.end_at is None:
             iltId, = db.query(MdlIltMeetings.ilt_id).filter(MdlIltMeetings.ilt_meeting_id==meeting_id).one_or_none()
             ownerId, = db.query(MdlIlts.owner_id).filter(MdlIlts.id==iltId).one_or_none()
-            if user_id != meeting_re.note_taker_id and user_id != ownerId:
-                raise CustomException(404,  "Only Ilt owner and Note Taker can edit the data.")
+            if user_id != meeting_re.note_taker_id and user_id != ownerId and user_re.role_id != 4 :
+                 raise CustomException(404,  "Only Ilt owner, Note Taker and Director can edit the data.")
         if meeting_re.end_at:
             raise CustomException(404,  "This meeting has been end, We can not update it.")
         if id > 0:
@@ -453,14 +462,52 @@ class IltMeetingResponceService:
             user_todo_record.status = status
             db.commit()
             db.refresh(user_todo_record)
+            # update member ids
+            if toDoMemeberIds:
+                parent_to_do_id = (user_todo_record.parent_to_do_id if user_todo_record.parent_to_do_id 
+                                    else user_todo_record.id)
+                current_todo_memberIds = [uid for uid, in db.query(MdlIlt_ToDoTask_map.user_id)
+                                              .filter(MdlIlt_ToDoTask_map.parent_to_do_id == parent_to_do_id,
+                                                      MdlIlt_ToDoTask_map.is_todo_member==True).all()]
+                removed_member = set(current_todo_memberIds) - set(toDoMemeberIds)
+                new_member =  set(toDoMemeberIds) - set(current_todo_memberIds)
+                db_new_todo_member_re = [MdlIlt_ToDoTask_map(parent_to_do_id = parent_to_do_id,
+                                                             user_id = m_id,
+                                                             is_todo_member = True) for m_id in new_member]
+                db.add_all(db_new_todo_member_re)
+                db.commit()
+                
+                for m_id in removed_member:
+                    db_removed_member = (db.query(MdlIlt_ToDoTask_map)
+                                          .filter(MdlIlt_ToDoTask_map.parent_to_do_id == parent_to_do_id,
+                                                  MdlIlt_ToDoTask_map.user_id==m_id
+                                                  )
+                                          .one_or_none())
+                    if db_removed_member is not None:
+                        db_removed_member.is_todo_member = False
+                    db.add(db_removed_member)
+                    db.commit()
+                    db.refresh(db_removed_member)
+
         else:
-            # check if user_id is inside MdlIltMembers
+            # create toDO records with all memebers 
             db_meeting_todo = MdlIlt_ToDoTask(
                 meeting_response_id=meetingResponseId, description=description, due_date=dueDate, status=status, 
                 created_at= datetime.utcnow(), is_active = True)
             db.add(db_meeting_todo)
             db.commit()
             db.refresh(db_meeting_todo)
+            create_by_uid, = (db.query(MdlIltMeetingResponses.meeting_user_id)
+                                .filter(MdlIltMeetingResponses.meeting_response_id==meetingResponseId)
+                                .one_or_none())
+            if create_by_uid not in toDoMemeberIds:
+                toDoMemeberIds.append(create_by_uid)
+            
+            db_todo_member_re = [MdlIlt_ToDoTask_map(parent_to_do_id = db_meeting_todo.id,
+                                 user_id = uid, 
+                                 is_todo_member=True) for uid in toDoMemeberIds]
+            db.add_all(db_todo_member_re)
+            db.commit()
 
         user_todolist_record = [
             {
@@ -470,7 +517,13 @@ class IltMeetingResponceService:
                 "status": record.status,
                 "isRepeat": True if (db.query(MdlIlt_ToDoTask)
                                     .filter(MdlIlt_ToDoTask.parent_to_do_id==record.id)
-                                    .count()>=1) else False
+                                    .count()>=1) else False,
+                "todoMemebers": [get_user_info(userId=map_re.user_id, db=db)
+                                    for map_re in  db.query(MdlIlt_ToDoTask_map)
+                                     .filter(MdlIlt_ToDoTask_map.parent_to_do_id == (record.parent_to_do_id 
+                                                        if record.parent_to_do_id else record.id)
+                                                        , MdlIlt_ToDoTask_map.is_todo_member==True)
+                                     .all()]
             } for record in db.query(MdlIlt_ToDoTask)
             .filter(MdlIlt_ToDoTask.meeting_response_id == meetingResponseId, 
                     MdlIlt_ToDoTask.is_active==True).all()]
