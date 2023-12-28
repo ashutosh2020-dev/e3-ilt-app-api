@@ -465,20 +465,41 @@ class IltMeetingResponceService:
             db.refresh(user_todo_record)
             # update member ids
             if toDoMemeberIds:
+                toDoMemeberIds = set(toDoMemeberIds)
                 parent_to_do_id = (user_todo_record.parent_to_do_id if user_todo_record.parent_to_do_id 
                                     else user_todo_record.id)
-                current_todo_memberIds = [uid for uid, in db.query(MdlIlt_ToDoTask_map.user_id)
-                                              .filter(MdlIlt_ToDoTask_map.parent_to_do_id == parent_to_do_id
-                                                      ).all()]
-                removed_member = set(current_todo_memberIds) - set(toDoMemeberIds)
-                new_member =  set(toDoMemeberIds) - set(current_todo_memberIds)
+                
+                active_todo_memberIds = set([uid for uid, in db.query(MdlIlt_ToDoTask_map.user_id)
+                                              .filter(MdlIlt_ToDoTask_map.parent_to_do_id == parent_to_do_id,
+                                                      MdlIlt_ToDoTask_map.is_todo_member==True).all()])
+                inactive_todo_memberIds = set([uid for uid, in db.query(MdlIlt_ToDoTask_map.user_id)
+                                         .filter(MdlIlt_ToDoTask_map.parent_to_do_id == parent_to_do_id,
+                                                 MdlIlt_ToDoTask_map.is_todo_member == False).all()])
+                all_todo_memberIds = active_todo_memberIds | inactive_todo_memberIds
+                removed_members = active_todo_memberIds - toDoMemeberIds
+                new_member = toDoMemeberIds - set(all_todo_memberIds)
+                activate_inactive_members = toDoMemeberIds & inactive_todo_memberIds
+                
+                # create new_todo_member
                 db_new_todo_member_re = [MdlIlt_ToDoTask_map(parent_to_do_id = parent_to_do_id,
                                                              user_id = m_id,
                                                              is_todo_member = True) for m_id in new_member]
                 db.add_all(db_new_todo_member_re)
                 db.commit()
-                
-                for m_id in removed_member:
+                #active already existing member
+                for m_id in activate_inactive_members:
+                    db_inactive_member = (db.query(MdlIlt_ToDoTask_map)
+                                          .filter(MdlIlt_ToDoTask_map.parent_to_do_id == parent_to_do_id,
+                                                  MdlIlt_ToDoTask_map.user_id==m_id
+                                                  )
+                                          .one_or_none())
+                    if db_inactive_member is not None:
+                        db_inactive_member.is_todo_member = True
+                    db.add(db_inactive_member)
+                    db.commit()
+                    db.refresh(db_inactive_member)
+                # inactivate
+                for m_id in removed_members:
                     db_removed_member = (db.query(MdlIlt_ToDoTask_map)
                                           .filter(MdlIlt_ToDoTask_map.parent_to_do_id == parent_to_do_id,
                                                   MdlIlt_ToDoTask_map.user_id==m_id
@@ -486,7 +507,7 @@ class IltMeetingResponceService:
                                           .one_or_none())
                     if db_removed_member is not None:
                         db_removed_member.is_todo_member = False
-                    db.add(db_removed_member)
+                        db.add(db_removed_member)
                     db.commit()
                     db.refresh(db_removed_member)
 
