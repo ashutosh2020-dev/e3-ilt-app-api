@@ -163,19 +163,30 @@ class IltMeetingResponceService:
             member_list = list(set(member_list))
             for mid in meeting_ids:
                 for uid in member_list:
-                    db_meeting_response = MdlMeetingsResponse(attendance_flag=None,
-                                                              checkin_personal_best=None, checkin_professional_best=None,
-                                                              rating=None, feedback=None, notes=None)
-                    db.add(db_meeting_response)
-                    db.commit()
-                    db.refresh(db_meeting_response)
-                    map_record = MdlIltMeetingResponses(meeting_id=mid,
-                                                        meeting_response_id=db_meeting_response.id, 
-                                                        meeting_user_id=uid,
-                                                        is_active=True)
-                    db.add(map_record)
-                    db.commit()
-                    db.refresh(map_record)
+                    check_responce_re = (db.query(MdlIltMeetingResponses).filter(MdlIltMeetingResponses.meeting_id==mid,
+                                                            MdlIltMeetingResponses.meeting_user_id ==uid)
+                                                    .one_or_none())
+                    if check_responce_re is not None:
+                        check_responce_re.is_active = True
+                        db.add(check_responce_re)
+                        db.commit()
+                        db.refresh(check_responce_re)
+                    else:
+                        db_meeting_response = MdlMeetingsResponse(attendance_flag=None,
+                                                                checkin_personal_best=None, checkin_professional_best=None,
+                                                                rating=None, feedback=None, notes=None)
+                        db.add(db_meeting_response)
+                        db.commit()
+                        db.refresh(db_meeting_response)
+                        map_record = MdlIltMeetingResponses(meeting_id=mid,
+                                                            meeting_response_id=db_meeting_response.id, 
+                                                            meeting_user_id=uid,
+                                                            is_active=True)
+                        db.add(map_record)
+                        db.commit()
+                        db.refresh(map_record)
+                    
+
 
             return (True, "")
         except Exception as e:

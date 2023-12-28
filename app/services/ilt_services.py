@@ -269,14 +269,22 @@ class IltService:
             # filtering user
             current_ilt_member_list= [re.member_id for re in ilt_query.filter(MdlIltMembers.ilt_id == ilt_id,
                                                                               MdlIltMembers.is_active == True).all()]
-            new_member_list=   set(ilt_data.memberIds) - set(current_ilt_member_list)
+            new_member_list =   set(ilt_data.memberIds) - set(current_ilt_member_list)
             removed_member_list = (set(current_ilt_member_list) - set(ilt_data.memberIds)) - set([db_ilt.owner_id])
             
             for m_re in list(new_member_list):
-                ilt_record = ilt_query.filter(MdlIltMembers.ilt_id == ilt_id,MdlIltMembers.is_active==True,
+                ilt_record = ilt_query.filter(MdlIltMembers.ilt_id == ilt_id,
+                                            #   MdlIltMembers.is_active==True,
                                               MdlIltMembers.member_id == m_re).one_or_none()
                 if ilt_record is not None:
-                    count += 1
+                    if ilt_record.is_active ==False:
+                        verified_new_member_ids.append(m_re)
+                        ilt_record.is_active = True
+                        db.add(ilt_record)
+                        db.commit()
+                        db.refresh(ilt_record)
+                    else:
+                        count += 1
                 else:
                     verified_new_member_ids.append(m_re)
                     db_ilt_member = MdlIltMembers(
