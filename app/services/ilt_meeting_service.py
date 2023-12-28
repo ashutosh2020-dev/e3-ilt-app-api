@@ -334,6 +334,7 @@ class IltMeetingService:
                         "isRepeat": True if (db.query(MdlIlt_ToDoTask)
                                              .filter(MdlIlt_ToDoTask.parent_to_do_id == record.id)
                                              .count() >= 1) else False,
+                        "todoOwner": get_user_info(responceId=record.meeting_response_id, db=db),
                         "todoMemebers": [get_user_info(userId=map_re.user_id, db=db)
                                          for map_re in db.query(MdlIlt_ToDoTask_map)
                                          .filter(MdlIlt_ToDoTask_map.parent_to_do_id == (record.parent_to_do_id

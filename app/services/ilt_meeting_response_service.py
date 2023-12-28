@@ -57,6 +57,7 @@ class IltMeetingResponceService:
                 "isRepeat": True if (db.query(MdlIlt_ToDoTask)
                                      .filter(MdlIlt_ToDoTask.parent_to_do_id == record.id)
                                      .count() >= 1) else False,
+                "todoOwner": get_user_info(responceId=record.meeting_response_id, db=db),
                 "todoMemebers": [get_user_info(userId=map_re.user_id, db=db)
                                     for map_re in  db.query(MdlIlt_ToDoTask_map)
                                      .filter(MdlIlt_ToDoTask_map.parent_to_do_id == (record.parent_to_do_id 
@@ -467,8 +468,8 @@ class IltMeetingResponceService:
                 parent_to_do_id = (user_todo_record.parent_to_do_id if user_todo_record.parent_to_do_id 
                                     else user_todo_record.id)
                 current_todo_memberIds = [uid for uid, in db.query(MdlIlt_ToDoTask_map.user_id)
-                                              .filter(MdlIlt_ToDoTask_map.parent_to_do_id == parent_to_do_id,
-                                                      MdlIlt_ToDoTask_map.is_todo_member==True).all()]
+                                              .filter(MdlIlt_ToDoTask_map.parent_to_do_id == parent_to_do_id
+                                                      ).all()]
                 removed_member = set(current_todo_memberIds) - set(toDoMemeberIds)
                 new_member =  set(toDoMemeberIds) - set(current_todo_memberIds)
                 db_new_todo_member_re = [MdlIlt_ToDoTask_map(parent_to_do_id = parent_to_do_id,
@@ -518,6 +519,7 @@ class IltMeetingResponceService:
                 "isRepeat": True if (db.query(MdlIlt_ToDoTask)
                                     .filter(MdlIlt_ToDoTask.parent_to_do_id==record.id)
                                     .count()>=1) else False,
+                "todoOwner": get_user_info(responceId=record.meeting_response_id, db=db),
                 "todoMemebers": [get_user_info(userId=map_re.user_id, db=db)
                                     for map_re in  db.query(MdlIlt_ToDoTask_map)
                                      .filter(MdlIlt_ToDoTask_map.parent_to_do_id == (record.parent_to_do_id 

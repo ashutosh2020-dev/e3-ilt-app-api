@@ -137,10 +137,13 @@ def replacing_ownership_of_issue_todo_for(associated_responceId_list, default_ow
     pass
 
 
-def get_user_info(userId, db):
+def get_user_info(db, userId=None, responceId=None):
+    if responceId:
+        userId, = db.query(MdlIltMeetingResponses.meeting_user_id).filter(MdlIltMeetingResponses.meeting_response_id==responceId,
+                                                MdlIltMeetingResponses.is_active==True).one_or_none()
     record = db.query(MdlUsers).filter(MdlUsers.id == userId).one()
     return {
-        "userId": record.id,
-        "firstName": record.fname,
-        "lastName": record.lname
-    }
+                "userId": record.id,
+                "firstName": record.fname,
+                "lastName": record.lname
+        }
