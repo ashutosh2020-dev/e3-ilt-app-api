@@ -456,17 +456,16 @@ class IltMeetingResponceService:
                                 MdlIltMeetingResponses.is_active==True)
                         .one())
         meeting_re = db.query(MdlMeetings).filter(MdlMeetings.id==meeting_id).one_or_none()
-        if meeting_re.start_at and meeting_re.end_at is None:
+        if meeting_re.start_at:# and meeting_re.end_at is None:
             iltId, = db.query(MdlIltMeetings.ilt_id).filter(MdlIltMeetings.ilt_meeting_id==meeting_id).one_or_none()
             ownerId, = db.query(MdlIlts.owner_id).filter(MdlIlts.id==iltId).one_or_none()
             if user_id != meeting_re.note_taker_id and user_id != ownerId and user_re.role_id != 4 :
                  raise CustomException(404,  "Only Ilt owner, Note Taker and Director can edit the data.")
-        if meeting_re.end_at:
-            raise CustomException(404,  "This meeting has been end, We can not update it.")
+        # if meeting_re.end_at:
+        #     raise CustomException(404,  "This meeting has been end, We can not update it.")
         if id > 0:
             user_todo_record = (db.query(MdlIlt_ToDoTask)
-                                .filter(MdlIlt_ToDoTask.meeting_response_id == meetingResponseId,
-                                        MdlIlt_ToDoTask.id == id,
+                                .filter(MdlIlt_ToDoTask.id == id,
                                         MdlIlt_ToDoTask.is_active==True)
                                 .one())
             user_todo_record.description = description
@@ -490,7 +489,7 @@ class IltMeetingResponceService:
                 removed_members = active_todo_memberIds - toDoMemeberIds
                 new_member = toDoMemeberIds - set(all_todo_memberIds)
                 activate_inactive_members = toDoMemeberIds & inactive_todo_memberIds
-                
+
                 # create new_todo_member
                 db_new_todo_member_re = [MdlIlt_ToDoTask_map(parent_to_do_id = parent_to_do_id,
                                                              user_id = m_id,
@@ -499,6 +498,7 @@ class IltMeetingResponceService:
                 db.commit()
                 #active already existing member
                 for m_id in activate_inactive_members:
+                    print(m_id, "----",new_member)
                     db_inactive_member = (db.query(MdlIlt_ToDoTask_map)
                                           .filter(MdlIlt_ToDoTask_map.parent_to_do_id == parent_to_do_id,
                                                   MdlIlt_ToDoTask_map.user_id==m_id
@@ -767,7 +767,7 @@ class IltMeetingResponceService:
 
         return {
             "statusCode": 200,
-            "userMessage": "Issue have been created/modified successfully",
+            "userMessage": "Issue have been modified successfully" if id else "Issue have been created successfully",
             "data": issues_records
         }
 
