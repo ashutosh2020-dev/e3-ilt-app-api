@@ -496,7 +496,7 @@ class IltMeetingResponceService:
                                                              is_todo_member = True) for m_id in new_member]
                 db.add_all(db_new_todo_member_re)
                 db.commit()
-                #active already existing member
+                #activate already existing member
                 for m_id in activate_inactive_members:
                     print(m_id, "----",new_member)
                     db_inactive_member = (db.query(MdlIlt_ToDoTask_map)
@@ -542,6 +542,9 @@ class IltMeetingResponceService:
             db.add_all(db_todo_member_re)
             db.commit()
 
+        meeting_ResponseId_list = [id for id, in db.query(MdlIltMeetingResponses.meeting_response_id)
+                                                .filter(MdlIltMeetingResponses.meeting_id==meeting_id,
+                                                        MdlIltMeetingResponses.is_active == True).all()]
         user_todolist_record = [
             {
                 "todoListId": record.id,
@@ -559,7 +562,7 @@ class IltMeetingResponceService:
                                                         , MdlIlt_ToDoTask_map.is_todo_member==True)
                                      .all()]
             } for record in db.query(MdlIlt_ToDoTask)
-            .filter(MdlIlt_ToDoTask.meeting_response_id == meetingResponseId, 
+            .filter(MdlIlt_ToDoTask.meeting_response_id.in_(meeting_ResponseId_list),
                     MdlIlt_ToDoTask.is_active==True).all()]
 
         return {
