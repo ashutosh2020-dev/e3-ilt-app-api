@@ -11,6 +11,7 @@ from app.routers import user_maintenance, dashboard_maintenance, ilt_maintenance
 import uvicorn
 from app.exceptions.customException import CustomException
 from fastapi.responses import JSONResponse
+from app.config.database import server_url
 import os
 import ssl
 sslSettings = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
@@ -70,12 +71,22 @@ tags_metadata = [
         
     }
 ]
-
-app = FastAPI(
-                title=settings.app_name,
-                version=settings.app_version,
-                description=settings.app_description
-                )
+if server_url in ("PROD"):
+    app = FastAPI(
+                    title=settings.app_name,
+                    version=settings.app_version,
+                    description=settings.app_description,
+                    docs_url=None,
+                    redoc_url=None
+                    )
+else:
+    app = FastAPI(
+        docs_url="/123456",
+        redoc_url="/12345",
+        title=settings.app_name,
+        version=settings.app_version,
+        description=settings.app_description
+    )
 # app.allowed_hosts = ["http://e3-ilt-app-api.us-east-1.elasticbeanstalk.com"]
 # app.add_middleware(HTTPSRedirectMiddleware)
 @app.exception_handler(CustomException)
@@ -120,7 +131,7 @@ app.include_router(user_maintenance.router, tags=["User Maintenance"])
 app.include_router(ilt_meeting_maintenance.router, tags=["Ilt Meetings Maintenance"])
 app.include_router(ilt_meeting_response_maintenance.router, tags=["ILT Meeting Response Maintenance"])
 app.include_router(shared_maintenance.router, tags=["Shared Maintenance"])
-app.include_router(other_maintenance.router, tags=["Others"])
+# app.include_router(other_maintenance.router, tags=["Others"])
 
 @app.get("/")
 def home():
