@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Depends, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.middleware.trustedhost import TrustedHostMiddleware
+# from fastapi.middleware.trustedhost import TrustedHostMiddleware
 # from fastapi.middleware.httpsredirect import HTTPSRedirectMiddleware
 from sqlalchemy.orm import Session
 from app.config.app_settings import settings
@@ -112,17 +112,16 @@ async def Request_Validation_handler(request: Request, exc: RequestValidationErr
     )
 
 Base.metadata.create_all(bind=engine)
-# origins = ["http://localhost:8080"]
+origins = ["http://middle-ilt-app-ui-env.eba-3gvras9p.us-east-1.elasticbeanstalk.com/",
+           "http://localhost:3000"]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
-# app.add_middleware(TrustedHostMiddleware, 
-#                    allowed_hosts=["http://middle-ilt-app-ui-env.eba-3gvras9p.us-east-1.elasticbeanstalk.com", "127.0.0.1"])
 
 app.include_router(ilt_maintenance.router, tags=["ILT Maintenance"])
 app.include_router(dashboard_maintenance.router, tags=["User Dashboard"])
