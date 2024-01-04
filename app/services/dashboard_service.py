@@ -1,4 +1,4 @@
-from sqlalchemy import and_, func
+from sqlalchemy import and_, func, or_
 from sqlalchemy.orm import Session
 from app.models import MdlUsers, MdlIltMeetings, MdlMeetings,\
     MdlIltMembers, MdlIltMeetingResponses, MdlMeetingsResponse, MdlIltissue,\
@@ -115,20 +115,23 @@ def get_rock_aggegrates(list_of_ilt, db:Session):
                           total=total
                           )
 def get_rock_aggegrates_for_meeting(ilt_id, meeting_id, db:Session):
-    meeting_schedule_start_at, = db.query(MdlMeetings.schedule_start_at).filter(
+    meeting_schedule_start_at, meeting_end_at = db.query(MdlMeetings.schedule_start_at, MdlMeetings.end_at).filter(
         MdlMeetings.id == meeting_id).one_or_none()
 
     ontrack_count = (db.query(MdlRocks)
                    .filter(and_(MdlRocks.ilt_id == ilt_id,
                            MdlRocks.created_at <= meeting_schedule_start_at,
                            MdlRocks.on_track_flag ==True, 
-                           MdlRocks.is_complete ==False))
+                           or_(MdlRocks.is_complete ==False,
+                               MdlRocks.completed_at > meeting_end_at)
+                           ))
                    .count())
     offtrack_count = (db.query(MdlRocks)
                    .filter(and_(MdlRocks.ilt_id == ilt_id,
                            MdlRocks.created_at <= meeting_schedule_start_at,
                            MdlRocks.on_track_flag ==False, 
-                           MdlRocks.is_complete ==False))
+                           or_(MdlRocks.is_complete ==False,
+                               MdlRocks.completed_at > meeting_end_at)))
                    .count())
     total = ontrack_count + offtrack_count
     return PercentageData(percentage=round((ontrack_count/total)*100, 1) if total != 0 else 0,

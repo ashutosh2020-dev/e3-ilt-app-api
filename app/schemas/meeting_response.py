@@ -111,6 +111,7 @@ class RockInput(BaseModel):
     rockOwnerId:int
     rockMembers:Optional[List[int]] = []
     isComplete: Optional[bool] = None
+    completeAt: Optional[datetime] =None
 
 
 class RockOutput():
@@ -122,3 +123,4 @@ class RockOutput():
     rockOwner: List[Member]
     rockMembers: Optional[List[Member]] = []
     isComplete: bool
+    completeAt: Optional[datetime] = None
