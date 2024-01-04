@@ -112,7 +112,7 @@ async def Request_Validation_handler(request: Request, exc: RequestValidationErr
     )
 
 Base.metadata.create_all(bind=engine)
-origins = ["http://middle-ilt-app-ui-env.eba-3gvras9p.us-east-1.elasticbeanstalk.com/",
+origins = ["http://middle-ilt-app-ui-env.eba-3gvras9p.us-east-1.elasticbeanstalk.com",
            "http://localhost:3000"]
 
 app.add_middleware(
