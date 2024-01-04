@@ -230,6 +230,7 @@ class IltMeetingResponceService:
             rockObj.description = record.description
             rockObj.onTrack = record.on_track_flag
             rockObj.isComplete = record.is_complete
+            rockObj.completeAt = record.completed_at if record.is_complete else None
 
             rockObj.rockOwner = [Member(userId=u_re.id, firstName=u_re.fname, lastName=u_re.lname)
                                  for u_re in db.query(MdlUsers)
@@ -310,6 +311,8 @@ class IltMeetingResponceService:
             db_rock.is_complete = rockData.isComplete
             db_rock.updated_at = datetime.utcnow()
             db_rock.on_track_flag = rockData.onTrack
+            if rockData.isComplete and rockData.isComplete:
+                db_rock.completed_at = rockData.completeAt
             db.add(db_rock)
             db.commit()
             db.refresh(db_rock)
@@ -410,7 +413,8 @@ class IltMeetingResponceService:
                            description=rockData.description, 
                            is_complete =False,
                            created_at = meeting_re.schedule_start_at,
-                           on_track_flag = rockData.onTrack)
+                           on_track_flag = rockData.onTrack,
+                           completed_at=datetime(1, 1, 1, 0, 0, 0))
         
         db.add(db_rock)
         db.commit()

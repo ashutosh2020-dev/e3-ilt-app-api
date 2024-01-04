@@ -137,7 +137,7 @@ class MdlRocks(Base):
     created_at = Column(DateTime, nullable=False)
     updated_at = Column(DateTime, nullable=True)
     on_track_flag = Column(Boolean, nullable=False)
-
+    completed_at = Column(DateTime, nullable=False)
 
 class MdlRocks_members(Base):
     __tablename__ = "Rocks_member_mapping"
