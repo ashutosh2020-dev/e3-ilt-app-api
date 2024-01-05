@@ -222,14 +222,18 @@ class IltMeetingResponceService:
                                                    )
                                     .all())
         meeting_rock_records = []
-        for record in list_rocks_re:
+        for record in list_rocks_re:  
+            meeting_date = meeting_re.end_at if meeting_re.end_at else meeting_re.schedule_start_at
             rockObj = RockOutput()
             rockObj.rockId =record.id
             rockObj.iltId = record.ilt_id
             rockObj.name = record.name
             rockObj.description = record.description
             rockObj.onTrack = record.on_track_flag
-            rockObj.isComplete = record.is_complete
+            if record.is_complete:
+                rockObj.isComplete = True if  record.completed_at > meeting_date else False
+            else:
+                rockObj.isComplete = False
             rockObj.completeAt = record.completed_at if record.is_complete else None
 
             rockObj.rockOwner = [Member(userId=u_re.id, firstName=u_re.fname, lastName=u_re.lname)
@@ -288,6 +292,12 @@ class IltMeetingResponceService:
                                                       func.lower(MdlRocks.name) == rock_name))
                        .first())
         if rockData.rockId:
+            if rockData.isComplete:
+                if rockData.completeAt:
+                    if  rockData.completeAt > datetime.utcnow(): 
+                        raise CustomException(404, "Date and time should be greater than current time!")
+                else:
+                    raise CustomException(404, "Please Enter date for complete rock!")
             #update
             rock_id = rockData.rockId
             db_rock = db.query(MdlRocks).filter(and_(MdlRocks.id==rock_id, MdlRocks.ilt_id==rockData.iltId)).one_or_none()
