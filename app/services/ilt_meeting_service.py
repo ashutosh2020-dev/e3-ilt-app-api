@@ -1,4 +1,4 @@
-from sqlalchemy import and_
+from sqlalchemy import and_, func
 from sqlalchemy.orm import Session
 from app.models import MdlIltMeetings, MdlMeetings, MdlUsers, MdlIlts, \
     MdlIltMembers, MdlIltMeetingResponses, MdlMeetingsResponse,  MdlIlt_ToDoTask_map,\
@@ -165,6 +165,12 @@ class IltMeetingService:
         if scheduledStartDate < current_date and pastData_flag == False:
             raise CustomException(
                 404, "Please enter correct date, Date must be greater than currect date")
+        find_same_date_meeting = (db.query(MdlMeetings)
+                                .filter(func.date(MdlMeetings.schedule_start_at) == scheduledStartDate.date())
+                                .one_or_none())
+        if find_same_date_meeting:
+            raise CustomException(404, 
+                                  "Please select a different date; this one is already booked for a meeting.")
         db_meeting = MdlMeetings()
         db_meeting.schedule_start_at = scheduledStartDate
         if location:
