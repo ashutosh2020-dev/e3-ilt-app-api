@@ -294,7 +294,7 @@ class IltMeetingResponceService:
         if rockData.rockId:
             if rockData.isComplete:
                 if rockData.completeAt:
-                    if  rockData.completeAt > datetime.utcnow(): 
+                    if  rockData.completeAt < datetime.utcnow(): 
                         raise CustomException(404, "Date and time should be greater than current time!")
                     
             #update
