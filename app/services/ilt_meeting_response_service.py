@@ -7,7 +7,7 @@ from app.models import MdlIlt_ToDoTask, Mdl_updates, \
 from sqlalchemy import desc, join
 from typing import List, Optional
 from app.schemas.meeting_response import MeetingResponse, Duedate, RockInput, RockOutput, Member
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from typing import Annotated, Union
 from app.exceptions.customException import CustomException
 from app.services.utils import get_user_info
@@ -292,11 +292,12 @@ class IltMeetingResponceService:
                                                       func.lower(MdlRocks.name) == rock_name))
                        .first())
         if rockData.rockId:
-            # if rockData.isComplete:
-            #     if rockData.completeAt:
-            #         if  rockData.completeAt < datetime.utcnow(): 
-            #             raise CustomException(404, "Date and time should be greater than current time!")
-                    
+            if rockData.isComplete:
+                if rockData.completeAt:
+                    if  rockData.completeAt < (datetime.utcnow()+datetime.timedelta(days=1)):
+                        raise CustomException(404, "Date and time should be greater than current time!")
+                else:
+                    raise CustomException(404, "Please Enter  'Complete Date' to change Rock's complete status!")
             #update
             rock_id = rockData.rockId
             db_rock = db.query(MdlRocks).filter(and_(MdlRocks.id==rock_id, MdlRocks.ilt_id==rockData.iltId)).one_or_none()
