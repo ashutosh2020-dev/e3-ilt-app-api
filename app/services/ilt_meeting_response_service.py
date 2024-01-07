@@ -231,7 +231,7 @@ class IltMeetingResponceService:
             rockObj.description = record.description
             rockObj.onTrack = record.on_track_flag
             if record.is_complete:
-                rockObj.isComplete = True if  record.completed_at > meeting_date else False
+                rockObj.isComplete = False if  record.completed_at > meeting_date else True
             else:
                 rockObj.isComplete = False
             rockObj.completeAt = record.completed_at if record.is_complete else None
