@@ -90,9 +90,9 @@ def pending_ilt_meeting(id: int, meetingId: int, UserId: int = Header(convert_un
 #                                                   futureMeetingId=pendingData.futureMeetingId, db=db)
 
 
-@router.get("/api/v1/ilts/{id}/rocks")
-def read_ilt_rocks(id: int, UserId: int = Header(convert_underscores=False), db: Session = Depends(get_db)):
-    return IltMeetingResponceService.read_ilt_rock(user_id=UserId, ilt_id=id, db=db)
+# @router.get("/api/v1/ilts/{id}/rocks")
+# def read_ilt_rocks(id: int, UserId: int = Header(convert_underscores=False), db: Session = Depends(get_db)):
+#     return IltMeetingResponceService.read_ilt_rock(user_id=UserId, ilt_id=id, db=db)
 
 
 @router.post("/api/v1/ilts/meeting/create_rocks")
