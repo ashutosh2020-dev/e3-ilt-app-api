@@ -321,8 +321,10 @@ class IltMeetingResponceService:
             db_rock.is_complete = rockData.isComplete
             db_rock.updated_at = datetime.utcnow()
             db_rock.on_track_flag = rockData.onTrack
-            if rockData.isComplete and rockData.isComplete:
+            if rockData.isComplete and rockData.completeAt:
                 db_rock.completed_at = rockData.completeAt
+            if db_rock.is_complete==True and rockData.isComplete == False:
+                db_rock.completed_at = datetime(1, 1, 1, 0, 0, 0)
             db.add(db_rock)
             db.commit()
             db.refresh(db_rock)
