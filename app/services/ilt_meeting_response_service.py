@@ -292,9 +292,10 @@ class IltMeetingResponceService:
                                                       func.lower(MdlRocks.name) == rock_name))
                        .first())
         if rockData.rockId:
+            print(rockData.completeAt)
             if rockData.isComplete:
                 if rockData.completeAt:
-                    if  rockData.completeAt > (datetime.utcnow()+datetime.timedelta(days=1)):
+                    if  rockData.completeAt > (datetime.utcnow()+timedelta(days=1)):
                         raise CustomException(404, "Date and time should be greater than current time!")
                 else:
                     raise CustomException(404, "Please Enter  'Complete Date' to change Rock's complete status!")
