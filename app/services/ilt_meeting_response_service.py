@@ -292,7 +292,6 @@ class IltMeetingResponceService:
                                                       func.lower(MdlRocks.name) == rock_name))
                        .first())
         if rockData.rockId:
-            print(rockData.completeAt)
             if rockData.isComplete:
                 if rockData.completeAt:
                     if  rockData.completeAt > (datetime.utcnow()+timedelta(days=1)):
