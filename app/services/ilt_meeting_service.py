@@ -165,12 +165,18 @@ class IltMeetingService:
         if scheduledStartDate < current_date and pastData_flag == False:
             raise CustomException(
                 404, "Please enter correct date, Date must be greater than currect date")
-        find_same_date_meeting = (db.query(MdlMeetings)
-                                .filter(func.date(MdlMeetings.schedule_start_at) == scheduledStartDate.date())
-                                .one_or_none())
-        if find_same_date_meeting:
-            raise CustomException(404, 
+        find_same_date_meeting = ((db
+                                   .query(MdlMeetings)
+                                   .join(MdlIltMeetings, MdlMeetings.id == MdlIltMeetings.ilt_meeting_id)
+                                   .filter(func.date(MdlMeetings.schedule_start_at) == scheduledStartDate.date(),
+                                           MdlIltMeetings.ilt_id == ilt_id)).all())
+
+        if len(find_same_date_meeting) == 1:
+            raise CustomException(404,
                                   "Please select a different date; this one is already booked for a meeting.")
+        if len(find_same_date_meeting) > 1:
+            raise CustomException(404,
+                                  "This date has more that one meetings scheduled, please inform the administrator immediately")
         db_meeting = MdlMeetings()
         db_meeting.schedule_start_at = scheduledStartDate
         if location:
