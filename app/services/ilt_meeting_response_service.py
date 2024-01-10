@@ -514,7 +514,6 @@ class IltMeetingResponceService:
                 db.commit()
                 #activate already existing member
                 for m_id in activate_inactive_members:
-                    print(m_id, "----",new_member)
                     db_inactive_member = (db.query(MdlIlt_ToDoTask_map)
                                           .filter(MdlIlt_ToDoTask_map.parent_to_do_id == parent_to_do_id,
                                                   MdlIlt_ToDoTask_map.user_id==m_id

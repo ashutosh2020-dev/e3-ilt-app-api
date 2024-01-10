@@ -257,10 +257,10 @@ class IltMeetingService:
                                    .filter(func.date(MdlMeetings.schedule_start_at) == scheduledStartDate.date(),
                                            MdlIltMeetings.ilt_id == ilt_id)).all())
 
-        if len(find_same_date_meeting) == 1:
+        if len(find_same_date_meeting) > 1:
             raise CustomException(404,
                                   "Please select a different date; this one is already booked for a meeting.")
-        if len(find_same_date_meeting) > 1:
+        if len(find_same_date_meeting) >= 2:
             raise CustomException(404,
                                   "This date has more that one meetings scheduled, please inform the administrator immediately")
         
