@@ -464,6 +464,8 @@ class IltMeetingResponceService:
             raise CustomException(400,  f" userId is not valid")
         if db.query(MdlMeetingsResponse).filter(MdlMeetingsResponse.id == meetingResponseId).one_or_none() is None:
             raise CustomException(400,  f" meetingResponseId is not valid")
+        if len(toDoMemeberIds) == 0:
+            raise CustomException(500, "Please select alteast one member!")
         if toDoMemeberIds:
             if db.query(MdlUsers.id).filter(MdlUsers.id.in_(toDoMemeberIds)).count() != len(toDoMemeberIds):
                 raise CustomException(404, "invalid members list!")
@@ -545,11 +547,6 @@ class IltMeetingResponceService:
             db.add(db_meeting_todo)
             db.commit()
             db.refresh(db_meeting_todo)
-            create_by_uid, = (db.query(MdlIltMeetingResponses.meeting_user_id)
-                                .filter(MdlIltMeetingResponses.meeting_response_id==meetingResponseId)
-                                .one_or_none())
-            if create_by_uid not in toDoMemeberIds:
-                toDoMemeberIds.append(create_by_uid)
             
             db_todo_member_re = [MdlIlt_ToDoTask_map(parent_to_do_id = db_meeting_todo.id,
                                  user_id = uid, 
