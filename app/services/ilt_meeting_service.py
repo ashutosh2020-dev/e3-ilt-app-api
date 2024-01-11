@@ -174,7 +174,7 @@ class IltMeetingService:
         if len(find_same_date_meeting) == 1:
             raise CustomException(404,
                                   "Please select a different date; this one is already booked for a meeting.")
-        if len(find_same_date_meeting) > 1:
+        if len(find_same_date_meeting) >= 2:
             raise CustomException(404,
                                   "This date has more that one meetings scheduled, please inform the administrator immediately")
         db_meeting = MdlMeetings()
@@ -503,7 +503,6 @@ class IltMeetingService:
         #inactivating complete items
         (complete_issue_id_list,
             complete_to_do_id_list) = get_completed_issue_todo_list(meeting_id=meeting_id, db=db)
-        print(complete_issue_id_list, complete_to_do_id_list)
         inactivate_all_completed_issue_todo_list(listOfIssueIds=complete_issue_id_list,
                                                  listOfToDoIds=complete_to_do_id_list,
                                                  ilt_id=ilt_id,
