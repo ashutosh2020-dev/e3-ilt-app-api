@@ -760,15 +760,13 @@ class IltMeetingService:
         # get_all_end_meeting_re = (db.query(MdlMeetings).filter(MdlMeetings.id == 29).all())
         get_all_end_meeting_re = (db.query(MdlMeetings).filter(MdlMeetings.end_at != None)
                                  .order_by(MdlMeetings.id).all())
-        print(len(get_all_end_meeting_re))
+        
         
         for db_meeting in get_all_end_meeting_re:
             meeting_id = db_meeting.id
             ilt_id, = db.query(MdlIltMeetings.ilt_id).filter(MdlIltMeetings.ilt_meeting_id==db_meeting.id).one()
-            print(meeting_id)
             get_ilt_rock =  db.query(MdlRocks).filter(MdlRocks.ilt_id==ilt_id).all()
             for rock_re in get_ilt_rock:
-                # print(rock_re.id,  rock_re.created_at,db_meeting.schedule_start_at)
                 if rock_re.created_at > db_meeting.schedule_start_at and rock_re.created_at !=db_meeting.schedule_start_at :
                     continue
 
