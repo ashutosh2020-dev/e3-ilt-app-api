@@ -128,3 +128,8 @@ def update_ilts_whiteboard(iltId:int, meetingId:int, whiteboard:whiteboardData, 
                                                     meetingId =meetingId, 
                                                     whiteboard=whiteboard,
                                                     db=db)
+
+
+@router.get("/api/v1/ilts/update/rock/endMeetings/{update}")
+def update_rock_for_all_end_meeting(update: bool, db: Session = Depends(get_db)):
+    return IltMeetingService.insert_rock_info_for_all_end_meeting(update = update, db=db)

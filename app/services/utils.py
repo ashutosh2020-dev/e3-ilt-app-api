@@ -16,7 +16,6 @@ def get_upcomming_meeting(ilt_id, db):
                             .all()
                             ]
 
-
 def get_completed_issue_todo_list(meeting_id, db, user_id=None):
     ## check pending- issue, todo, 
     sub_query = (db.query(MdlIltMeetingResponses.meeting_response_id)
@@ -135,7 +134,6 @@ def replacing_ownership_of_issue_todo_for(associated_responceId_list, default_ow
                 db.add(db_re)
         db.commit()
     pass
-
 
 def get_user_info(db, userId=None, responceId=None):
     if responceId:

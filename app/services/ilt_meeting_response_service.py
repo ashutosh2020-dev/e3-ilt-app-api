@@ -3,7 +3,8 @@ from sqlalchemy.orm import Session
 from app.models import MdlIlt_ToDoTask, Mdl_updates, \
     MdlMeetingsResponse, MdlIltMeetingResponses, MdlRocks, \
     Mdl_issue, MdlUsers, MdlIltissue, MdlMeetings, MdlIlts, \
-    MdlRocks_members, MdlIltMembers, MdlIltMeetings, MdlPriorities, MdlIlt_ToDoTask_map
+    MdlRocks_members, MdlIltMembers, MdlIltMeetings, MdlPriorities, MdlIlt_ToDoTask_map, \
+    MdlEndMeetingMemberRocks, MdlEndMeetingRocks
 from sqlalchemy import desc, join
 from typing import List, Optional
 from app.schemas.meeting_response import MeetingResponse, Duedate, RockInput, RockOutput, Member
@@ -208,6 +209,7 @@ class IltMeetingResponceService:
         return True
    
     def read_ilt_rock(self, user_id: int, ilt_id: int, meeting_id: int,  db: Session):
+
         check_user_id = db.query(MdlUsers).filter(MdlUsers.id == user_id).one_or_none()
         if check_user_id is None:
             raise CustomException(404,  "user_id did not exist!")
@@ -222,40 +224,67 @@ class IltMeetingResponceService:
                                                    )
                                     .all())
         meeting_rock_records = []
-        for record in list_rocks_re:  
-            meeting_date = meeting_re.end_at if meeting_re.end_at else meeting_re.schedule_start_at
+        for record in list_rocks_re:
             rockObj = RockOutput()
             rockObj.rockId =record.id
             rockObj.iltId = record.ilt_id
             rockObj.name = record.name
             rockObj.description = record.description
-            rockObj.onTrack = record.on_track_flag
-            if record.is_complete:
-                rockObj.isComplete = False if  record.completed_at > meeting_date else True
+
+            if meeting_re.end_at:
+                end_m_rock_re = db.query(MdlEndMeetingRocks).filter(MdlEndMeetingRocks.rock_id == record.id).one_or_none()
+                if end_m_rock_re is None:
+                    raise CustomException(404, "Rocks record not found for end meetings. Please contact to your admistator")
+                rockObj.onTrack = end_m_rock_re.rock_status
+                rockObj.isComplete = end_m_rock_re.is_complete
+
+                owner_subquery = (db.query(MdlUsers)
+                                  .join(MdlEndMeetingMemberRocks, MdlUsers.id == MdlEndMeetingMemberRocks.user_id)
+                                 .filter(MdlEndMeetingMemberRocks.rock_id == record.id,
+                                         MdlEndMeetingMemberRocks.is_rock_owner == True))
+                member_subquery = (db.query(MdlUsers)
+                                    .join(MdlEndMeetingMemberRocks, MdlUsers.id == MdlEndMeetingMemberRocks.user_id)
+                                    .filter(MdlEndMeetingMemberRocks.rock_id == record.id,
+                                            MdlEndMeetingMemberRocks.is_rock_member == True))
+                
             else:
-                rockObj.isComplete = False
-            rockObj.completeAt = record.completed_at if record.is_complete else None
+                rockObj.onTrack = record.on_track_flag
+                if record.is_complete:
+                    rockObj.isComplete = (False if  record.completed_at>meeting_re.schedule_start_at else True)
+                    rockObj.completeAt = record.completed_at
+                else:
+                    rockObj.isComplete = False
+                    rockObj.completeAt = None
+
+                owner_subquery = (db.query(MdlUsers)
+                                  .join(MdlRocks_members, MdlUsers.id == MdlRocks_members.user_id)
+                                  .filter(MdlRocks_members.ilt_rock_id == record.id,
+                                          MdlRocks_members.is_rock_owner == True))
+                member_subquery = (db.query(MdlUsers)
+                                   .join(MdlRocks_members, MdlUsers.id == MdlRocks_members.user_id)
+                                   .filter(MdlRocks_members.ilt_rock_id == record.id,
+                                           MdlRocks_members.is_rock_member == True))
+                
+            
+
+            # rockObj.onTrack = record.on_track_flag
+            # if record.is_complete:
+            #     rockObj.isComplete = False if  record.completed_at > meeting_date else True
+            # else:
+            #     rockObj.isComplete = False
+            # rockObj.completeAt = record.completed_at if record.is_complete else None
 
             rockObj.rockOwner = [Member(userId=u_re.id, firstName=u_re.fname, lastName=u_re.lname)
-                                 for u_re in db.query(MdlUsers)
-                                 .join(MdlRocks_members, MdlUsers.id == MdlRocks_members.user_id)
-                                 .filter(MdlRocks_members.ilt_rock_id == record.id,
-                                         MdlRocks_members.is_rock_owner == True)
-                                 .all()
+                                 for u_re in owner_subquery.all()
                                  ]
             
             rockObj.rockMembers = [Member(userId=u_re.id, firstName=u_re.fname, lastName=u_re.lname)
-                                    for u_re in db.query(MdlUsers)
-                                    .join(MdlRocks_members, MdlUsers.id == MdlRocks_members.user_id)
-                                    .filter(MdlRocks_members.ilt_rock_id == record.id,
-                                            MdlRocks_members.is_rock_member == True)
-                                    .all()
+                                    for u_re in member_subquery.all()
                                 ]
            
             meeting_rock_records.append(rockObj)
 
         return meeting_rock_records
-
     
     def create_assign_update_rock(self, rockData:RockInput, user_id, meeting_id, db:Session):
 
@@ -421,7 +450,7 @@ class IltMeetingResponceService:
 
         # create
         db_rock = MdlRocks(ilt_id=rockData.iltId, 
-                           name=rock_name, 
+                           name=rock_name,
                            description=rockData.description, 
                            is_complete =False,
                            created_at = meeting_re.schedule_start_at,
@@ -455,7 +484,6 @@ class IltMeetingResponceService:
             "statusCode": 200,
             "userMessage": "Rock added"
         }
-
 
     def create_update_to_do_list(self, user_id: int, id: int, meetingResponseId: int, description: str,
                                  dueDate: Duedate, status: bool, toDoMemeberIds:List, db: Session):
@@ -785,7 +813,6 @@ class IltMeetingResponceService:
             "userMessage": "Issue have been modified successfully" if id else "Issue have been created successfully",
             "data": issues_records
         }
-
 
     # def update_meetingResponce_rocks(self, user_id: int,
     #                                  meetingResponseId: int,

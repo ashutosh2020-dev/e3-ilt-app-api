@@ -66,6 +66,7 @@ class SharedService:
         
         except Exception as e:
             raise CustomException(500, f"unable to process your requests {e}")
+    
     def get_lookup_details(self, db:Session):
         try:
 
