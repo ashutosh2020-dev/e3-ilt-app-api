@@ -150,7 +150,7 @@ class MdlEndMeetingRocks(Base):
 
 class MdlEndMeetingMemberRocks(Base):
     __tablename__ = "Ilt_end_meeting_member_rocks"
-    __table_args__ = (UniqueConstraint('rock_id', 'user_id'),)
+    __table_args__ = (UniqueConstraint('rock_id', 'meeting_id', 'user_id'),)
     id = Column(Integer, primary_key=True, autoincrement=True)
     rock_id = Column(Integer, ForeignKey("Ilt_rocks.id"), nullable=False, index=True)
     meeting_id = Column(Integer, ForeignKey("Ilt_meetings.id"), nullable=False, index=True)
