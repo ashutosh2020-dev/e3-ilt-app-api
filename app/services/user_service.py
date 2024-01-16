@@ -163,7 +163,6 @@ class UserService:
             list_d_ilts.extend(list_ilts)
         return list_d_ilts
 
-
     def get_schools(self, districtId: int, db: Session):
         d_record = db.query(MdlDistrict).filter(
             MdlDistrict.id == districtId).one_or_none()
@@ -370,13 +369,9 @@ class UserService:
 
     def delete_user(self, user_id: int, db: Session):
 
-        db_user = db.query(MdlUsers).filter(MdlUsers.id == user_id).one()
-        db.delete(db_user)
-        db.commit()
-        # delete from ilt, meetings, meeting responce
         return {
             "statusCode": 200,
-            "userMessage": "User deleted successfully."
+            "userMessage": "...."
         }
 
     def update_password(self, loginUserId, id, old_password, new_password, db:Session):

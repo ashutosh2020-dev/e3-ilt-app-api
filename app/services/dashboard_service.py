@@ -2,7 +2,7 @@ from sqlalchemy import and_, func, or_
 from sqlalchemy.orm import Session
 from app.models import MdlUsers, MdlIltMeetings, MdlMeetings,\
     MdlIltMembers, MdlIltMeetingResponses, MdlMeetingsResponse, MdlIltissue,\
-    Mdl_issue, MdlIlt_ToDoTask, MdlIlts, MdlSchools, MdlDistrictMember, MdlDistrict, MdlRocks
+    Mdl_issue, MdlIlt_ToDoTask, MdlIlts, MdlSchools, MdlDistrictMember, MdlDistrict, MdlRocks, MdlEndMeetingRocks
 from app.schemas.dashboard_schemas import SummaryData, PercentageData, DashboardFilterParamaters, TimeFilterParameter
 from datetime import datetime, timezone
 from app.exceptions.customException import CustomException
@@ -29,8 +29,6 @@ def calculate_meeting_status(schedule_start_at, start_at, end_at):
     else:
         return 2  # completed
 
-def compute_meetings_avg():
-    pass
 def get_associated_schoolId_wrt_role(user_id:int, role_id:int, FilterParamaters:DashboardFilterParamaters, db:Session):
         user_id_list = [user_id,]
         list_ilts = []
@@ -109,30 +107,41 @@ def get_rock_aggegrates(list_of_ilt, db:Session):
     offtrack_count = db.query(MdlRocks).filter(MdlRocks.ilt_id.in_(list_of_ilt), 
                                                MdlRocks.on_track_flag ==False,
                                                MdlRocks.is_complete == False).count()
-    # total_rocks = db.query(MdlRocks).filter(MdlRocks.ilt_id.in_(list_of_ilt)).count()    
     total = ontrack_count+offtrack_count
     return PercentageData(percentage=round((ontrack_count/total)*100, 1) if total !=0 else 0,
                           total=total
                           )
-def get_rock_aggegrates_for_meeting(ilt_id, meeting_id, db:Session):
-    meeting_schedule_start_at, meeting_end_at = db.query(MdlMeetings.schedule_start_at, MdlMeetings.end_at).filter(
-        MdlMeetings.id == meeting_id).one_or_none()
 
-    ontrack_count = (db.query(MdlRocks)
-                   .filter(and_(MdlRocks.ilt_id == ilt_id,
-                           MdlRocks.created_at <= meeting_schedule_start_at,
-                           MdlRocks.on_track_flag ==True, 
-                           or_(MdlRocks.is_complete ==False,
-                               MdlRocks.completed_at > meeting_end_at)
-                           ))
-                   .count())
-    offtrack_count = (db.query(MdlRocks)
-                   .filter(and_(MdlRocks.ilt_id == ilt_id,
-                           MdlRocks.created_at <= meeting_schedule_start_at,
-                           MdlRocks.on_track_flag ==False, 
-                           or_(MdlRocks.is_complete ==False,
-                               MdlRocks.completed_at > meeting_end_at)))
-                   .count())
+def get_rock_aggegrates_for_meeting(ilt_id, meeting_id, db:Session):
+    # meeting_schedule_start_at, meeting_end_at = db.query(MdlMeetings.schedule_start_at, MdlMeetings.end_at).filter(
+    #     MdlMeetings.id == meeting_id).one_or_none()
+    ontrack_count = (db.query(MdlEndMeetingRocks)
+                     .filter(MdlEndMeetingRocks.meeting_id ==meeting_id,
+                                  MdlRocks.on_track_flag == True,
+                                  MdlRocks.is_complete == False
+                                  )
+                     .count())
+    offtrack_count = (db.query(MdlEndMeetingRocks)
+                     .filter(MdlEndMeetingRocks.meeting_id ==meeting_id,
+                                  MdlRocks.on_track_flag == False,
+                                  MdlRocks.is_complete == False
+                                  )
+                     .count())
+    # ontrack_count = (db.query(MdlRocks)
+    #                .filter(and_(MdlRocks.ilt_id == ilt_id,
+    #                        MdlRocks.created_at <= meeting_schedule_start_at,
+    #                        MdlRocks.on_track_flag ==True, 
+    #                        or_(MdlRocks.is_complete ==False,
+    #                            MdlRocks.completed_at > meeting_end_at)
+    #                        ))
+    #                .count())
+    # offtrack_count = (db.query(MdlRocks)
+    #                .filter(and_(MdlRocks.ilt_id == ilt_id,
+    #                        MdlRocks.created_at <= meeting_schedule_start_at,
+    #                        MdlRocks.on_track_flag ==False, 
+    #                        or_(MdlRocks.is_complete ==False,
+    #                            MdlRocks.completed_at > meeting_end_at)))
+    #                .count())
     total = ontrack_count + offtrack_count
     return PercentageData(percentage=round((ontrack_count/total)*100, 1) if total != 0 else 0,
                           total=total)

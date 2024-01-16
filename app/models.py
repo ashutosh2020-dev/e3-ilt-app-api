@@ -139,6 +139,25 @@ class MdlRocks(Base):
     on_track_flag = Column(Boolean, nullable=False)
     completed_at = Column(DateTime, nullable=False)
 
+class MdlEndMeetingRocks(Base):
+    __tablename__ = "Ilt_end_meeting_rocks"
+    __table_args__ = (UniqueConstraint('rock_id', 'meeting_id'),)
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    rock_id = Column(Integer, ForeignKey("Ilt_rocks.id"), nullable=False, index=True)
+    meeting_id = Column(Integer, ForeignKey("Ilt_meetings.id"), nullable=False, index=True)
+    rock_status = Column(Boolean, nullable=False, index=True)
+    is_complete = Column(Boolean, nullable=False, default=False)
+
+class MdlEndMeetingMemberRocks(Base):
+    __tablename__ = "Ilt_end_meeting_member_rocks"
+    __table_args__ = (UniqueConstraint('rock_id', 'meeting_id', 'user_id'),)
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    rock_id = Column(Integer, ForeignKey("Ilt_rocks.id"), nullable=False, index=True)
+    meeting_id = Column(Integer, ForeignKey("Ilt_meetings.id"), nullable=False, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"),nullable=False, index=True)
+    is_rock_owner = Column(Boolean, nullable=False, default=False)
+    is_rock_member = Column(Boolean, nullable=False, default=False)
+ 
 class MdlRocks_members(Base):
     __tablename__ = "Rocks_member_mapping"
     __table_args__ = (UniqueConstraint('user_id', 'ilt_rock_id'),)
@@ -147,7 +166,6 @@ class MdlRocks_members(Base):
     ilt_rock_id = Column(Integer, ForeignKey("Ilt_rocks.id"), nullable=False, index=True)
     is_rock_owner = Column(Boolean, nullable=False, default=False)
     is_rock_member = Column(Boolean, nullable=False, default=False)
-
 
 class MdlIlt_ToDoTask(Base):
     __tablename__ = "Ilt_to_do_task"

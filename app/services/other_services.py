@@ -108,7 +108,6 @@ class Create_otherService:
                 "userMessage": "school has created successfully."
                 }
         
-    
     def create_roles(self, role_name:str, roleDescription:str, db:Session):
         db_role = MdlRoles(name=role_name, description=roleDescription)
         db.add(db_role)
@@ -139,7 +138,6 @@ class Create_otherService:
                     "statusCode": 200,
                     "userMessage": "priority has created."
                     }
-
 
     def create_district(self, name, db:Session):
         db_district = MdlDistrict(name=name)

@@ -2,7 +2,8 @@ from sqlalchemy import and_, func
 from sqlalchemy.orm import Session
 from app.models import MdlIltMeetings, MdlMeetings, MdlUsers, MdlIlts, \
     MdlIltMembers, MdlIltMeetingResponses, MdlMeetingsResponse,  MdlIlt_ToDoTask_map,\
-    Mdl_updates, MdlIlt_ToDoTask, MdlIltissue, Mdl_issue, MdlIltMeetingWhiteBoard, MdlIltWhiteBoard, MdlRocks
+    Mdl_updates, MdlIlt_ToDoTask, MdlIltissue, Mdl_issue, MdlIltMeetingWhiteBoard,\
+    MdlIltWhiteBoard, MdlRocks, MdlRocks_members,  MdlEndMeetingRocks, MdlEndMeetingMemberRocks
 from app.services.utils import get_upcomming_meeting, get_completed_issue_todo_list, inactivate_all_completed_issue_todo_list
 import sys
 from app.schemas.ilt_meeting_schemas import Status, whiteboardData, whiteboardDataInfo
@@ -282,7 +283,7 @@ class IltMeetingService:
         }
         
     def get_meeting_info(self, User_id: int, iltId: int, meeting_id: int,  db: Session):
-        try: 
+        
             user = db.query(MdlUsers).filter(
                 MdlUsers.id == User_id).one_or_none()
             if user is None:
@@ -426,8 +427,6 @@ class IltMeetingService:
                     }
                 )
             return members_Info_dict
-        except Exception as e:
-            raise CustomException(500,  f"Internal server error {str(e)}")
 
     def start_ilt_meeting(self, UserId: int, pastData_flag:bool, meeting_id: int, ilt_id: int, db: Session):
 
@@ -460,28 +459,22 @@ class IltMeetingService:
         }
         
     def stop_ilt_meeting(self, UserId: int, meeting_id: int, ilt_id: int, pastData_flag:bool, db: Session):
-        # print("k")
         user_re = db.query(MdlUsers).filter(MdlUsers.id == UserId).one_or_none()
         if user_re is None:
-            raise CustomException(400,  "No users available ")
+            raise CustomException(400,  "This user is not no longer exist.")
         if db.query(MdlIlts).filter(MdlIlts.id == ilt_id).one_or_none() is None:
             raise CustomException(400,  "No Ilt present")
-        print("k")
         
         ownerId, = db.query(MdlIlts.owner_id).filter(MdlIlts.id==ilt_id).one_or_none()
         db_meeting = db.query(MdlMeetings).filter(MdlMeetings.id == meeting_id).one_or_none()
         if db_meeting is None:
             raise CustomException(400,  "Meeting records is not available")
-        if UserId != db_meeting.note_taker_id and UserId != ownerId:
-            raise CustomException(404,  "Only Ilt owner and Note Taker can edit the data.")
+        if UserId not in [db_meeting.note_taker_id, UserId != ownerId] and user_re.role_id != 4:
+            raise CustomException(404,  "Only Ilt owner, Note Taker and Director can end the Meeting.")
         if db_meeting.start_at is None:
             raise CustomException(400,  "Meeting has not started")
         if db_meeting.end_at is not None:
             raise CustomException(400,  "Meeting is ended successfully")
-        
-        ownerId, = db.query(MdlIlts.owner_id).filter(MdlIlts.id==ilt_id).one_or_none()
-        if (UserId not in [ db_meeting.note_taker_id, ownerId]) and user_re.role_id != 4:
-            raise CustomException(404,  "Only Ilt owner and Note Taker can transfer meeting's pendings.")
 
         
         if db_meeting.start_at:
@@ -514,6 +507,26 @@ class IltMeetingService:
         db.commit()
         db.refresh(db_whiteB)
 
+        # taking snapshot of Rock status and members 
+        get_ilt_rock =  db.query(MdlRocks).filter(MdlRocks.ilt_id==ilt_id).all()
+        db_meeting_rock_re = [MdlEndMeetingRocks(rock_id=rock_re.id, 
+                                              meeting_id = meeting_id, 
+                                              rock_status=rock_re.on_track_flag,
+                                              is_complete = True if db_meeting.end_at>rock_re.completed_at else False
+                                              )
+                            for rock_re in get_ilt_rock]
+        db.add_all(db_meeting_rock_re)
+        db.commit()
+        for re in db_meeting_rock_re:
+            get_rock_member_re = db.query(MdlRocks_members).filter(MdlRocks_members.ilt_rock_id==re.id).all()
+            db_rock_member_re = [MdlEndMeetingMemberRocks(rock_id = re.id, 
+                                                          meeting_id=meeting_id,
+                                                          user_id = mem_re.user_id,
+                                                          is_rock_owner = mem_re.is_rock_owner,
+                                                          is_rock_member = mem_re.is_rock_member)
+                                 for mem_re in get_rock_member_re]
+            db.add_all(db_rock_member_re)
+            db.commit()
         return {
             "confirmMessageID": "string",
             "statusCode": 200,
@@ -740,3 +753,53 @@ class IltMeetingService:
                 "statusCode": 200,
                 "userMessage": "successfully updated description"
             }
+    
+    def insert_rock_info_for_all_end_meeting(self, update:bool, db:Session):
+        if update==False:
+            raise CustomException(500,"Bad Request.")
+        # get_all_end_meeting_re = (db.query(MdlMeetings).filter(MdlMeetings.id == 29).all())
+        get_all_end_meeting_re = (db.query(MdlMeetings).filter(MdlMeetings.end_at != None)
+                                 .order_by(MdlMeetings.id).all())
+        
+        
+        for db_meeting in get_all_end_meeting_re:
+            meeting_id = db_meeting.id
+            ilt_id, = db.query(MdlIltMeetings.ilt_id).filter(MdlIltMeetings.ilt_meeting_id==db_meeting.id).one()
+            get_ilt_rock =  db.query(MdlRocks).filter(MdlRocks.ilt_id==ilt_id).all()
+            for rock_re in get_ilt_rock:
+                if rock_re.created_at > db_meeting.schedule_start_at and rock_re.created_at !=db_meeting.schedule_start_at :
+                    continue
+
+                check_rock_re = (db.query(MdlEndMeetingRocks)
+                                    .filter(MdlEndMeetingRocks.rock_id==rock_re.id)
+                                    .one_or_none())
+                get_rock_member_re = db.query(MdlRocks_members).filter(MdlRocks_members.ilt_rock_id==rock_re.id).all()
+                if check_rock_re is  None:
+                    if rock_re.is_complete:
+                        is_complete = True if db_meeting.end_at>rock_re.completed_at  else False
+                    else:
+                        is_complete =  False
+                    db_meeting_rock_re = MdlEndMeetingRocks(rock_id=rock_re.id, 
+                                                        meeting_id = meeting_id, 
+                                                        rock_status=rock_re.on_track_flag,
+                                                        is_complete = is_complete)
+                    db.add(db_meeting_rock_re)
+                    db.commit()
+
+                check_rock_mem_re = (db.query(MdlEndMeetingMemberRocks)
+                                    .filter(MdlEndMeetingMemberRocks.rock_id==rock_re.id)
+                                    .all())
+                if len(check_rock_mem_re)==0:
+                    db_rock_member_re = [MdlEndMeetingMemberRocks(rock_id = rock_re.id, 
+                                                                meeting_id=meeting_id,
+                                                                user_id = mem_re.user_id,
+                                                                is_rock_owner = mem_re.is_rock_owner,
+                                                                is_rock_member = mem_re.is_rock_member)
+                                        for mem_re in get_rock_member_re]
+                    db.add_all(db_rock_member_re)
+                    db.commit()
+                                    
+        return{
+            "statusCode": 200,
+            "userMessage": "successfully updated"
+        }
