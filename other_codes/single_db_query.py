@@ -1,13 +1,13 @@
 from sqlalchemy import create_engine, text
+import pandas as pd
 
+DATABASE_URL = "mysql://sortinghatadmin:Sortinghat#Middle123@rds-middle-ilt-app.c61momvubcsz.us-east-1.rds.amazonaws.com:3306/dbiltappuat"
 
-DATABASE_URL = "sqlite:///t.db"
-engine = create_engine(DATABASE_URL)
-with engine.connect() as conn:
-    user_cset_record = conn.execute(text(f"Drop table alembic_version"))
-    print("table droped successfully")
-
-    get_all_end_meeting_id = conn.execute(text(f"select * from Ilt_meetings where Ilt_meetings.end_at != null"))
-    for mid in get_all_end_meeting_id:
-        get_ilt_id = 0
-        check_in = ""
+# engine = create_engine(DATABASE_URL)
+# with engine.connect() as conn:
+#     user_cset_record = conn.execute(text(f"SELECT * FROM roles;"))
+#     for re in user_cset_record:
+#         print(type(re))
+#         break
+df = pd.read_sql_table('roles', DATABASE_URL)
+print(df.shape)
