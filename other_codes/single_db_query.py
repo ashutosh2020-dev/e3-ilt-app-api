@@ -4,16 +4,14 @@ from sqlalchemy import create_engine, text
 fromdb = "UAT"  # "PROD"
 todb = "sqllite"
 instance = "dbiltappuat"
+DATABASE_URLS_DICT = {
+    "PROD": "mysql://sortinghatadmin:Sortinghat#Middle123@rds-middle-ilt-app.c61momvubcsz.us-east-1.rds.amazonaws.com:3306/dbiltapp",
+    "UAT": "mysql://sortinghatadmin:Sortinghat#Middle123@rds-middle-ilt-app.c61momvubcsz.us-east-1.rds.amazonaws.com:3306/dbiltappuat",
+    "sqllite": "sqlite:///ilt_db.db"
+}
 
 
-
-def save_db_info(fromdb, todb, instanceName):
-
-    DATABASE_URLS_DICT = {
-            "PROD": "mysql://sortinghatadmin:Sortinghat#Middle123@rds-middle-ilt-app.c61momvubcsz.us-east-1.rds.amazonaws.com:3306/dbiltapp",
-            "UAT": "mysql://sortinghatadmin:Sortinghat#Middle123@rds-middle-ilt-app.c61momvubcsz.us-east-1.rds.amazonaws.com:3306/dbiltappuat",
-            "sqllite": "sqlite:///ilt_db.db"
-    }
+def save_db_info(fromdb, todb, instanceName):    
     DATABASE_URL = DATABASE_URLS_DICT.get(fromdb)
     DATABASE_URL2 = DATABASE_URLS_DICT.get(todb)
 
