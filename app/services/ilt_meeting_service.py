@@ -252,36 +252,36 @@ class IltMeetingService:
             if scheduledStartDate < datetime(2020, 1, 1, 00, 00):
                 raise CustomException(
                     400,  "Please enter correct date, dates must be greater than currect data")
-        find_same_date_meeting = ((db
-                                   .query(MdlMeetings)
-                                   .join(MdlIltMeetings, MdlMeetings.id == MdlIltMeetings.ilt_meeting_id)
-                                   .filter(func.date(MdlMeetings.schedule_start_at) == scheduledStartDate.date(),
-                                           MdlIltMeetings.ilt_id == ilt_id)).all())
+            find_same_date_meeting = ((db
+                                    .query(MdlMeetings)
+                                    .join(MdlIltMeetings, MdlMeetings.id == MdlIltMeetings.ilt_meeting_id)
+                                    .filter(func.date(MdlMeetings.schedule_start_at) == scheduledStartDate.date(),
+                                            MdlIltMeetings.ilt_id == ilt_id)).all())
 
-        if len(find_same_date_meeting) >= 2:
-            raise CustomException(404,
-                                  "This date has more that one meetings scheduled, please inform the administrator immediately")
+            if len(find_same_date_meeting) >= 2:
+                raise CustomException(404,
+                                    "This date has more that one meetings scheduled, please inform the administrator immediately")
         
         db_meeting = db.query(MdlMeetings).filter(MdlMeetings.id == meeting_id).one_or_none()
-        if db_meeting is None:
-            raise CustomException(404,  "meeting records not found")
         if db_meeting.end_at:
             raise CustomException(404,  "Meeting has been ended, Can not update it")
-        if db_meeting.schedule_start_at != scheduledStartDate:
-            update_rock(meeting_schedual_time=db_meeting.schedule_start_at,
-                        rock_created_time=scheduledStartDate, db=db)
+        
         if location:
             db_meeting.location = location
         if scheduledStartDate:
+            if db_meeting.schedule_start_at != scheduledStartDate:
+                update_rock(meeting_schedual_time=db_meeting.schedule_start_at,
+                            rock_created_time=scheduledStartDate, db=db)
             db_meeting.schedule_start_at = scheduledStartDate
         if noteTakerId:
             db_meeting.note_taker_id = noteTakerId
+        db.add(db_meeting)
         db.commit()
         return {
             "statusCode": 200,
             "userMessage": "meeting have successfully updated"
-        }
-        
+        }  
+
     def get_meeting_info(self, User_id: int, iltId: int, meeting_id: int,  db: Session):
         
             user = db.query(MdlUsers).filter(
