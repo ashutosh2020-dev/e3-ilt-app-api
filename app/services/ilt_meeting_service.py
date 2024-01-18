@@ -377,6 +377,12 @@ class IltMeetingService:
                 user_issues_record = [db.query(Mdl_issue)
                                       .filter(Mdl_issue.id == record.issue_id).one_or_none() for record in issue_record]  \
                     if issue_record else []
+                schedule_start_at = ilt_meeting_record.schedule_start_at
+                start_meeting_time = ilt_meeting_record.start_at if ilt_meeting_record.start_at else 0
+                end_meeting_time = ilt_meeting_record.end_at if ilt_meeting_record.end_at else 0
+                meeting_status = calculate_meeting_status(schedule_start_at, 
+                                                          start_meeting_time, 
+                                                          end_meeting_time)
                 # print("---",meeting_response_id, [(user_issues_single_record.created_at,
                 #                                    user_issues_single_record.issue_resolve_date,
                 #                                    user_issues_single_record.resolves_flag,
@@ -389,6 +395,7 @@ class IltMeetingService:
                         "iltMeetingLocation":ilt_meeting_record.location,
                         "meetingScheduleTime":ilt_meeting_record.schedule_start_at,
                         "noteTakerId":noteTakerId,
+                        "meetingStatus":meeting_status,
                         "member": {
                             "userId": user_record.id,
                             "firstName": user_record.fname,
