@@ -136,16 +136,18 @@ class UserService:
             raise CustomException(404, "User records not found.")
 
         district_list = []
-        district_record = db.query(MdlDistrictMember).filter(
-            MdlDistrictMember.user_id == user_id).all()
-        for district_map_re in district_record:
-            district_re = db.query(MdlDistrict).filter(
-                MdlDistrict.id == district_map_re.district_id).one_or_none()
+        district_record_all = db.query(MdlDistrict).all()
+        user_district_ids = [d_id for d_id, in db.query(MdlDistrictMember.district_id).filter(
+            MdlDistrictMember.user_id == user_id).all()]
+        
+        for district_re in district_record_all:
             district_list.append({
                 "value": district_re.id,
-                "label": district_re.name
+                "label": district_re.name,
+                "isAssigned": True if district_re.id in user_district_ids else False
             })
         return district_list
+
 
     def get_district_ilts(self, districtId, db:Session):
          # check userId
