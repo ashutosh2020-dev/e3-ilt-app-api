@@ -314,7 +314,7 @@ class IltMeetingService:
                             MdlIltMeetingResponses.is_active==True).all()]
                 ilt_members_ids.extend(user_ids)
             else:
-                raise CustomException( 404,  "Invalid user")
+                raise CustomException( 404,  "Only Director and Ilt's Members can view the Ilt Info!")
 
             members_Info_dict = []
             meeting_response_id = 0
