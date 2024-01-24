@@ -35,8 +35,8 @@ def get_associated_schoolId_wrt_role(user_id:int, role_id:int, FilterParamaters:
         list_of_school_id = []
 
         if FilterParamaters.distictId or FilterParamaters.schoolId:
-            if role_id<4:
-                raise CustomException(404,  "Only Director is allowed to see filter info.")
+            if role_id<3:
+                raise CustomException(404,  "Only Directors and Project Leaders are allowed to see filter info.")
             if  FilterParamaters.districtAggregateFlag ==True:
                 if FilterParamaters.distictId:
                     for d_id in FilterParamaters.distictId:
