@@ -778,7 +778,8 @@ class IltMeetingService:
                     continue
 
                 check_rock_re = (db.query(MdlEndMeetingRocks)
-                                    .filter(MdlEndMeetingRocks.rock_id==rock_re.id)
+                                    .filter(MdlEndMeetingRocks.rock_id==rock_re.id, 
+                                            MdlEndMeetingRocks.meeting_id==meeting_id)
                                     .one_or_none())
                 get_rock_member_re = db.query(MdlRocks_members).filter(MdlRocks_members.ilt_rock_id==rock_re.id).all()
                 if check_rock_re is  None:
