@@ -232,7 +232,8 @@ class IltMeetingResponceService:
             rockObj.description = record.description
 
             if meeting_re.end_at:
-                end_m_rock_re = db.query(MdlEndMeetingRocks).filter(MdlEndMeetingRocks.rock_id == record.id).one_or_none()
+                end_m_rock_re = db.query(MdlEndMeetingRocks).filter(MdlEndMeetingRocks.rock_id == record.id,
+                                                                    MdlEndMeetingRocks.meeting_id==meeting_id).one_or_none()
                 if end_m_rock_re is None:
                     raise CustomException(404, "Rocks record not found for end meetings. Please contact to your admistator")
                 rockObj.onTrack = end_m_rock_re.rock_status
