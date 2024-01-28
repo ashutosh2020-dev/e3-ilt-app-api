@@ -143,5 +143,6 @@ def get_user_info(db, userId=None, responceId=None):
     return {
                 "userId": record.id,
                 "firstName": record.fname,
-                "lastName": record.lname
+                "lastName": record.lname,
+                "emailId":record.email
         }

@@ -31,7 +31,8 @@ def fn_read_users_district_ilts(districtId: int,  db: Session = Depends(get_db))
 
 @router.post("/api/v1/users/")
 async def fn_create_user(user:UserRequest, UserId: int=Header(convert_underscores=False), db: Session = Depends(get_db)):
-    return user_service.create_user(parent_user_id=UserId,
+    return user_service.create_user(user_id = UserId,
+                                    assigned_to=user.assignedTo,
                                     fname=user.firstName, 
                                     lname=user.lastName,
                                     email=user.emailId,
@@ -40,6 +41,7 @@ async def fn_create_user(user:UserRequest, UserId: int=Header(convert_underscore
                                     is_active=user.active,
                                     role_id=user.roleId,
                                     districts=user.districts,
+                                    
                                     db=db)
     
 @router.post("/api/v1/users/{id}")
@@ -54,6 +56,7 @@ def fn_update_user(id:int, user:UpdateUserRequest, UserId: int=Header(convert_un
                                     is_active=user.active,
                                     role_id=user.roleId,
                                     districts=user.districts,
+                                    assigned_to = user.assignedTo,
                                     db=db)
 @router.post("/api/v1/users/{id}/password")
 def fn_update_user_password(id:int, user:UpdateUserPasswordRequest, UserId: int=Header(convert_underscores=False), 
