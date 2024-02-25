@@ -308,13 +308,13 @@ class IltMeetingService:
                                        .filter(MdlIltMembers.ilt_id==iltId,
                                                MdlIltMembers.is_active==True)
                                        .all()]             
-            if (User_id in current_ilt_members_ids) or (user.role_id == 4):
+            if (User_id in current_ilt_members_ids) or (user.role_id in [4,3]):
                 user_ids = [userId for userId, in db.query(MdlIltMeetingResponses.meeting_user_id)\
                     .filter(MdlIltMeetingResponses.meeting_id == meeting_id,
                             MdlIltMeetingResponses.is_active==True).all()]
                 ilt_members_ids.extend(user_ids)
             else:
-                raise CustomException( 404,  "Only Director and Ilt's Members can view the Ilt Info!")
+                raise CustomException( 404,  "Only Director, Project Leader and Ilt's Members can view the Ilt Info!")
 
             members_Info_dict = []
             meeting_response_id = 0
